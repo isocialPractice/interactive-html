@@ -17,12 +17,24 @@
 
 ### Adding a New Tool Page
 
-1. **Copy an existing HTML file** as a template:
+1. **Choose the appropriate category folder**:
+   - `general/` - For measurement and utility tools
+   - `555/` - For 555 timer related tools
+   - `electronics/` - For electronic component tools
+
+2. **Copy an existing HTML file** as a template:
    ```bash
-   cp electronics-ohms-law-calculator.html new-tool.html
+   # For a general tool:
+   cp general/general-volume-measurement.html general/new-tool.html
+   
+   # For a 555 timer tool:
+   cp 555/555-astable-calculator.html 555/new-tool.html
+   
+   # For an electronics tool:
+   cp electronics/electronics-ohms-law-calculator.html electronics/new-tool.html
    ```
 
-2. **Update the head section** (between `<!-- InstanceBeginEditable name="head" -->` tags):
+3. **Update the head section** (between `<!-- InstanceBeginEditable name="head" -->` tags):
    ```html
    <title>Your New Tool Name</title>
    <style>
@@ -30,19 +42,24 @@
    </style>
    ```
 
-3. **Update the page content** (between `<!-- InstanceBeginEditable name="page" -->` tags):
+4. **Update the page content** (between `<!-- InstanceBeginEditable name="page" -->` tags):
    ```html
    <div class="container">
        <!-- Your tool HTML -->
    </div>
    ```
 
-4. **Add to navigation**:
+5. **Add to category index page**:
+   - Edit the appropriate `index.html` file in the category folder
+   - Add your new tool to the tools grid
+
+6. **Add to navigation** (if needed):
    - Edit `Templates/page.html` and add your new tool link
    - Run `html-dwt-cmd update-all Templates/page.html --auto-apply`
-   - All 15+ pages will be updated automatically
+     - Use `--no-backup` to disable creation of backup directory from tool.
+   - All pages will be updated automatically
 
-5. **Link the template** (if creating from scratch):
+7. **Link the template** (if creating from scratch):
    - Add `<!-- InstanceBegin template="/Templates/page.html" -->` at the top
    - Add `<!-- InstanceEnd -->` at the bottom
 
@@ -88,6 +105,9 @@ The easiest way to update navigation across all pages:
 3. **Update all pages automatically**:
    ```bash
    html-dwt-cmd update-all Templates/page.html --auto-apply
+
+   # Update without creating backups (faster, but no rollback option)
+   html-dwt-cmd update-all Templates/page.html --auto-apply --no-backup
    ```
 
 This will update all 15+ HTML files in seconds, preserving each page's unique content.
@@ -187,11 +207,15 @@ Before deploying changes:
 ## Deployment
 
 ### GitHub Pages
-1. Push all files to your repository
+1. Push all files to your repository (including all folders: general/, 555/, electronics/)
 2. Go to Settings → Pages
 3. Select branch (usually `main`) and root directory
 4. Save and wait for deployment
 5. Access at: `https://username.github.io/repository-name/`
+6. Category landing pages available at:
+   - `https://username.github.io/repository-name/general/`
+   - `https://username.github.io/repository-name/555/`
+   - `https://username.github.io/repository-name/electronics/`
 
 ### Local Testing
 ```bash

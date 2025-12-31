@@ -5,28 +5,48 @@
 ```
 interactive-html/
 │
-├── style.css                          # Global stylesheet (NEW)
-├── favicon.svg                        # Site icon (NEW)
-├── index.html                         # Landing page ✅
+├── index.html                         # Main landing page ✅
+├── LICENSE                            # MIT License
+├── README.md                          # Project documentation
+├── task.bat                           # Build/deployment script
 │
 ├── Templates/
 │   └── page.html                      # Master template ✅
 │
-├── 555-astable-calculator.html        # ✅ Template applied
-├── 555-timer-simulator.html           # ✅ Template applied
-├── 555-monostable-simulator.html      # ✅ Template applied
-├── 555-logic-simulator.html           # ✅ Template applied
+├── css/
+│   └── style.css                      # Global stylesheet
 │
-├── electronics-ohms-law-calculator.html              # ✅ Template applied
-├── electronics-led-current-calculator.html           # ✅ Template applied
-├── electronics-voltage-divider-calculator.html       # ✅ Template applied
-├── electronics-resistor-calculator.html              # ✅ Template applied
-├── electronics-parallel-resistor-calculator.html     # ✅ Template applied
-├── electronics-fusible-resistor-calculator.html      # ✅ Template applied
-├── electronics-potentiometer-simulator.html          # ✅ Template applied
-├── electronics-potentiometer-decoder.html            # ✅ Template applied
-├── electronics-varistor-simulator.html               # ✅ Template applied
-└── electronics-electronics-surface-mount-decoder.html # ✅ Template applied
+├── img/
+│   └── favicon.svg                    # Site icon
+│
+├── docs/
+│   ├── DESIGN_SYSTEM.md               # Design guidelines
+│   ├── QUICK_START.md                 # Developer guide
+│   └── STRUCTURE.md                   # This file
+│
+├── general/                           # ✨ NEW: General tools section
+│   ├── index.html                     # General tools landing ✅
+│   └── general-volume-measurement.html # ✅ Template applied
+│
+├── 555/                               # ✨ Organized: 555 timer tools
+│   ├── index.html                     # 555 tools landing ✅
+│   ├── 555-astable-calculator.html    # ✅ Template applied
+│   ├── 555-timer-simulator.html       # ✅ Template applied
+│   ├── 555-monostable-simulator.html  # ✅ Template applied
+│   └── 555-logic-simulator.html       # ✅ Template applied
+│
+└── electronics/                       # ✨ Organized: Electronics tools
+    ├── index.html                     # Electronics tools landing ✅
+    ├── electronics-ohms-law-calculator.html              # ✅ Template applied
+    ├── electronics-led-current-calculator.html           # ✅ Template applied
+    ├── electronics-voltage-divider-calculator.html       # ✅ Template applied
+    ├── electronics-resistor-calculator.html              # ✅ Template applied
+    ├── electronics-parallel-resistor-calculator.html     # ✅ Template applied
+    ├── electronics-fusible-resistor-calculator.html      # ✅ Template applied
+    ├── electronics-potentiometer-simulator.html          # ✅ Template applied
+    ├── electronics-potentiometer-decoder.html            # ✅ Template applied
+    ├── electronics-varistor-simulator.html               # ✅ Template applied
+    └── electronics-surface-mount-decoder.html            # ✅ Template applied
 ```
 
 ## HTML Page Structure
@@ -99,24 +119,24 @@ interactive-html/
 ## Navigation Menu Structure
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  [ Logo ] Electronics Tools                               [=]    │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌────────────┐  ┌───────────┐  ┌──────────┐  ┌───────────┐      │
-│  │     555    │  │    Resist │  │   LED &  │  │     Compo │      │
-│  │   Timer ▼  │  │   -ors ▼  │  │   Power ▼│  │   -nents ▼│      │
-│  └────────────┘  └───────────┘  └──────────┘  └───────────┘      │
-│      │               │               │               │           │
-│      │               │               │               │           │
-│      ▼               ▼               ▼               ▼           │
-│  ┌──────────┐    ┌──────────┐    ┌─────────┐    ┌─────────┐      │
-│  │Simulator │    │Color Code│    │Ohm's Law│    │ Potentio│      │
-│  │Astable   │    │Parallel  │    │LED Calc │    │  -meter │      │
-│  │Monostable│    │Fusible   │    │Voltage  │    │ Decoder │      │
-│  │Logic     │    └──────────┘    │Varistor │    │   SMD   │      │
-│  └──────────┘                    └─────────┘    └─────────┘      │
-└──────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  [ Logo ] Interactive Tools                                          [=]     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌──────────┐  ┌────────────┐  ┌───────────┐  ┌──────────┐  ┌───────────┐    │
+│  │  General │  │     555    │  │    Resist │  │   LED &  │  │     Compo │    │
+│  │  Tools ▼ │  │   Timer ▼  │  │   -ors ▼  │  │   Power ▼│  │   -nents ▼│    │
+│  └──────────┘  └────────────┘  └───────────┘  └──────────┘  └───────────┘    │
+│      │               │               │               │               │       │
+│      │               │               │               │               │       │
+│      ▼               ▼               ▼               ▼               ▼       │
+│  ┌─────────┐    ┌──────────┐    ┌──────────┐    ┌─────────┐    ┌─────────┐   │
+│  │ Volume  │    │Simulator │    │Color Code│    │Ohm's Law│    │ Potentio│   │
+│  │Measure  │    │Astable   │    │Parallel  │    │LED Calc │    │  -meter │   │
+│  │         │    │Monostable│    │Fusible   │    │Voltage  │    │ Decoder │   │
+│  │         │    │Logic     │    └──────────┘    │Varistor │    │   SMD   │   │
+│  └─────────┘    └──────────┘                    └─────────┘    └─────────┘   │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## CSS Variable System

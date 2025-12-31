@@ -1,0 +1,417 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+ <title>General Interactive Tools | Measurement & Utility Calculators</title>
+ <meta name="description" content="Interactive measurement tools and utilities for everyday use. Free calculators for volume, conversions, and practical applications.">
+ <style>
+  * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+
+  body {
+   background: linear-gradient(0deg, lightslategray 0%, white 50%);
+   font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
+   color: #1A1A1A;
+   line-height: 1.6;
+   min-height: 100vh;
+  }
+
+  header {
+   background: linear-gradient(180deg, white 0%, lightslategray 65%, darkslategray 90%);
+   color: white;
+   box-shadow: 0 4px 16px rgba(123, 63, 242, 0.3);
+   padding: 48px 0;
+   margin-bottom: 48px;
+  }
+  header h1 { color: darkslategray; }
+
+  .header-content {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px;
+   text-align: center;
+  }
+
+  h1 {
+   font-size: 48px;
+   font-weight: 700;
+   margin-bottom: 16px;
+   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  a { color: darkslategray !important; }
+  a.nav-link { color: #6c757d !important; }
+  .tagline {
+   font-size: 20px;
+   font-weight: 500;
+   opacity: 0.95;
+  }
+
+  .intro-section {
+   max-width: 1200px;
+   margin: 0 auto 48px;
+   padding: 0 24px;
+  }
+
+  .intro-card {
+   background: white;
+   border-radius: 16px;
+   padding: 32px;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+   border-left: 4px solid darkslategray;
+  }
+
+  .intro-card h2 {
+   color: darkslategray;
+   font-size: 24px;
+   margin-bottom: 16px;
+  }
+
+  .intro-card p {
+   color: #6C757D;
+   line-height: 1.8;
+   margin-bottom: 12px;
+  }
+
+  .container {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px 48px;
+  }
+
+  .tools-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+   gap: 24px;
+   margin-bottom: 48px;
+  }
+
+  .tool-card {
+   background: #FFFFFF;
+   border-radius: 16px;
+   padding: 28px;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+   border: 2px solid #F0E6FF;
+   transition: all 0.3s;
+   text-decoration: none;
+   color: inherit;
+   display: block;
+  }
+
+  .tool-card:hover {
+   transform: translateY(-6px);
+   box-shadow: 0 12px 32px rgba(123, 63, 242, 0.25);
+   border-color: #7B3FF2;
+  }
+
+  .tool-icon {
+   width: 64px;
+   height: 64px;
+   background: linear-gradient(135deg, lightslategray 0%, darkslategray 100%);
+   border-radius: 14px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 32px;
+   margin-bottom: 20px;
+   color: #FFFFFF;
+   box-shadow: 0 4px 12px rgba(123, 63, 242, 0.3);
+  }
+
+  .tool-title {
+   color: #1A1A1A;
+   font-size: 20px;
+   font-weight: 700;
+   margin-bottom: 12px;
+  }
+
+  .tool-description {
+   color: #6C757D;
+   font-size: 15px;
+   line-height: 1.6;
+   margin-bottom: 16px;
+  }
+
+  .tool-features {
+   list-style: none;
+   margin: 16px 0;
+   padding-left: 0;
+  }
+
+  .tool-features li {
+   color: #495057;
+   font-size: 14px;
+   padding: 6px 0;
+   padding-left: 24px;
+   position: relative;
+  }
+
+  .tool-features li:before {
+   content: "✓";
+   position: absolute;
+   left: 0;
+   color: #7B3FF2;
+   font-weight: bold;
+  }
+
+  .tool-badge {
+   display: inline-block;
+   background: linear-gradient(135deg, lightslategray 0%, darkslategray 100%);
+   color: white;
+   padding: 6px 14px;
+   border-radius: 8px;
+   font-size: 12px;
+   font-weight: 700;
+   margin-top: 12px;
+  }
+
+  .coming-soon {
+   background: white;
+   border-radius: 16px;
+   padding: 32px;
+   text-align: center;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .coming-soon h2 {
+   color: darkslateblue;
+   font-size: 28px;
+   margin-bottom: 16px;
+  }
+
+  .coming-soon p {
+   color: darkslategray;
+   font-size: 16px;
+   line-height: 1.6;
+  }
+
+  .coming-soon-list {
+   list-style: none;
+   margin: 24px 0;
+   padding: 0;
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+   gap: 12px;
+  }
+
+  .coming-soon-list li {
+   color: black !important;
+   font-size: 15px;
+   padding: 12px;
+   background: #F8F9FA;
+   border-radius: 8px;
+   border-left: 3px solid darkslategray;
+  }
+
+  footer {
+   background: #FFFFFF;
+   border-top: 1px solid #E1E4E8;
+   padding: 32px 0;
+   margin-top: 48px;
+   text-align: center;
+  }
+
+  .footer-content {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px;
+   color: #6C757D;
+   font-size: 14px;
+  }
+
+  .footer-links {
+   margin-top: 16px;
+  }
+
+  .footer-links a {
+   color: #7B3FF2;
+   text-decoration: none;
+   margin: 0 12px;
+   font-weight: 500;
+  }
+
+  .footer-links a:hover {
+   text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+   h1 {
+    font-size: 36px;
+   }
+
+   .tools-grid {
+    grid-template-columns: 1fr;
+   }
+
+   .coming-soon-list {
+    grid-template-columns: 1fr;
+   }
+  }
+ </style>
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+    <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+    </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+ <header style="margin-top: -72px; padding-top: 96px;">
+  <div class="header-content">
+   <h1>📐 General Tools</h1>
+   <p class="tagline">Practical measurement and utility tools for everyday use</p>
+  </div>
+ </header>
+
+ <div class="intro-section">
+  <div class="intro-card">
+   <h2>Interactive Measurement Tools</h2>
+   <p>Beyond electronics, we're building a collection of interactive tools for everyday measurements, conversions, and practical calculations. These tools feature the same intuitive interfaces and real-time feedback you've come to expect from our electronics calculators.</p>
+   <p>Whether you're planning a project, cooking, or need quick conversions, these tools are designed to be fast, accurate, and easy to use.</p>
+  </div>
+ </div>
+
+ <div class="container">
+  <!-- Current Tools -->
+  <div class="tools-grid">
+   <a href="general-volume-measurement.html" class="tool-card">
+    <div class="tool-icon">📏</div>
+    <h3 class="tool-title">Volume Measurement Calculator</h3>
+    <p class="tool-description">Calculate volumes for various geometric shapes and convert between different units. Perfect for planning projects, estimating materials, or educational purposes.</p>
+    <ul class="tool-features">
+     <li>Multiple shape calculators</li>
+     <li>Real-time volume calculation</li>
+     <li>Unit conversion (ml, L, gallons, etc.)</li>
+     <li>Visual shape representations</li>
+     <li>Material estimation helpers</li>
+    </ul>
+    <span class="tool-badge">Measurement</span>
+   </a>
+
+   <a href="general-area-and-perimeter-calculator.html" class="tool-card">
+    <div class="tool-icon">📐</div>
+    <h3 class="tool-title">Area & Perimeter Calculator</h3>
+    <p class="tool-description">Draw custom shapes on a canvas and instantly calculate their area and perimeter. Features a simple CAD-like interface for precise measurements.</p>
+    <ul class="tool-features">
+     <li>Interactive drawing canvas</li>
+     <li>Line and rectangle tools</li>
+     <li>Real-time calculations</li>
+     <li>Multiple unit support</li>
+     <li>Export drawings and data</li>
+    </ul>
+    <span class="tool-badge">Drawing & Calculation</span>
+   </a>
+  </div>
+
+  <!-- Coming Soon -->
+  <div class="coming-soon">
+   <h2>🚀 More Tools Coming Soon</h2>
+   <p>We're continuously expanding our collection of interactive tools. Here's what's in development:</p>
+   <ul class="coming-soon-list">
+    <li>🌡️ Temperature Converter</li>
+    <li>⚖️ Weight & Mass Converter</li>
+    <li>📐 Angle & Trigonometry Tools</li>
+    <li>⏱️ Time Zone Converter</li>
+    <li>💰 Currency Calculator</li>
+    <li>📊 Unit Converter Suite</li>
+    <li>🔢 Number Base Converter</li>
+    <li>📱 Screen Size Calculator</li>
+    <li>🎨 Color Converter (RGB, HEX, HSL)</li>
+    <li>💽 Data Converter (Binary, Decimal, Hex, Octal, Text)</li>
+   </ul>
+   <p style="margin-top: 24px; font-style: italic;">Have a suggestion? Let us know on <a href="https://github.com/isocialPractice/interactive-html" target="_blank" style="color: #7B3FF2; font-weight: 600;">GitHub</a>!</p>
+  </div>
+ </div>
+
+ <footer>
+  <div class="footer-content">
+   <p>General Tools - Part of the Interactive Tools collection. Licensed under <a href="../LICENSE" style="color: #7B3FF2; text-decoration: none; font-weight: 500;">MIT</a>.</p>
+   <div class="footer-links">
+    <a href="../index.html">← Back to All Tools</a>
+    <a href="https://github.com/isocialPractice/interactive-html" target="_blank">GitHub</a>
+   </div>
+  </div>
+ </footer>
+
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>

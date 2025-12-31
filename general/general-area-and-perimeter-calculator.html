@@ -1,0 +1,1993 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+  <title>Area and Perimeter Calculator</title>
+  <style>
+   * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+  body {
+   font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
+   background: linear-gradient(135deg, #E6F2FF 0%, #F5F7FA 100%);
+   color: #1A1A1A;
+   min-height: 100vh;
+   padding: 24px;
+  }
+  .container {
+   background: #FFFFFF;
+   border-radius: 16px;
+   padding: 32px;
+   max-width: 1400px;
+   margin: 0 auto;
+   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+   border: 1px solid #E1E4E8;
+  }
+  h1 {
+   text-align: center;
+   color: #004080;
+   margin-bottom: 8px;
+   font-weight: 700;
+   font-size: 28px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 12px;
+  }
+  .subtitle {
+   text-align: center;
+   color: #6C757D;
+   margin-bottom: 32px;
+   font-size: 15px;
+   font-weight: 500;
+  }
+  .main-layout {
+   display: grid;
+   grid-template-columns: 1fr 400px;
+   gap: 24px;
+   margin: 24px 0;
+  }
+   @media (max-width: 1024px) {
+  .main-layout {
+   grid-template-columns: 1fr;
+  }
+  }
+  .canvas-section {
+   background: #F5F7FA;
+   border-radius: 12px;
+   padding: 20px;
+   border: 2px solid #E1E4E8;
+  }
+  .canvas-header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 16px;
+  }
+  .canvas-title {
+   font-weight: 600;
+   color: #004080;
+   font-size: 18px;
+  }
+  .canvas-container {
+   background: #FFFFFF;
+   border: 2px solid #1A1A1A;
+   border-radius: 8px;
+   overflow: hidden;
+   cursor: crosshair;
+   position: relative;
+  }
+  #drawingCanvas {
+   display: block;
+   width: 100%;
+   height: 600px;
+  }
+  .canvas-info {
+   margin-top: 12px;
+   padding: 12px;
+   background: #E6F2FF;
+   border-radius: 8px;
+   font-size: 13px;
+   color: #004080;
+   line-height: 1.6;
+  }
+  .controls-section {
+   background: #F5F7FA;
+   border-radius: 12px;
+   padding: 20px;
+   border: 2px solid #E1E4E8;
+  }
+  .control-group {
+   margin-bottom: 20px;
+  }
+  .control-group:last-child {
+   margin-bottom: 0;
+  }
+  label {
+   display: block;
+   margin-bottom: 8px;
+   font-weight: 600;
+   color: #1A1A1A;
+   font-size: 14px;
+  }
+   input[type="number"],
+   input[type="text"],
+  select {
+   width: 100%;
+   padding: 12px 16px;
+   border-radius: 8px;
+   border: 2px solid #E1E4E8;
+   background: #FFFFFF;
+   color: #1A1A1A;
+   font-size: 16px;
+   transition: all 0.2s ease;
+  }
+   input:focus, select:focus {
+   outline: none;
+   border-color: #0066CC;
+   box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+  }
+  .btn-group {
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   margin-top: 20px;
+  }
+  button {
+   padding: 12px 24px;
+   border: none;
+   border-radius: 8px;
+   background: #0066CC;
+   color: #fff;
+   font-size: 16px;
+   font-weight: 600;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   box-shadow: 0 2px 8px rgba(0,102,204,0.2);
+   width: 100%;
+  }
+  button:hover {
+   background: #004080;
+   transform: translateY(-1px);
+  }
+  button.secondary {
+   background: #6C757D;
+  }
+  button.danger {
+   background: #DC3545;
+  }
+  button:active {
+   transform: translateY(0);
+  }
+  .results-card {
+   background: linear-gradient(135deg, #0066CC 0%, #004080 100%);
+   color: white;
+   padding: 20px;
+   border-radius: 12px;
+   margin-bottom: 20px;
+  }
+   .results-card * {
+   color: white;
+  }
+  .result-item {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 10px 0;
+   border-bottom: 1px solid rgba(255,255,255,0.2);
+  }
+  .result-item:last-child {
+   border-bottom: none;
+  }
+  .result-label {
+   font-size: 14px;
+   opacity: 0.9;
+  }
+  .result-value {
+   font-size: 20px;
+   font-weight: 700;
+  }
+  .tool-bar {
+   display: flex;
+   gap: 8px;
+   flex-wrap: wrap;
+  }
+  .tool-btn {
+   padding: 8px 16px;
+   font-size: 14px;
+   flex: 1;
+   min-width: fit-content;
+  }
+  .tool-btn.active {
+   background: #28A745;
+  }
+  .info-box {
+   background: #E6F2FF;
+   border-left: 4px solid #0066CC;
+   padding: 16px 20px;
+   margin: 24px 0;
+   font-size: 14px;
+   color: #004080;
+   border-radius: 8px;
+   line-height: 1.6;
+  }
+  .shape-list {
+   margin-top: 20px;
+  }
+  .shape-item {
+   background: #FFFFFF;
+   padding: 12px;
+   border-radius: 8px;
+   margin-bottom: 8px;
+   border: 1px solid #E1E4E8;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+  }
+  .shape-info {
+   flex: 1;
+  }
+  .shape-name {
+   font-weight: 600;
+   color: #004080;
+   margin-bottom: 4px;
+  }
+  .shape-measurements {
+   font-size: 12px;
+   color: #6C757D;
+  }
+  .shape-actions {
+   display: flex;
+   gap: 8px;
+  }
+  .icon-btn {
+   padding: 6px 12px;
+   font-size: 12px;
+   min-width: auto;
+  }
+  .coordinate-display {
+   position: absolute;
+   top: 10px;
+   right: 10px;
+   background: rgba(0,0,0,0.7);
+   color: white;
+   padding: 6px 12px;
+   border-radius: 6px;
+   font-size: 12px;
+   font-family: 'Courier New', monospace;
+   pointer-events: none;
+  }
+  .grid-toggle {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   margin-bottom: 12px;
+  }
+   .grid-toggle input[type="checkbox"] {
+   width: auto;
+  }
+  </style>
+  
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+    <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+    </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+  <div class="container">
+   <h1>📐 Area and Perimeter Calculator</h1>
+   <p class="subtitle">Draw shapes and calculate measurements with precision</p>
+
+   <div class="info-box">
+    <strong>How to use:</strong> Click on the canvas to place points and create shapes. Click near the first point to close the shape.
+    Use the tools to draw lines, create rectangles, or clear the canvas. All measurements update automatically!
+   </div>
+
+   <div class="main-layout">
+    <div class="canvas-section">
+     <div class="canvas-header">
+      <div class="canvas-title">Drawing Canvas</div>
+      <div class="grid-toggle">
+       <input type="checkbox" id="gridToggle" checked>
+       <label for="gridToggle" style="margin: 0; cursor: pointer;">Show Grid</label>
+      </div>
+     </div>
+     <div class="tool-bar">
+      <button class="tool-btn active" id="lineToolBtn" onclick="setTool('line')">✏️ Line Tool (L)</button>
+      <button class="tool-btn" id="rectToolBtn" onclick="setTool('rectangle')">⬜ Rectangle (R)</button>
+      <button class="tool-btn" id="ellipseToolBtn" onclick="setTool('ellipse')">⚫ Ellipse (E)</button>
+      <button class="tool-btn" id="selectToolBtn" onclick="setTool('select')">🔍 Select (V)</button>
+      <button class="tool-btn secondary" onclick="undoLastPoint()">↶ Undo Point (Ctrl + Z)</button>
+      <button class="tool-btn danger" onclick="clearCanvas()">🗑️ Clear All</button>
+     </div>
+     <div class="canvas-container">
+      <canvas id="drawingCanvas"></canvas>
+      <div class="coordinate-display" id="coordDisplay">X: 0, Y: 0</div>
+     </div>
+     <div class="canvas-info">
+      <strong>Current Tool:</strong> <span id="currentToolDisplay">Line Tool</span><br>
+      <strong>Points:</strong> <span id="pointCount">0</span> |
+      <strong>Scale:</strong> <span id="scaleDisplay">1 pixel = 1 unit</span>
+     </div>
+    </div>
+
+    <div class="controls-section">
+     <div class="results-card">
+      <h3 style="margin-bottom: 16px; font-size: 20px;">Measurements</h3>
+      <div class="result-item">
+       <span class="result-label">Total Perimeter</span>
+       <span class="result-value" id="perimeterDisplay">0</span>
+      </div>
+      <div class="result-item">
+       <span class="result-label">Total Area</span>
+       <span class="result-value" id="areaDisplay">0</span>
+      </div>
+      <div class="result-item">
+       <span class="result-label">Number of Shapes</span>
+       <span class="result-value" id="shapeCount">0</span>
+      </div>
+     </div>
+
+     <div class="control-group">
+      <label for="unitSelect">Measurement Unit</label>
+      <select id="unitSelect" onchange="updateDisplay()">
+       <option value="px">Pixels (px)</option>
+       <option value="cm">Centimeters (cm)</option>
+       <option value="m" selected>Meters (m)</option>
+       <option value="in">Inches (in)</option>
+       <option value="ft">Feet (ft)</option>
+      </select>
+     </div>
+
+     <div class="control-group">
+      <label for="scaleInput">Scale (pixels per unit)</label>
+      <input type="number" id="scaleInput" value="10" min="1" max="100" step="1" onchange="updateDisplay()">
+     </div>
+
+     <div class="control-group">
+      <label for="gridSizeInput">Grid Size (pixels)</label>
+      <input type="number" id="gridSizeInput" value="20" min="5" max="100" step="5" onchange="redraw()">
+      <small style="display: block; margin-top: 4px; color: #6C757D; font-size: 12px;" id="gridUnitsDisplay">1 grid square = 2.00 m</small>
+     </div>
+
+     <div class="control-group">
+      <label for="precisionInput">Decimal Precision</label>
+      <input type="number" id="precisionInput" value="2" min="0" max="6" step="1" onchange="updateDisplay()">
+     </div>
+
+     <div class="shape-list">
+      <h3 style="margin-bottom: 12px; font-size: 16px; color: #004080;">Shapes</h3>
+      <div id="shapesList"></div>
+     </div>
+
+     <div class="btn-group">
+      <button onclick="exportData()">📥 Export Data</button>
+      <button class="secondary" onclick="saveAsImage()">💾 Save as Image</button>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <script>
+  const canvas = document.getElementById('drawingCanvas');
+  const ctx = canvas.getContext('2d');
+  const coordDisplay = document.getElementById('coordDisplay');
+  const gridToggle = document.getElementById('gridToggle');
+
+  // State management - DECLARE FIRST
+  let currentTool = 'line';
+  let points = [];
+  let shapes = [];
+  let tempPoints = [];
+  let isDrawing = false;
+  let rectStart = null;
+  let lastPos = null;
+  let isMouseDown = false;
+  let ellipseStart = null;
+  let isShiftPressed = false;
+  let isCtrlPressed = false;
+
+  // Selection state
+  let hoveredItem = null; // {type: 'shape'|'point'|'edge', shapeIndex: number, pointIndex?: number, edgeIndex?: number}
+  let selectedItem = null; // Same structure as hoveredItem OR array for multiple selection
+  let dragStart = null;
+  let isDragging = false;
+  let dragSelectStart = null; // For drag-to-select rectangle
+  let dragSelectEnd = null;
+
+  // Undo history
+  let undoHistory = []; // Stack of {type, data} for undo operations
+  let preDragState = null; // Store state before dragging starts
+
+  // Colors
+  const colors = ['#0066CC', '#28A745', '#DC3545', '#FFC107', '#6F42C1', '#FF851B'];
+  let currentColorIndex = 0;
+
+  // Set canvas size
+  function resizeCanvas() {
+   const container = canvas.parentElement;
+   canvas.width = container.clientWidth;
+   canvas.height = 600;
+   redraw();
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  function setTool(tool) {
+   // Save any unclosed line before switching tools
+   if (tempPoints.length > 1 && currentTool === 'line') {
+    shapes.push({
+     points: [...tempPoints],
+     closed: false,
+     color: colors[currentColorIndex],
+     isEllipse: false
+    });
+    currentColorIndex = (currentColorIndex + 1) % colors.length;
+   }
+
+   currentTool = tool;
+   document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+   if (tool === 'line') {
+    document.getElementById('lineToolBtn').classList.add('active');
+    document.getElementById('currentToolDisplay').textContent = 'Line Tool';
+   } else if (tool === 'rectangle') {
+   document.getElementById('rectToolBtn').classList.add('active');
+   document.getElementById('currentToolDisplay').textContent = 'Rectangle Tool';
+  } else if (tool === 'ellipse') {
+  document.getElementById('ellipseToolBtn').classList.add('active');
+  document.getElementById('currentToolDisplay').textContent = 'Ellipse Tool (Shift for Circle)';
+  } else if (tool === 'select') {
+  document.getElementById('selectToolBtn').classList.add('active');
+  document.getElementById('currentToolDisplay').textContent = 'Select Tool (V)';
+  canvas.style.cursor = 'default';
+  }
+  tempPoints = [];
+  rectStart = null;
+  ellipseStart = null;
+  hoveredItem = null;
+  selectedItem = null;
+  redraw();
+  updateDisplay();
+  }
+
+  function drawGrid() {
+   if (!gridToggle.checked) return;
+
+   ctx.strokeStyle = '#E1E4E8';
+   ctx.lineWidth = 1;
+
+   const gridSize = parseInt(document.getElementById('gridSizeInput').value) || 20;
+
+   // Vertical lines
+   for (let x = 0; x < canvas.width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+   }
+
+   // Horizontal lines
+   for (let y = 0; y < canvas.height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+   }
+  }
+
+  function drawPoint(x, y, color = '#0066CC', radius = 5, isHovered = false, isSelected = false) {
+   if (isSelected) {
+    // Draw selection ring
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+    ctx.stroke();
+   } else if (isHovered) {
+   // Draw hover ring
+   ctx.strokeStyle = '#FFA500';
+   ctx.lineWidth = 2;
+   ctx.beginPath();
+   ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
+   ctx.stroke();
+  }
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  }
+
+  function drawLine(x1, y1, x2, y2, color = '#0066CC', width = 3) {
+   ctx.strokeStyle = color;
+   ctx.lineWidth = width;
+   ctx.beginPath();
+   ctx.moveTo(x1, y1);
+   ctx.lineTo(x2, y2);
+   ctx.stroke();
+  }
+
+  function drawShape(shape, shapeIndex) {
+   if (shape.points.length < 2) return;
+
+   const color = shape.color || '#0066CC';
+   const isShapeHovered = hoveredItem && hoveredItem.type === 'shape' && hoveredItem.shapeIndex === shapeIndex;
+   const isShapeSelected = selectedItem && selectedItem.type === 'shape' && selectedItem.shapeIndex === shapeIndex;
+   const anyPointSelected = selectedItem && (selectedItem.type === 'point' || selectedItem.type === 'bbox-corner' || selectedItem.type === 'bbox-edge') &&
+   selectedItem.shapeIndex === shapeIndex;
+
+   // Handle ellipse rendering
+   if (shape.isEllipse && shape.points.length === 4) {
+    // points are: [top, right, bottom, left] cardinal positions
+    const centerX = (shape.points[1].x + shape.points[3].x) / 2;
+    const centerY = (shape.points[0].y + shape.points[2].y) / 2;
+    const radiusX = Math.abs(shape.points[1].x - shape.points[3].x) / 2;
+    const radiusY = Math.abs(shape.points[2].y - shape.points[0].y) / 2;
+
+    // Draw filled ellipse
+    let fillColor = color + '20';
+    if (isShapeSelected) {
+     fillColor = color + '40';
+    } else if (isShapeHovered) {
+    fillColor = color + '30';
+   }
+
+   ctx.fillStyle = fillColor;
+   ctx.beginPath();
+   ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+   ctx.fill();
+
+   // Draw ellipse outline
+   const lineWidth = (isShapeSelected || isShapeHovered) ? 4 : 3;
+   ctx.strokeStyle = color;
+   ctx.lineWidth = lineWidth;
+   ctx.beginPath();
+   ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+   ctx.stroke();
+
+   // Draw bounding box when shape is selected but no specific point is selected
+   if (isShapeSelected && !anyPointSelected) {
+    const minX = Math.min(...shape.points.map(p => p.x));
+    const maxX = Math.max(...shape.points.map(p => p.x));
+    const minY = Math.min(...shape.points.map(p => p.y));
+    const maxY = Math.max(...shape.points.map(p => p.y));
+
+    // Draw bounding box
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+    ctx.setLineDash([]);
+
+    // Draw corner handles
+    const handleSize = 8;
+    const corners = [
+    {x: minX, y: minY},
+    {x: maxX, y: minY},
+    {x: maxX, y: maxY},
+    {x: minX, y: maxY}
+    ];
+
+    corners.forEach((corner, idx) => {
+     const isCornerHovered = hoveredItem && hoveredItem.type === 'bbox-corner' &&
+     hoveredItem.shapeIndex === shapeIndex && hoveredItem.cornerIndex === idx;
+     const isCornerSelected = selectedItem && selectedItem.type === 'bbox-corner' &&
+     selectedItem.shapeIndex === shapeIndex && selectedItem.cornerIndex === idx;
+
+     ctx.fillStyle = isCornerSelected ? '#FFD700' : (isCornerHovered ? '#FFA500' : '#FFFFFF');
+     ctx.strokeStyle = '#FFD700';
+     ctx.lineWidth = 2;
+     ctx.fillRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
+     ctx.strokeRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
+    });
+
+    // Draw edge midpoint handles
+    const edges = [
+    {x: (minX + maxX) / 2, y: minY, dir: 'n'},
+    {x: maxX, y: (minY + maxY) / 2, dir: 'e'},
+    {x: (minX + maxX) / 2, y: maxY, dir: 's'},
+    {x: minX, y: (minY + maxY) / 2, dir: 'w'}
+    ];
+
+    edges.forEach((edge, idx) => {
+     const isEdgeHovered = hoveredItem && hoveredItem.type === 'bbox-edge' &&
+     hoveredItem.shapeIndex === shapeIndex && hoveredItem.edgeIndex === idx;
+     const isEdgeSelected = selectedItem && selectedItem.type === 'bbox-edge' &&
+     selectedItem.shapeIndex === shapeIndex && selectedItem.edgeIndex === idx;
+
+     ctx.fillStyle = isEdgeSelected ? '#FFD700' : (isEdgeHovered ? '#FFA500' : '#FFFFFF');
+     ctx.strokeStyle = '#FFD700';
+     ctx.lineWidth = 2;
+     ctx.fillRect(edge.x - handleSize/2, edge.y - handleSize/2, handleSize, handleSize);
+     ctx.strokeRect(edge.x - handleSize/2, edge.y - handleSize/2, handleSize, handleSize);
+    });
+   }
+
+   // Draw control points and handles when a point is selected
+   if (anyPointSelected) {
+    shape.points.forEach((point, pointIndex) => {
+     const isPointHovered = hoveredItem && hoveredItem.type === 'point' &&
+     hoveredItem.shapeIndex === shapeIndex && hoveredItem.pointIndex === pointIndex;
+     const isPointSelected = selectedItem && selectedItem.type === 'point' &&
+     selectedItem.shapeIndex === shapeIndex && selectedItem.pointIndex === pointIndex;
+
+     // Draw handle lines
+     if (isPointSelected || isPointHovered) {
+      ctx.strokeStyle = color + '60';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+
+      // Draw line from point to center
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+      ctx.lineTo(centerX, centerY);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+     }
+
+     drawPoint(point.x, point.y, color, 5, isPointHovered, isPointSelected);
+    });
+   }
+
+   return;
+  }
+
+  // Draw filled shape if closed
+  if (shape.closed) {
+   let fillColor = color + '20'; // 20 is alpha for transparency
+   if (isShapeSelected) {
+    fillColor = color + '40'; // More opaque when selected
+   } else if (isShapeHovered) {
+   fillColor = color + '30'; // Slightly more opaque on hover
+  }
+  ctx.fillStyle = fillColor;
+  ctx.beginPath();
+  ctx.moveTo(shape.points[0].x, shape.points[0].y);
+  for (let i = 1; i < shape.points.length; i++) {
+   ctx.lineTo(shape.points[i].x, shape.points[i].y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  }
+
+  // Draw lines with selection/hover effect
+  const numEdges = shape.closed ? shape.points.length : shape.points.length - 1;
+  for (let i = 0; i < numEdges; i++) {
+   const p1 = shape.points[i];
+   const p2 = shape.points[(i + 1) % shape.points.length];
+
+   // Check if this edge is hovered or selected
+   const isEdgeHovered = hoveredItem && hoveredItem.type === 'edge' &&
+   hoveredItem.shapeIndex === shapeIndex && hoveredItem.edgeIndex === i;
+   const isEdgeSelected = selectedItem && selectedItem.type === 'edge' &&
+   selectedItem.shapeIndex === shapeIndex && selectedItem.edgeIndex === i;
+
+   let edgeColor = color;
+   let edgeWidth = 3;
+
+   if (isEdgeSelected) {
+    edgeColor = '#FFD700'; // Gold for selected edge
+    edgeWidth = 5;
+   } else if (isEdgeHovered) {
+   edgeColor = '#FFA500'; // Orange for hovered edge
+   edgeWidth = 4;
+  } else if (isShapeSelected || isShapeHovered) {
+  edgeWidth = 4;
+  }
+
+  drawLine(p1.x, p1.y, p2.x, p2.y, edgeColor, edgeWidth);
+  }
+
+  // Draw points with hover/selection state
+  shape.points.forEach((point, pointIndex) => {
+   const isPointHovered = hoveredItem && hoveredItem.type === 'point' &&
+   hoveredItem.shapeIndex === shapeIndex && hoveredItem.pointIndex === pointIndex;
+   const isPointSelected = selectedItem && selectedItem.type === 'point' &&
+   selectedItem.shapeIndex === shapeIndex && selectedItem.pointIndex === pointIndex;
+   drawPoint(point.x, point.y, color, 5, isPointHovered, isPointSelected);
+  });
+  }
+
+  function redraw() {
+   ctx.clearRect(0, 0, canvas.width, canvas.height);
+   drawGrid();
+
+   // Draw all completed shapes
+   shapes.forEach((shape, index) => drawShape(shape, index));
+
+   // Draw temporary shape being created
+   if (tempPoints.length > 0 && currentTool !== 'select') {
+    if (currentTool === 'ellipse' && tempPoints.length === 4 && isMouseDown) {
+     // Draw ellipse preview
+     // tempPoints are: [top, right, bottom, left] cardinal points
+     const centerX = (tempPoints[1].x + tempPoints[3].x) / 2;
+     const centerY = (tempPoints[0].y + tempPoints[2].y) / 2;
+     const radiusX = Math.abs(tempPoints[1].x - tempPoints[3].x) / 2;
+     const radiusY = Math.abs(tempPoints[2].y - tempPoints[0].y) / 2;
+
+     ctx.strokeStyle = colors[currentColorIndex];
+     ctx.lineWidth = 2;
+     ctx.setLineDash([5, 5]);
+     ctx.beginPath();
+     ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+     ctx.stroke();
+     ctx.setLineDash([]);
+    } else {
+    // Draw regular temp shape (line tool, rectangle)
+    const tempShape = {
+     points: tempPoints,
+     closed: false,
+     color: colors[currentColorIndex]
+    };
+    drawShape(tempShape, -1);
+
+    // Draw preview line from last point to mouse cursor for line tool
+    if (currentTool === 'line' && tempPoints.length > 0 && lastPos && !isMouseDown) {
+     const lastPoint = tempPoints[tempPoints.length - 1];
+     let previewPos = { ...lastPos };
+
+     // Apply Shift constraint for preview
+     if (isShiftPressed) {
+      const dx = Math.abs(lastPos.x - lastPoint.x);
+      const dy = Math.abs(lastPos.y - lastPoint.y);
+
+      if (dx > dy) {
+       previewPos.y = lastPoint.y; // Horizontal
+      } else {
+      previewPos.x = lastPoint.x; // Vertical
+     }
+    }
+
+    // Draw preview line
+    ctx.strokeStyle = colors[currentColorIndex];
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(lastPoint.x, lastPoint.y);
+    ctx.lineTo(previewPos.x, previewPos.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1.0;
+   }
+  }
+  }
+
+  // Draw drag selection rectangle
+  if (dragSelectStart && dragSelectEnd && currentTool === 'select') {
+   ctx.strokeStyle = '#0066CC';
+   ctx.fillStyle = 'rgba(0, 102, 204, 0.1)';
+   ctx.lineWidth = 2;
+   ctx.setLineDash([5, 5]);
+
+   const x = Math.min(dragSelectStart.x, dragSelectEnd.x);
+   const y = Math.min(dragSelectStart.y, dragSelectEnd.y);
+   const w = Math.abs(dragSelectEnd.x - dragSelectStart.x);
+   const h = Math.abs(dragSelectEnd.y - dragSelectStart.y);
+
+   ctx.fillRect(x, y, w, h);
+   ctx.strokeRect(x, y, w, h);
+   ctx.setLineDash([]);
+  }
+  }
+
+  function getMousePos(event) {
+   const rect = canvas.getBoundingClientRect();
+   return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+   };
+  }
+
+  function distance(p1, p2) {
+   return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+  }
+
+  function distanceToLineSegment(point, lineStart, lineEnd) {
+   // Calculate distance from point to line segment
+   const lineLengthSquared = Math.pow(lineEnd.x - lineStart.x, 2) + Math.pow(lineEnd.y - lineStart.y, 2);
+
+   if (lineLengthSquared === 0) {
+    return distance(point, lineStart);
+   }
+
+   // Calculate projection of point onto line segment
+   let t = ((point.x - lineStart.x) * (lineEnd.x - lineStart.x) +
+   (point.y - lineStart.y) * (lineEnd.y - lineStart.y)) / lineLengthSquared;
+
+   t = Math.max(0, Math.min(1, t));
+
+   const projection = {
+    x: lineStart.x + t * (lineEnd.x - lineStart.x),
+    y: lineStart.y + t * (lineEnd.y - lineStart.y)
+   };
+
+   return distance(point, projection);
+  }
+
+  function findHoveredItem(pos) {
+   const tolerance = 8;
+   const handleSize = 8;
+
+   // Check bounding box corners and edges for selected ellipses (highest priority)
+   if (selectedItem && selectedItem.type === 'shape') {
+    const shape = shapes[selectedItem.shapeIndex];
+    if (shape && shape.isEllipse) {
+     const minX = Math.min(...shape.points.map(p => p.x));
+     const maxX = Math.max(...shape.points.map(p => p.x));
+     const minY = Math.min(...shape.points.map(p => p.y));
+     const maxY = Math.max(...shape.points.map(p => p.y));
+
+     // Check corners
+     const corners = [
+     {x: minX, y: minY},
+     {x: maxX, y: minY},
+     {x: maxX, y: maxY},
+     {x: minX, y: maxY}
+     ];
+
+     for (let i = 0; i < corners.length; i++) {
+      if (Math.abs(pos.x - corners[i].x) <= handleSize/2 &&
+      Math.abs(pos.y - corners[i].y) <= handleSize/2) {
+       return { type: 'bbox-corner', shapeIndex: selectedItem.shapeIndex, cornerIndex: i };
+      }
+     }
+
+     // Check edges
+     const edges = [
+     {x: (minX + maxX) / 2, y: minY},
+     {x: maxX, y: (minY + maxY) / 2},
+     {x: (minX + maxX) / 2, y: maxY},
+     {x: minX, y: (minY + maxY) / 2}
+     ];
+
+     for (let i = 0; i < edges.length; i++) {
+      if (Math.abs(pos.x - edges[i].x) <= handleSize/2 &&
+      Math.abs(pos.y - edges[i].y) <= handleSize/2) {
+       return { type: 'bbox-edge', shapeIndex: selectedItem.shapeIndex, edgeIndex: i };
+      }
+     }
+    }
+   }
+
+   // Check points (high priority)
+   for (let i = shapes.length - 1; i >= 0; i--) {
+    const shape = shapes[i];
+    for (let j = 0; j < shape.points.length; j++) {
+     if (distance(pos, shape.points[j]) <= tolerance) {
+      return { type: 'point', shapeIndex: i, pointIndex: j };
+     }
+    }
+   }
+
+   // Check edges/paths (second priority) - skip for ellipses
+   for (let i = shapes.length - 1; i >= 0; i--) {
+    const shape = shapes[i];
+
+    // Skip edge detection for ellipses (they don't have straight edges)
+    if (shape.isEllipse) continue;
+
+    const numEdges = shape.closed ? shape.points.length : shape.points.length - 1;
+
+    for (let j = 0; j < numEdges; j++) {
+     const p1 = shape.points[j];
+     const p2 = shape.points[(j + 1) % shape.points.length];
+
+     if (distanceToLineSegment(pos, p1, p2) <= tolerance) {
+      return { type: 'edge', shapeIndex: i, edgeIndex: j };
+     }
+    }
+   }
+
+   // Check if inside a shape (lowest priority)
+   for (let i = shapes.length - 1; i >= 0; i--) {
+    const shape = shapes[i];
+    if (shape.closed && isPointInShape(pos, shape.points)) {
+     return { type: 'shape', shapeIndex: i };
+    }
+   }
+
+   return null;
+  }
+
+  function isPointInShape(point, shapePoints) {
+   // Ray casting algorithm
+   let inside = false;
+   for (let i = 0, j = shapePoints.length - 1; i < shapePoints.length; j = i++) {
+    const xi = shapePoints[i].x, yi = shapePoints[i].y;
+    const xj = shapePoints[j].x, yj = shapePoints[j].y;
+
+    const intersect = ((yi > point.y) !== (yj > point.y))
+    && (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+   }
+   return inside;
+  }
+
+  function calculatePerimeter(points, isEllipse = false, isClosed = true) {
+   if (points.length < 2) return 0;
+
+   // Ellipse/Circle circumference: Ramanujan's approximation formula
+   // Points are stored as: [top, right, bottom, left] cardinal positions
+   if (isEllipse && points.length === 4) {
+    const radiusX = Math.abs(points[1].x - points[3].x) / 2;  // right - left
+    const radiusY = Math.abs(points[2].y - points[0].y) / 2;  // bottom - top
+
+    // For circle (radiusX ≈ radiusY), use: P = 2πr
+    if (Math.abs(radiusX - radiusY) < 0.01) {
+     return 2 * Math.PI * radiusX;
+    }
+
+    // For ellipse, use Ramanujan's approximation: π(a+b)(1 + 3h/(10+√(4-3h)))
+    const h = Math.pow((radiusX - radiusY), 2) / Math.pow((radiusX + radiusY), 2);
+    return Math.PI * (radiusX + radiusY) * (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h)));
+   }
+
+   // Polygon perimeter
+   let perimeter = 0;
+   let perArr = [];
+   for (let i = 0; i < points.length - 1; i++) {
+    if (points.length == 4) {
+     if (i == 2) break;
+     perArr.push(distance(points[i], points[i + 1]));
+    } else {
+    perimeter += distance(points[i], points[i + 1]);
+   }
+  }
+  // Only add closing segment if shape is closed
+  if (isClosed) {
+   if (points.length == 4) {
+    perimeter = 2 * (perArr[0] + perArr[1]);
+   } else {
+   perimeter += distance(points[points.length - 1], points[0]);
+  }
+  }
+  return perimeter;
+  }
+
+  function calculateArea(points, isEllipse = false) {
+   if (points.length < 3) return 0;
+
+   // Ellipse/Circle area: A = π × radiusX × radiusY
+   // Points are stored as: [top, right, bottom, left] cardinal positions
+   if (isEllipse && points.length === 4) {
+    const radiusX = Math.abs(points[1].x - points[3].x) / 2;  // right - left
+    const radiusY = Math.abs(points[2].y - points[0].y) / 2;  // bottom - top
+    return Math.PI * radiusX * radiusY;
+   }
+
+   // Shoelace formula for polygons
+   let area = 0;
+   for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    area += points[i].x * points[j].y;
+    area -= points[j].x * points[i].y;
+   }
+   return Math.abs(area / 2);
+  }
+
+  // Mouse event handlers with proper down/move/up pattern
+  canvas.addEventListener('mousedown', (e) => {
+   const pos = getMousePos(e);
+   isMouseDown = true;
+   lastPos = pos;
+
+   if (currentTool === 'select') {
+    // Select mode - check for item under cursor
+    if (shapes.length === 0) return;
+
+    const item = findHoveredItem(pos);
+    if (item) {
+     // Check if Ctrl is pressed for multi-select
+     if (isCtrlPressed) {
+      // Multi-select mode
+      if (!Array.isArray(selectedItem)) {
+       selectedItem = selectedItem ? [selectedItem] : [];
+      }
+      // Check if this item is already selected
+      const alreadySelected = selectedItem.some(sel =>
+      sel.type === item.type && sel.shapeIndex === item.shapeIndex
+      );
+      if (!alreadySelected) {
+       selectedItem.push(item);
+      }
+     } else {
+     selectedItem = item;
+    }
+    dragStart = { ...pos };
+    isDragging = false;
+
+    // Save state before modification
+    preDragState = {
+     shapeIndex: item.shapeIndex,
+     points: JSON.parse(JSON.stringify(shapes[item.shapeIndex].points))
+    };
+
+    updateDisplay();
+    redraw();
+   } else {
+   // Clicked on empty space - start drag select if not holding ctrl
+   if (!isCtrlPressed) {
+    selectedItem = null;
+   }
+   dragSelectStart = { ...pos };
+   dragSelectEnd = null;
+   updateDisplay();
+   redraw();
+  }
+
+  } else if (currentTool === 'line') {
+  // Check if clicking near first point of current temp shape to close it
+  if (tempPoints.length > 2) {
+   if (distance(pos, tempPoints[0]) < 15) {
+    // Close the shape
+    const newShapeIndex = shapes.length;
+    shapes.push({
+     points: [...tempPoints],
+     closed: true,
+     color: colors[currentColorIndex],
+     isEllipse: false
+    });
+    undoHistory.push({
+     type: 'shapeAdded',
+     shapeIndex: newShapeIndex
+    });
+    currentColorIndex = (currentColorIndex + 1) % colors.length;
+    tempPoints = [];
+    updateDisplay();
+    redraw();
+    isMouseDown = false;
+    return;
+   }
+  }
+
+  // Check if clicking near first point of an existing unclosed shape to close it
+  for (let i = shapes.length - 1; i >= 0; i--) {
+   const shape = shapes[i];
+   if (!shape.closed && !shape.isEllipse && shape.points.length > 0) {
+    const firstPoint = shape.points[0];
+    if (distance(pos, firstPoint) < 15) {
+     // Close the existing shape
+     undoHistory.push({
+      type: 'shapeModification',
+      shapeIndex: i,
+      previousPoints: JSON.parse(JSON.stringify(shape.points)),
+      newPoints: JSON.parse(JSON.stringify(shape.points)),
+      wasClosed: false
+     });
+     shape.closed = true;
+     updateDisplay();
+     redraw();
+     isMouseDown = false;
+     return;
+    }
+    // Check if clicking near last point to continue drawing
+    const lastPoint = shape.points[shape.points.length - 1];
+    if (distance(pos, lastPoint) < 15) {
+     // Continue drawing from this shape
+     let finalPos = { ...pos };
+
+     // Apply Shift constraint for horizontal/vertical line drawing
+     if (isShiftPressed && shape.points.length > 0) {
+      const prevPoint = shape.points[shape.points.length - 1];
+      const dx = Math.abs(pos.x - prevPoint.x);
+      const dy = Math.abs(pos.y - prevPoint.y);
+
+      if (dx > dy) {
+       finalPos.y = prevPoint.y; // Snap to horizontal
+      } else {
+      finalPos.x = prevPoint.x; // Snap to vertical
+     }
+    }
+
+    shape.points.push(finalPos);
+    updateDisplay();
+    redraw();
+    isMouseDown = false;
+    return;
+   }
+  }
+  }
+
+  // Add point to current shape
+  let finalPos = { ...pos };
+
+  // Apply Shift constraint for horizontal/vertical line drawing
+  if (isShiftPressed && tempPoints.length > 0) {
+   const lastPoint = tempPoints[tempPoints.length - 1];
+   const dx = Math.abs(pos.x - lastPoint.x);
+   const dy = Math.abs(pos.y - lastPoint.y);
+
+   if (dx > dy) {
+    // Snap to horizontal
+    finalPos.y = lastPoint.y;
+   } else {
+   // Snap to vertical
+   finalPos.x = lastPoint.x;
+  }
+  }
+
+  tempPoints.push(finalPos);
+  redraw();
+  isMouseDown = false; // Line tool uses click, not drag
+
+  } else if (currentTool === 'rectangle') {
+  // Start rectangle
+  rectStart = pos;
+  tempPoints = [pos];
+  } else if (currentTool === 'ellipse') {
+  // Start ellipse
+  ellipseStart = pos;
+  tempPoints = [pos];
+  }
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+   const pos = getMousePos(e);
+   lastPos = pos;
+   coordDisplay.textContent = `X: ${Math.round(pos.x)}, Y: ${Math.round(pos.y)}`;
+
+   // Select tool hover and drag
+   if (currentTool === 'select') {
+    if (shapes.length === 0) return;
+
+    if (isMouseDown && selectedItem && dragStart) {
+     // Dragging selected items
+     isDragging = true;
+     const dx = pos.x - dragStart.x;
+     const dy = pos.y - dragStart.y;
+
+     if (selectedItem.type === 'point') {
+      // Move single point
+      const shape = shapes[selectedItem.shapeIndex];
+
+      if (shape.isEllipse) {
+       // For ellipses, move the point and maintain ellipse structure
+       const centerX = (shape.points[0].x + shape.points[2].x) / 2;
+       const centerY = (shape.points[0].y + shape.points[2].y) / 2;
+       const pointIndex = selectedItem.pointIndex;
+
+       if (isShiftPressed) {
+        // Proportional scaling - adjust opposite point too
+        const oppositeIndex = (pointIndex + 2) % 4;
+        const perpIndex1 = (pointIndex + 1) % 4;
+        const perpIndex2 = (pointIndex + 3) % 4;
+
+        // Calculate new position
+        shape.points[pointIndex].x += dx;
+        shape.points[pointIndex].y += dy;
+
+        // Move opposite point in opposite direction
+        shape.points[oppositeIndex].x -= dx;
+        shape.points[oppositeIndex].y -= dy;
+
+        // Recalculate perpendicular points to maintain proportion
+        const newRadiusX = Math.abs(shape.points[1].x - shape.points[3].x) / 2;
+        const newRadiusY = Math.abs(shape.points[0].y - shape.points[2].y) / 2;
+        const newCenterX = (shape.points[1].x + shape.points[3].x) / 2;
+        const newCenterY = (shape.points[0].y + shape.points[2].y) / 2;
+
+        // Update all points to maintain ellipse shape
+        shape.points[0] = {x: newCenterX, y: newCenterY - newRadiusY};
+        shape.points[1] = {x: newCenterX + newRadiusX, y: newCenterY};
+        shape.points[2] = {x: newCenterX, y: newCenterY + newRadiusY};
+        shape.points[3] = {x: newCenterX - newRadiusX, y: newCenterY};
+       } else {
+       // Free form - just move this point
+       shape.points[pointIndex].x += dx;
+       shape.points[pointIndex].y += dy;
+      }
+     } else {
+     // Regular point movement for polygons/lines
+     let finalDx = dx;
+     let finalDy = dy;
+
+     // Apply Shift constraint for horizontal/vertical only movement
+     if (isShiftPressed) {
+      if (Math.abs(dx) > Math.abs(dy)) {
+       finalDy = 0; // Move only horizontally
+      } else {
+      finalDx = 0; // Move only vertically
+     }
+    }
+
+    shape.points[selectedItem.pointIndex].x += finalDx;
+    shape.points[selectedItem.pointIndex].y += finalDy;
+
+    // Update dragStart based on constrained movement
+    dragStart.x += finalDx;
+    dragStart.y += finalDy;
+   }
+  } else if (selectedItem.type === 'bbox-corner') {
+  // Resize ellipse via bounding box corner
+  const shape = shapes[selectedItem.shapeIndex];
+  const cornerIndex = selectedItem.cornerIndex;
+
+  const oldMinX = Math.min(...shape.points.map(p => p.x));
+  const oldMaxX = Math.max(...shape.points.map(p => p.x));
+  const oldMinY = Math.min(...shape.points.map(p => p.y));
+  const oldMaxY = Math.max(...shape.points.map(p => p.y));
+  const oldCenterX = (oldMinX + oldMaxX) / 2;
+  const oldCenterY = (oldMinY + oldMaxY) / 2;
+  const oldWidth = oldMaxX - oldMinX;
+  const oldHeight = oldMaxY - oldMinY;
+
+  let newMinX = oldMinX, newMaxX = oldMaxX, newMinY = oldMinY, newMaxY = oldMaxY;
+
+  if (isShiftPressed) {
+   // Proportional scaling
+   const aspectRatio = oldWidth / oldHeight;
+
+   if (cornerIndex === 0) { // Top-left
+    const newWidth = oldMaxX - (pos.x);
+    const newHeight = newWidth / aspectRatio;
+    newMinX = oldMaxX - newWidth;
+    newMinY = oldMaxY - newHeight;
+   } else if (cornerIndex === 1) { // Top-right
+   const newWidth = pos.x - oldMinX;
+   const newHeight = newWidth / aspectRatio;
+   newMaxX = oldMinX + newWidth;
+   newMinY = oldMaxY - newHeight;
+  } else if (cornerIndex === 2) { // Bottom-right
+  const newWidth = pos.x - oldMinX;
+  const newHeight = newWidth / aspectRatio;
+  newMaxX = oldMinX + newWidth;
+  newMaxY = oldMinY + newHeight;
+  } else if (cornerIndex === 3) { // Bottom-left
+  const newWidth = oldMaxX - pos.x;
+  const newHeight = newWidth / aspectRatio;
+  newMinX = oldMaxX - newWidth;
+  newMaxY = oldMinY + newHeight;
+  }
+  } else {
+  // Free form scaling
+  if (cornerIndex === 0) { // Top-left
+   newMinX = pos.x;
+   newMinY = pos.y;
+  } else if (cornerIndex === 1) { // Top-right
+  newMaxX = pos.x;
+  newMinY = pos.y;
+  } else if (cornerIndex === 2) { // Bottom-right
+  newMaxX = pos.x;
+  newMaxY = pos.y;
+  } else if (cornerIndex === 3) { // Bottom-left
+  newMinX = pos.x;
+  newMaxY = pos.y;
+  }
+  }
+
+  // Update ellipse points
+  const newCenterX = (newMinX + newMaxX) / 2;
+  const newCenterY = (newMinY + newMaxY) / 2;
+  const newRadiusX = (newMaxX - newMinX) / 2;
+  const newRadiusY = (newMaxY - newMinY) / 2;
+
+  shape.points[0] = {x: newCenterX, y: newCenterY - newRadiusY};
+  shape.points[1] = {x: newCenterX + newRadiusX, y: newCenterY};
+  shape.points[2] = {x: newCenterX, y: newCenterY + newRadiusY};
+  shape.points[3] = {x: newCenterX - newRadiusX, y: newCenterY};
+
+  dragStart = { ...pos };
+  } else if (selectedItem.type === 'bbox-edge') {
+  // Resize ellipse via bounding box edge
+  const shape = shapes[selectedItem.shapeIndex];
+  const edgeIndex = selectedItem.edgeIndex;
+
+  const oldMinX = Math.min(...shape.points.map(p => p.x));
+  const oldMaxX = Math.max(...shape.points.map(p => p.x));
+  const oldMinY = Math.min(...shape.points.map(p => p.y));
+  const oldMaxY = Math.max(...shape.points.map(p => p.y));
+  const oldCenterX = (oldMinX + oldMaxX) / 2;
+  const oldCenterY = (oldMinY + oldMaxY) / 2;
+  const oldWidth = oldMaxX - oldMinX;
+  const oldHeight = oldMaxY - oldMinY;
+
+  let newMinX = oldMinX, newMaxX = oldMaxX, newMinY = oldMinY, newMaxY = oldMaxY;
+
+  if (isShiftPressed) {
+   // Proportional scaling from edge
+   const aspectRatio = oldWidth / oldHeight;
+
+   if (edgeIndex === 0) { // Top edge
+    const newHeight = oldMaxY - pos.y;
+    const newWidth = newHeight * aspectRatio;
+    newMinY = oldMaxY - newHeight;
+    newMinX = oldCenterX - newWidth / 2;
+    newMaxX = oldCenterX + newWidth / 2;
+   } else if (edgeIndex === 1) { // Right edge
+   const newWidth = pos.x - oldMinX;
+   const newHeight = newWidth / aspectRatio;
+   newMaxX = oldMinX + newWidth;
+   newMinY = oldCenterY - newHeight / 2;
+   newMaxY = oldCenterY + newHeight / 2;
+  } else if (edgeIndex === 2) { // Bottom edge
+  const newHeight = pos.y - oldMinY;
+  const newWidth = newHeight * aspectRatio;
+  newMaxY = oldMinY + newHeight;
+  newMinX = oldCenterX - newWidth / 2;
+  newMaxX = oldCenterX + newWidth / 2;
+  } else if (edgeIndex === 3) { // Left edge
+  const newWidth = oldMaxX - pos.x;
+  const newHeight = newWidth / aspectRatio;
+  newMinX = oldMaxX - newWidth;
+  newMinY = oldCenterY - newHeight / 2;
+  newMaxY = oldCenterY + newHeight / 2;
+  }
+  } else {
+  // Free form scaling from edge
+  if (edgeIndex === 0) { // Top
+   newMinY = pos.y;
+  } else if (edgeIndex === 1) { // Right
+  newMaxX = pos.x;
+  } else if (edgeIndex === 2) { // Bottom
+  newMaxY = pos.y;
+  } else if (edgeIndex === 3) { // Left
+  newMinX = pos.x;
+  }
+  }
+
+  // Update ellipse points
+  const newCenterX = (newMinX + newMaxX) / 2;
+  const newCenterY = (newMinY + newMaxY) / 2;
+  const newRadiusX = (newMaxX - newMinX) / 2;
+  const newRadiusY = (newMaxY - newMinY) / 2;
+
+  shape.points[0] = {x: newCenterX, y: newCenterY - newRadiusY};
+  shape.points[1] = {x: newCenterX + newRadiusX, y: newCenterY};
+  shape.points[2] = {x: newCenterX, y: newCenterY + newRadiusY};
+  shape.points[3] = {x: newCenterX - newRadiusX, y: newCenterY};
+
+  dragStart = { ...pos };
+  } else if (selectedItem.type === 'edge') {
+  // Move edge (both endpoints together)
+  const shape = shapes[selectedItem.shapeIndex];
+  const edgeIndex = selectedItem.edgeIndex;
+  const nextIndex = (edgeIndex + 1) % shape.points.length;
+
+  let finalDx = dx;
+  let finalDy = dy;
+
+  // Apply Shift constraint for horizontal/vertical only movement
+  if (isShiftPressed) {
+   if (Math.abs(dx) > Math.abs(dy)) {
+    finalDy = 0; // Move only horizontally
+   } else {
+   finalDx = 0; // Move only vertically
+  }
+  }
+
+  shape.points[edgeIndex].x += finalDx;
+  shape.points[edgeIndex].y += finalDy;
+  shape.points[nextIndex].x += finalDx;
+  shape.points[nextIndex].y += finalDy;
+
+  // Update dragStart based on constrained movement
+  dragStart.x += finalDx;
+  dragStart.y += finalDy;
+  } else if (selectedItem.type === 'shape') {
+  // Move entire shape (only when interior is selected)
+  const shape = shapes[selectedItem.shapeIndex];
+
+  let finalDx = dx;
+  let finalDy = dy;
+
+  // Apply Shift constraint for horizontal/vertical only movement
+  if (isShiftPressed) {
+   if (Math.abs(dx) > Math.abs(dy)) {
+    finalDy = 0; // Move only horizontally
+   } else {
+   finalDx = 0; // Move only vertically
+  }
+  }
+
+  shape.points.forEach(point => {
+   point.x += finalDx;
+   point.y += finalDy;
+  });
+
+  // Update dragStart based on constrained movement
+  dragStart.x += finalDx;
+  dragStart.y += finalDy;
+  }
+
+  dragStart = { ...pos };
+  updateDisplay();
+  redraw();
+  } else if (isMouseDown && dragSelectStart) {
+  // Drag selecting
+  dragSelectEnd = { ...pos };
+  redraw();
+  } else if (!isMouseDown) {
+  // Update hover state
+  const item = findHoveredItem(pos);
+  if (JSON.stringify(item) !== JSON.stringify(hoveredItem)) {
+   hoveredItem = item;
+
+   // Set cursor based on item type
+   if (item) {
+    if (item.type === 'bbox-corner') {
+     const corners = ['nwse-resize', 'nesw-resize', 'nwse-resize', 'nesw-resize'];
+     canvas.style.cursor = corners[item.cornerIndex];
+    } else if (item.type === 'bbox-edge') {
+    const edges = ['ns-resize', 'ew-resize', 'ns-resize', 'ew-resize'];
+    canvas.style.cursor = edges[item.edgeIndex];
+   } else {
+   canvas.style.cursor = 'pointer';
+  }
+  } else {
+  canvas.style.cursor = 'default';
+  }
+
+  redraw();
+  }
+  }
+  return;
+  }
+
+  // Update preview for rectangle tool
+  if (currentTool === 'rectangle' && isMouseDown && rectStart) {
+   const x1 = rectStart.x;
+   const y1 = rectStart.y;
+   const x2 = pos.x;
+   const y2 = pos.y;
+
+   tempPoints = [
+   {x: x1, y: y1},
+   {x: x2, y: y1},
+   {x: x2, y: y2},
+   {x: x1, y: y2}
+   ];
+   redraw();
+  }
+
+  // Update preview for ellipse tool
+  if (currentTool === 'ellipse' && isMouseDown && ellipseStart) {
+   let x1 = ellipseStart.x;
+   let y1 = ellipseStart.y;
+   let x2 = pos.x;
+   let y2 = pos.y;
+
+   // If Shift is pressed, make it a circle
+   if (isShiftPressed) {
+    const size = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+    x2 = x1 + (x2 > x1 ? size : -size);
+    y2 = y1 + (y2 > y1 ? size : -size);
+   }
+
+   // Create 4 points: top, right, bottom, left (cardinal positions)
+   const centerX = (x1 + x2) / 2;
+   const centerY = (y1 + y2) / 2;
+   const radiusX = Math.abs(x2 - x1) / 2;
+   const radiusY = Math.abs(y2 - y1) / 2;
+
+   tempPoints = [
+   {x: centerX, y: centerY - radiusY},  // Top
+   {x: centerX + radiusX, y: centerY},  // Right
+   {x: centerX, y: centerY + radiusY},  // Bottom
+   {x: centerX - radiusX, y: centerY}   // Left
+   ];
+   redraw();
+  }
+  });
+
+  canvas.addEventListener('mouseup', (e) => {
+   if (!isMouseDown) return;
+
+   const pos = lastPos || getMousePos(e); // Use last position if outside canvas
+
+   if (currentTool === 'select') {
+    if (isDragging && preDragState) {
+     // Finished dragging - save to undo history
+     undoHistory.push({
+      type: 'shapeModification',
+      shapeIndex: preDragState.shapeIndex,
+      previousPoints: preDragState.points,
+      newPoints: JSON.parse(JSON.stringify(shapes[preDragState.shapeIndex].points))
+     });
+     preDragState = null;
+     isDragging = false;
+    } else if (dragSelectStart && dragSelectEnd) {
+    // Finished drag selection - select all shapes fully within the rectangle
+    const minX = Math.min(dragSelectStart.x, dragSelectEnd.x);
+    const maxX = Math.max(dragSelectStart.x, dragSelectEnd.x);
+    const minY = Math.min(dragSelectStart.y, dragSelectEnd.y);
+    const maxY = Math.max(dragSelectStart.y, dragSelectEnd.y);
+
+    const selectedShapes = [];
+    shapes.forEach((shape, index) => {
+     // Check if all points of the shape are within the selection rectangle
+     const allPointsInside = shape.points.every(point =>
+     point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY
+     );
+
+     if (allPointsInside) {
+      selectedShapes.push({ type: 'shape', shapeIndex: index });
+     }
+    });
+
+    if (selectedShapes.length > 0) {
+     selectedItem = selectedShapes.length === 1 ? selectedShapes[0] : selectedShapes;
+    }
+
+    updateDisplay();
+    redraw();
+   }
+   dragStart = null;
+   dragSelectStart = null;
+   dragSelectEnd = null;
+   isMouseDown = false;
+   return;
+  }
+
+  if (currentTool === 'rectangle' && rectStart) {
+   // Finalize rectangle
+   const x1 = rectStart.x;
+   const y1 = rectStart.y;
+   const x2 = pos.x;
+   const y2 = pos.y;
+
+   const newShapeIndex = shapes.length;
+   shapes.push({
+    points: [
+    {x: x1, y: y1},
+    {x: x2, y: y1},
+    {x: x2, y: y2},
+    {x: x1, y: y2}
+    ],
+    closed: true,
+    color: colors[currentColorIndex],
+    name: `Rectangle ${shapes.length + 1}`
+   });
+   undoHistory.push({
+    type: 'shapeAdded',
+    shapeIndex: newShapeIndex
+   });
+
+   currentColorIndex = (currentColorIndex + 1) % colors.length;
+   rectStart = null;
+   tempPoints = [];
+   updateDisplay();
+   redraw();
+  }
+
+  if (currentTool === 'ellipse' && ellipseStart && tempPoints.length === 4) {
+   // Finalize ellipse - use the tempPoints from preview
+   const centerX = (tempPoints[1].x + tempPoints[3].x) / 2;
+   const centerY = (tempPoints[0].y + tempPoints[2].y) / 2;
+   const radiusX = Math.abs(tempPoints[1].x - tempPoints[3].x) / 2;
+   const radiusY = Math.abs(tempPoints[2].y - tempPoints[0].y) / 2;
+
+   const shapeName = (Math.abs(radiusX - radiusY) < 2) ? 'Circle' : 'Ellipse';
+
+   const newShapeIndex = shapes.length;
+   shapes.push({
+    points: [...tempPoints],  // Use the preview points directly
+    closed: true,
+    isEllipse: true,
+    color: colors[currentColorIndex],
+    name: `${shapeName} ${shapes.length + 1}`
+   });
+   undoHistory.push({
+    type: 'shapeAdded',
+    shapeIndex: newShapeIndex
+   });
+
+   currentColorIndex = (currentColorIndex + 1) % colors.length;
+   ellipseStart = null;
+   tempPoints = [];
+
+   // Auto-select the new ellipse
+   selectedItem = { type: 'shape', shapeIndex: shapes.length - 1 };
+
+   updateDisplay();
+   redraw();
+  }
+
+  isMouseDown = false;
+  });
+
+  // Handle mouse leaving canvas
+  canvas.addEventListener('mouseleave', (e) => {
+   // Store last position when leaving canvas
+   if (lastPos) {
+    coordDisplay.textContent = `X: ${Math.round(lastPos.x)}, Y: ${Math.round(lastPos.y)} (outside)`;
+   }
+  });
+
+  // Global mouseup to handle releasing outside canvas
+  document.addEventListener('mouseup', (e) => {
+   if (isMouseDown) {
+    canvas.dispatchEvent(new MouseEvent('mouseup', e));
+   }
+  });
+
+  function undoLastPoint() {
+   // First check if there's an undo history item
+   if (undoHistory.length > 0) {
+    const lastAction = undoHistory.pop();
+
+    if (lastAction.type === 'shapeModification') {
+     // Restore shape to previous state
+     if (shapes[lastAction.shapeIndex]) {
+      shapes[lastAction.shapeIndex].points = JSON.parse(JSON.stringify(lastAction.previousPoints));
+     }
+     updateDisplay();
+     redraw();
+    } else if (lastAction.type === 'shapeAdded') {
+    // Remove the shape that was added
+    shapes.splice(lastAction.shapeIndex, 1);
+    updateDisplay();
+    redraw();
+   }
+  } else if (tempPoints.length > 0) {
+  // Remove last point from current temp shape
+  tempPoints.pop();
+  redraw();
+  } else if (shapes.length > 0) {
+  // Remove the last shape added (fallback)
+  shapes.pop();
+  updateDisplay();
+  redraw();
+  }
+  }
+
+  function clearCanvas() {
+   if (confirm('Are you sure you want to clear all shapes?')) {
+    shapes = [];
+    tempPoints = [];
+    rectStart = null;
+    currentColorIndex = 0;
+    updateDisplay();
+    redraw();
+   }
+  }
+
+  function deleteShape(index) {
+   shapes.splice(index, 1);
+   updateDisplay();
+   redraw();
+  }
+
+  function getShapeDimensions(shape) {
+   if (!shape.points || shape.points.length === 0) return { width: 0, height: 0 };
+
+   const xCoords = shape.points.map(p => p.x);
+   const yCoords = shape.points.map(p => p.y);
+   const width = Math.max(...xCoords) - Math.min(...xCoords);
+   const height = Math.max(...yCoords) - Math.min(...yCoords);
+
+   return { width, height };
+  }
+
+  function getLineLength(shape) {
+   if (!shape.points || shape.points.length < 2) return 0;
+
+   let length = 0;
+   for (let i = 0; i < shape.points.length - 1; i++) {
+    length += distance(shape.points[i], shape.points[i + 1]);
+   }
+   return length;
+  }
+
+  function updateDisplay() {
+   const scale = parseFloat(document.getElementById('scaleInput').value) || 10;
+   const precision = parseInt(document.getElementById('precisionInput').value) || 2;
+   const unit = document.getElementById('unitSelect').value;
+   const gridSize = parseInt(document.getElementById('gridSizeInput').value) || 20;
+
+   let totalPerimeter = 0;
+   let totalArea = 0;
+
+   shapes.forEach(shape => {
+    if (shape.closed) {
+     const perimeter = calculatePerimeter(shape.points, shape.isEllipse, true);
+     const area = calculateArea(shape.points, shape.isEllipse);
+     shape.perimeter = perimeter / scale;
+     shape.area = area / (scale * scale);
+     totalPerimeter += shape.perimeter;
+     totalArea += shape.area;
+    }
+   });
+
+   document.getElementById('perimeterDisplay').textContent =
+   totalPerimeter.toFixed(precision) + ' ' + unit;
+   document.getElementById('areaDisplay').textContent =
+   totalArea.toFixed(precision) + ' ' + unit + '²';
+   document.getElementById('shapeCount').textContent = shapes.length;
+   document.getElementById('scaleDisplay').textContent =
+   `1 pixel = ${(1/scale).toFixed(3)} ${unit}`;
+
+   // Update grid units display
+   const gridUnits = (gridSize / scale).toFixed(precision);
+   document.getElementById('gridUnitsDisplay').textContent =
+   `1 grid square = ${gridUnits} ${unit}`;
+
+   updateShapesList();
+  }
+
+  function updateShapesList() {
+   const container = document.getElementById('shapesList');
+   const precision = parseInt(document.getElementById('precisionInput').value) || 2;
+   const unit = document.getElementById('unitSelect').value;
+
+   if (shapes.length === 0) {
+    container.innerHTML = '<div style="color: #6C757D; font-size: 14px; text-align: center; padding: 20px;">No shapes yet. Start drawing!</div>';
+    return;
+   }
+
+   // Filter shapes if something is selected
+   let displayShapes = shapes;
+   if (selectedItem && currentTool === 'select') {
+    displayShapes = shapes.filter((shape, index) => index === selectedItem.shapeIndex);
+    if (displayShapes.length === 0) {
+     container.innerHTML = '<div style="color: #6C757D; font-size: 14px; text-align: center; padding: 20px;">Selected item</div>';
+     return;
+    }
+   }
+
+   container.innerHTML = displayShapes.map((shape, displayIndex) => {
+    // Find the actual index in the shapes array
+    const actualIndex = shapes.indexOf(shape);
+    const shapeName = shape.isEllipse ? 'Ellipse' : (shape.closed ? 'Polygon' : 'Line');
+    const shapeNumber = actualIndex + 1;
+    const scale = parseFloat(document.getElementById('scaleInput').value) || 10;
+
+    let measurementsHTML = '';
+
+    if (shape.closed) {
+     // For closed shapes: show width, height, perimeter, and area
+     const dimensions = getShapeDimensions(shape);
+     const perimeter = calculatePerimeter(shape.points, shape.isEllipse, true);
+     const area = calculateArea(shape.points, shape.isEllipse);
+
+     const widthScaled = (dimensions.width / scale).toFixed(precision);
+     const heightScaled = (dimensions.height / scale).toFixed(precision);
+     const perimeterText = `${(perimeter / scale).toFixed(precision)} ${unit}`;
+     const areaText = `${(area / (scale * scale)).toFixed(precision)} ${unit}²`;
+     const measureTerm = shape.isEllipse == true ? "Circumference" : "Perimeter";
+
+     measurementsHTML = `
+     <div style="font-size: 11px; color: #495057; margin-bottom: 2px;">Width: ${widthScaled} ${unit} | Height: ${heightScaled} ${unit}</div>
+     <div class="shape-measurements">${measureTerm}: ${perimeterText} | Area: ${areaText}</div>
+     `;
+    } else {
+    // For lines: show length only
+    const length = getLineLength(shape);
+    const lengthScaled = (length / scale).toFixed(precision);
+    measurementsHTML = `
+    <div class="shape-measurements">Length: ${lengthScaled} ${unit}</div>
+    `;
+   }
+
+   return `
+   <div class="shape-item">
+   <div class="shape-info">
+   <div class="shape-name" style="color: ${shape.color}">${shapeName} ${shapeNumber}</div>
+   ${measurementsHTML}
+   </div>
+   <div class="shape-actions">
+   <button class="icon-btn danger" onclick="deleteShape(${actualIndex})">🗑️</button>
+   </div>
+   </div>
+   `;
+  }).join('');
+  }
+
+  function exportData() {
+   const scale = parseFloat(document.getElementById('scaleInput').value) || 10;
+   const unit = document.getElementById('unitSelect').value;
+
+   const data = {
+    scale: scale,
+    unit: unit,
+    shapes: shapes.map(shape => ({
+     name: shape.name,
+     points: shape.points,
+     perimeter: shape.perimeter,
+     area: shape.area,
+     closed: shape.closed
+    }))
+   };
+
+   const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+   const url = URL.createObjectURL(blob);
+   const a = document.createElement('a');
+   a.href = url;
+   a.download = 'area-perimeter-data.json';
+   a.click();
+   URL.revokeObjectURL(url);
+  }
+
+  function saveAsImage() {
+   const link = document.createElement('a');
+   link.download = 'drawing.png';
+   link.href = canvas.toDataURL();
+   link.click();
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+   // Tool selection shortcuts
+   if (e.key === 'v' || e.key === 'V') {
+    setTool('select');
+   }
+   if (e.key === 'l' || e.key === 'L') {
+    setTool('line');
+   }
+   if (e.key === 'r' || e.key === 'R') {
+    setTool('rectangle');
+   }
+   if (e.key === 'e' || e.key === 'E') {
+    setTool('ellipse');
+   }
+
+   // Delete selected items
+   if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedItem && currentTool === 'select') {
+     e.preventDefault();
+     if (Array.isArray(selectedItem)) {
+      // Delete multiple selected shapes
+      // Sort by index descending to avoid index shifting issues
+      const indices = selectedItem.map(item => item.shapeIndex).sort((a, b) => b - a);
+      indices.forEach(index => {
+       shapes.splice(index, 1);
+      });
+      selectedItem = null;
+     } else if (selectedItem.type === 'shape') {
+     // Delete single selected shape
+     shapes.splice(selectedItem.shapeIndex, 1);
+     selectedItem = null;
+    }
+    updateDisplay();
+    redraw();
+   }
+  }
+
+  // Undo with Ctrl+Z
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+   e.preventDefault();
+   undoLastPoint();
+  }
+
+  // Track Shift key for constrained movement and drawing
+  if (e.key === 'Shift') {
+   isShiftPressed = true;
+   if (currentTool === 'ellipse') {
+    document.getElementById('currentToolDisplay').textContent = 'Ellipse Tool (Circle Mode)';
+   } else if (currentTool === 'line') {
+   document.getElementById('currentToolDisplay').textContent = 'Line Tool (H/V Constrained)';
+  } else if (currentTool === 'select') {
+  document.getElementById('currentToolDisplay').textContent = 'Select Tool (Constrained Move)';
+  }
+  }
+
+  // Track Ctrl key for multiple selection
+  if (e.key === 'Control' || e.key === 'Meta') {
+   isCtrlPressed = true;
+   if (currentTool === 'select') {
+    document.getElementById('currentToolDisplay').textContent = 'Select Tool (Multi-Select)';
+   }
+  }
+  });
+
+  document.addEventListener('keyup', (e) => {
+   if (e.key === 'Shift') {
+    isShiftPressed = false;
+    if (currentTool === 'ellipse') {
+     document.getElementById('currentToolDisplay').textContent = 'Ellipse Tool (Shift for Circle)';
+    } else if (currentTool === 'line') {
+    document.getElementById('currentToolDisplay').textContent = 'Line Tool';
+   } else if (currentTool === 'select') {
+   document.getElementById('currentToolDisplay').textContent = 'Select Tool (V)';
+  }
+  }
+
+  // Track Ctrl key release
+  if (e.key === 'Control' || e.key === 'Meta') {
+   isCtrlPressed = false;
+   if (currentTool === 'select') {
+    document.getElementById('currentToolDisplay').textContent = 'Select Tool (V)';
+   }
+  }
+  });
+
+  // Grid toggle event
+  if (gridToggle) {
+   gridToggle.addEventListener('change', () => {
+    redraw();
+   });
+  }
+
+  // Initialize display
+  updateDisplay();
+  </script>
+
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>

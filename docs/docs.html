@@ -1,9 +1,126 @@
-<html lang="en">
+<html lang="en"><!-- InstanceBegin template="../Templates/page.html" codeOutsideHTMLIsLocked="false" -->
 <head>
 <link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
 <link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
-<!-- TemplateBeginEditable name="head" -->
-<!-- TemplateEndEditable -->
+<!-- InstanceBeginEditable name="head" -->
+<link rel="stylesheet" 
+ href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.8.1/github-markdown.min.css"
+ crossorigin="anonymous" referrerpolicy="no-referrer"/>
+ <title>Documentation</title>
+<meta name="color-scheme" content="light">
+<style>
+ /* Force light mode for all components */
+ :root {
+ color-scheme: light;
+ }
+
+ /* Override GitHub Markdown CSS to always use light mode */
+ @media (prefers-color-scheme: dark) {
+ .markdown-body,
+ .markdown-body * {
+  color-scheme: light !important;
+ }
+ }
+
+ /* Force light mode styles for markdown content */
+ .markdown-body {
+ background-color: #ffffff !important;
+ color: #1f2328 !important;
+ color-scheme: light !important;
+ }
+
+ /* Page submenu styling to match site design */
+ .page-nav {
+ background: linear-gradient(135deg, #E6F2FF 0%, #F5F7FA 100%);
+ border-bottom: 2px solid #E1E4E8;
+ box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+ position: sticky;
+ top: 72px;
+ z-index: 100;
+ margin-bottom: 32px;
+ }
+
+ .page-nav .nav-container {
+ max-width: 1400px;
+ margin: 0 auto;
+ padding: 0 24px;
+ }
+
+ .page-menu {
+ display: flex;
+ list-style: none;
+ gap: 8px;
+ margin: 0;
+ padding: 12px 0;
+ flex-wrap: wrap;
+ }
+
+ .page-link {
+ display: inline-block;
+ padding: 8px 16px;
+ color: #6C757D;
+ text-decoration: none;
+ font-size: 14px;
+ font-weight: 500;
+ border-radius: 8px;
+ transition: all 0.2s ease;
+ border: 1px solid transparent;
+ }
+
+ .page-link:hover {
+ color: #0066CC;
+ background: rgba(0, 102, 204, 0.08);
+ border-color: rgba(0, 102, 204, 0.2);
+ }
+
+ .page-link.active {
+ color: #0066CC;
+ background: #E6F2FF;
+ font-weight: 600;
+ border-color: #0066CC;
+ box-shadow: 0 2px 4px rgba(0, 102, 204, 0.1);
+ }
+
+ /* Content container styling */
+ #content {
+ max-width: 1200px;
+ margin: 0 auto;
+ padding: 32px 24px;
+ background: #ffffff;
+ border-radius: 12px;
+ box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+ }
+
+ /* Ensure body has proper background */
+ body {
+ background: linear-gradient(135deg, #E6F2FF 0%, #F5F7FA 100%) !important;
+ }
+
+ /* Additional markdown overrides for tables, code blocks, etc. */
+ .markdown-body table tr {
+ background-color: #ffffff !important;
+ border-top: 1px solid #d1d9e0 !important;
+ }
+
+ .markdown-body table tr:nth-child(2n) {
+ background-color: #f6f8fa !important;
+ }
+
+ .markdown-body code {
+ background-color: rgba(175, 184, 193, 0.2) !important;
+ color: #1f2328 !important;
+ }
+
+ .markdown-body pre {
+ background-color: #f6f8fa !important;
+ }
+
+ .markdown-body pre code {
+ background-color: transparent !important;
+ color: #1f2328 !important;
+ }
+</style>
+<!-- InstanceEndEditable -->
 </head>
 
 <body>
@@ -63,8 +180,72 @@
   </div>
  </nav>
 
-<!-- TemplateBeginEditable name="page" -->
-<!-- TemplateEndEditable -->
+<!-- InstanceBeginEditable name="page" -->
+<nav class="page-nav">
+<div class="nav-container">
+ <ul class="page-menu" id="docs-menu">
+ <li><a href="#" class="page-link active" data-file="../README.md">Home</a></li>
+ <li><a href="#" class="page-link" data-file="DESIGN_SYSTEM.md">Design System</a></li>
+ <li><a href="#" class="page-link" data-file="QUICK_START.md">Quick Start</a></li>
+ <li><a href="#" class="page-link" data-file="STRUCTURE.md">Structure</a></li>
+ </ul>
+</div>
+</nav>
+
+<textarea id="markdown-source" style="display: none;"></textarea>
+<div id="content" class="markdown-body"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+
+<script>
+// Load markdown file and render it
+function loadMarkdown(file) {
+ const baseUrl = window.location.href.indexOf('localhost') > -1 
+ ? '/'
+ : 'https://raw.githubusercontent.com/isocialPractice/interactive-html/main/';
+ 
+ const fileUrl = file.startsWith('../') ? baseUrl + file.substring(3) : baseUrl + 'docs/' + file;
+ 
+ const xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+ if (this.readyState == 4 && this.status == 200) {
+ const data = this.responseText;
+ const markdownSource = document.getElementById('markdown-source');
+ markdownSource.value = data;
+ 
+ // Parse and render markdown
+ document.getElementById('content').innerHTML = marked.parse(data);
+ }
+ };
+ xhttp.open('GET', fileUrl, true);
+ xhttp.send();
+}
+
+// Set up menu click handlers
+document.addEventListener('DOMContentLoaded', function() {
+ const menuLinks = document.querySelectorAll('.page-link');
+ 
+ menuLinks.forEach(link => {
+ link.addEventListener('click', function(e) {
+ e.preventDefault();
+ 
+ // Remove active class from all links
+ menuLinks.forEach(l => l.classList.remove('active'));
+ 
+ // Add active class to clicked link
+ this.classList.add('active');
+ 
+ // Load the markdown file
+ const file = this.getAttribute('data-file');
+ loadMarkdown(file);
+ });
+ });
+ 
+ // Load default file (README.md)
+ loadMarkdown('../README.md');
+});
+</script>
+<!-- InstanceEndEditable -->
 <script>
   // embeddedScript
   // Debugging tool to adjust root link per localhost test, and github pages.
@@ -87,3 +268,4 @@
   }
 </script>
 </body>
+<!-- InstanceEnd --></html>

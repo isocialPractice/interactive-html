@@ -1,0 +1,516 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+  <title>Electronics Tools | Component Calculators & Circuit Simulators</title>
+  <meta name="description" content="Comprehensive electronics tools for resistors, LEDs, voltage dividers, and component analysis. Free interactive calculators and simulators.">
+  <style>
+   * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+
+  body {
+   font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
+   background: linear-gradient(135deg, white 0%, #E6F7FF 25%, #F5F7FA 125%);
+   color: #1A1A1A;
+   line-height: 1.6;
+   min-height: 100vh;
+  }
+
+  header {
+   background: linear-gradient(180deg, #e6f1fc 0%, #004080 100%);
+   color: white;
+   box-shadow: 0 4px 16px rgba(0, 102, 204, 0.3);
+   padding: 48px 0;
+   margin-bottom: 48px;
+  }
+
+  .header-content {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px;
+   text-align: center;
+  }
+
+  h1 {
+   font-size: 48px;
+   font-weight: 700;
+   margin-bottom: 16px;
+   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .tagline {
+   font-size: 20px;
+   font-weight: 500;
+   opacity: 0.95;
+  }
+
+  .intro-section {
+   max-width: 1200px;
+   margin: 0 auto 48px;
+   padding: 0 24px;
+  }
+
+  .intro-card {
+   background: white;
+   border-radius: 16px;
+   padding: 32px;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+   border-left: 4px solid #0066CC;
+  }
+
+   .intro-card h2 {
+   color: #004080;
+   font-size: 24px;
+   margin-bottom: 16px;
+  }
+
+   .intro-card p {
+   color: #6C757D;
+   line-height: 1.8;
+   margin-bottom: 12px;
+  }
+
+  .container {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px 48px;
+  }
+
+  .category {
+   margin-bottom: 56px;
+  }
+
+  .category-header {
+   display: flex;
+   align-items: center;
+   margin-bottom: 28px;
+   padding-bottom: 16px;
+   border-bottom: 3px solid #0066CC;
+  }
+
+  .category-icon {
+   font-size: 32px;
+   margin-right: 16px;
+  }
+
+  .category-title {
+   color: #004080;
+   font-size: 28px;
+   font-weight: 700;
+  }
+
+  .tools-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+   gap: 24px;
+  }
+
+  .tool-card {
+   background: #FFFFFF;
+   border-radius: 16px;
+   padding: 28px;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+   border: 2px solid #E6F2FF;
+   transition: all 0.3s;
+   text-decoration: none;
+   color: inherit;
+   display: block;
+  }
+
+  .tool-card:hover {
+   transform: translateY(-6px);
+   box-shadow: 0 12px 32px rgba(0, 102, 204, 0.25);
+   border-color: #0066CC;
+  }
+
+  .tool-icon {
+   width: 64px;
+   height: 64px;
+   background: linear-gradient(135deg, #0066CC 0%, #004080 100%);
+   border-radius: 14px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 32px;
+   margin-bottom: 20px;
+   color: #FFFFFF;
+   box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+  }
+
+  .tool-title {
+   color: #1A1A1A;
+   font-size: 20px;
+   font-weight: 700;
+   margin-bottom: 12px;
+  }
+
+  .tool-description {
+   color: #6C757D;
+   font-size: 15px;
+   line-height: 1.6;
+   margin-bottom: 16px;
+  }
+
+  .tool-features {
+   list-style: none;
+   margin: 16px 0;
+   padding-left: 0;
+  }
+
+   .tool-features li {
+   color: #495057;
+   font-size: 14px;
+   padding: 6px 0;
+   padding-left: 24px;
+   position: relative;
+  }
+
+   .tool-features li:before {
+   content: "✓";
+   position: absolute;
+   left: 0;
+   color: #0066CC;
+   font-weight: bold;
+  }
+
+  .tool-badge {
+   display: inline-block;
+   background: linear-gradient(135deg, #E6F2FF 0%, #CCE5FF 100%);
+   color: #004080;
+   padding: 6px 14px;
+   border-radius: 8px;
+   font-size: 12px;
+   font-weight: 700;
+   margin-top: 12px;
+  }
+
+  footer {
+   background: #FFFFFF;
+   border-top: 1px solid #E1E4E8;
+   padding: 32px 0;
+   margin-top: 48px;
+   text-align: center;
+  }
+
+  .footer-content {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px;
+   color: #6C757D;
+   font-size: 14px;
+  }
+
+  .footer-links {
+   margin-top: 16px;
+  }
+
+   .footer-links a {
+   color: #0066CC;
+   text-decoration: none;
+   margin: 0 12px;
+   font-weight: 500;
+  }
+
+   .footer-links a:hover {
+   text-decoration: underline;
+  }
+
+   @media (max-width: 768px) {
+  h1 {
+   font-size: 36px;
+  }
+
+  .tools-grid {
+   grid-template-columns: 1fr;
+  }
+
+  .category-title {
+   font-size: 24px;
+  }
+  }
+  </style>
+  
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+    <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+    </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+  <header style="margin-top: -72px; padding-top: 96px;">
+   <div class="header-content">
+    <h1>🔌 Electronics Tools</h1>
+    <p class="tagline">Professional calculators and simulators for circuit design and component analysis</p>
+   </div>
+  </header>
+
+  <div class="intro-section">
+   <div class="intro-card">
+    <h2>Essential Electronics Tools</h2>
+    <p>Whether you're a student, hobbyist, or professional engineer, these interactive tools help you design circuits, calculate component values, and understand fundamental electronics principles. From basic Ohm's Law to complex component decoders, everything you need is here.</p>
+    <p>All tools feature real-time calculations, visual feedback, and educational explanations to help you learn while you design.</p>
+   </div>
+  </div>
+
+  <div class="container">
+   <!-- Resistor Tools -->
+   <section class="category">
+    <div class="category-header">
+     <span class="category-icon">🔌</span>
+     <h2 class="category-title">Resistor Tools</h2>
+    </div>
+    <div class="tools-grid">
+     <a href="electronics-resistor-calculator.html" class="tool-card">
+      <div class="tool-icon">🎨</div>
+      <h3 class="tool-title">Resistor Color Code Calculator</h3>
+      <p class="tool-description">Decode resistor color bands instantly. Supports 4-band and 5-band resistors with visual representation and tolerance information.</p>
+      <ul class="tool-features">
+       <li>4-band and 5-band support</li>
+       <li>Visual color band display</li>
+       <li>Tolerance calculation</li>
+       <li>Reverse calculator (value to colors)</li>
+       <li>Standard E-series values</li>
+      </ul>
+      <span class="tool-badge">🌟 Essential</span>
+     </a>
+
+     <a href="electronics-parallel-resistor-calculator.html" class="tool-card">
+      <div class="tool-icon">➗</div>
+      <h3 class="tool-title">Parallel Resistor Calculator</h3>
+      <p class="tool-description">Calculate equivalent resistance for multiple resistors in parallel. Support for 2 to 10 resistors with detailed calculation steps.</p>
+      <ul class="tool-features">
+       <li>Up to 10 resistors in parallel</li>
+       <li>Real-time equivalent resistance</li>
+       <li>Current distribution calculation</li>
+       <li>Power dissipation per resistor</li>
+       <li>Visual circuit diagram</li>
+      </ul>
+      <span class="tool-badge">Calculator</span>
+     </a>
+
+     <a href="electronics-fusible-resistor-calculator.html" class="tool-card">
+      <div class="tool-icon">🔥</div>
+      <h3 class="tool-title">Fusible Resistor Calculator</h3>
+      <p class="tool-description">Design safe circuits with fusible resistors. Calculate fusing current, safe operating limits, and failure characteristics.</p>
+      <ul class="tool-features">
+       <li>Fusing current calculation</li>
+       <li>Safe operating area analysis</li>
+       <li>Thermal characteristics</li>
+       <li>Power rating verification</li>
+       <li>Safety margin indicators</li>
+      </ul>
+      <span class="tool-badge">Safety</span>
+     </a>
+    </div>
+   </section>
+
+   <!-- LED & Power Tools -->
+   <section class="category">
+    <div class="category-header">
+     <span class="category-icon">💡</span>
+     <h2 class="category-title">LED & Power Tools</h2>
+    </div>
+    <div class="tools-grid">
+     <a href="electronics-ohms-law-calculator.html" class="tool-card">
+      <div class="tool-icon">⚡</div>
+      <h3 class="tool-title">Ohm's Law Calculator</h3>
+      <p class="tool-description">The fundamental electronics calculator. Calculate voltage, current, resistance, or power with interactive formula visualization.</p>
+      <ul class="tool-features">
+       <li>Calculate any parameter from others</li>
+       <li>Interactive formula display</li>
+       <li>Unit conversion helpers</li>
+       <li>Power dissipation warnings</li>
+       <li>Educational mode with explanations</li>
+      </ul>
+      <span class="tool-badge">🌟 Fundamental</span>
+     </a>
+
+     <a href="electronics-led-current-calculator.html" class="tool-card">
+      <div class="tool-icon">💡</div>
+      <h3 class="tool-title">LED Current Limiting Resistor</h3>
+      <p class="tool-description">Design perfect LED circuits every time. Calculate the ideal current limiting resistor with voltage drop and power dissipation.</p>
+      <ul class="tool-features">
+       <li>Automatic resistor calculation</li>
+       <li>Standard resistor value suggestions</li>
+       <li>Power dissipation display</li>
+       <li>Multiple LED support (series/parallel)</li>
+       <li>Common LED presets</li>
+      </ul>
+      <span class="tool-badge">Popular</span>
+     </a>
+
+     <a href="electronics-voltage-divider-calculator.html" class="tool-card">
+      <div class="tool-icon">📉</div>
+      <h3 class="tool-title">Voltage Divider Calculator</h3>
+      <p class="tool-description">Design voltage divider circuits with precision. Calculate resistor values or output voltage with load consideration.</p>
+      <ul class="tool-features">
+       <li>Calculate R1, R2, or Vout</li>
+       <li>Load resistance effects</li>
+       <li>Current and power analysis</li>
+       <li>Visual circuit representation</li>
+       <li>Standard value recommendations</li>
+      </ul>
+      <span class="tool-badge">Design</span>
+     </a>
+
+     <a href="electronics-varistor-simulator.html" class="tool-card">
+      <div class="tool-icon">🛡️</div>
+      <h3 class="tool-title">Varistor (MOV) Simulator</h3>
+      <p class="tool-description">Interactive metal oxide varistor simulator for surge protection circuit design. Visualize V-I characteristics and clamping behavior.</p>
+      <ul class="tool-features">
+       <li>Non-linear V-I characteristic display</li>
+       <li>Surge waveform simulation</li>
+       <li>Clamping voltage visualization</li>
+       <li>Energy absorption calculation</li>
+       <li>Component selection guide</li>
+      </ul>
+      <span class="tool-badge">Protection</span>
+     </a>
+    </div>
+   </section>
+
+   <!-- Component Tools -->
+   <section class="category">
+    <div class="category-header">
+     <span class="category-icon">🔧</span>
+     <h2 class="category-title">Component Tools</h2>
+    </div>
+    <div class="tools-grid">
+     <a href="electronics-potentiometer-simulator.html" class="tool-card">
+      <div class="tool-icon">🎛️</div>
+      <h3 class="tool-title">Potentiometer Simulator</h3>
+      <p class="tool-description">Interactive potentiometer simulator with real-time feedback. Rotate the dial and watch resistance and voltage change dynamically.</p>
+      <ul class="tool-features">
+       <li>Interactive dial control</li>
+       <li>Real-time resistance reading</li>
+       <li>Voltage divider mode</li>
+       <li>Linear and logarithmic taper</li>
+       <li>Visual wiper position</li>
+      </ul>
+      <span class="tool-badge">Interactive</span>
+     </a>
+
+     <a href="electronics-potentiometer-decoder.html" class="tool-card">
+      <div class="tool-icon">🔍</div>
+      <h3 class="tool-title">Potentiometer Code Decoder</h3>
+      <p class="tool-description">Decode potentiometer markings and 3-digit codes. Find resistance values, tolerances, and taper types from cryptic markings.</p>
+      <ul class="tool-features">
+       <li>3-digit code decoder</li>
+       <li>Manufacturer marking guide</li>
+       <li>Taper type identification</li>
+       <li>Power rating information</li>
+       <li>Cross-reference database</li>
+      </ul>
+      <span class="tool-badge">Reference</span>
+     </a>
+
+     <a href="electronics-surface-mount-decoder.html" class="tool-card">
+      <div class="tool-icon">📱</div>
+      <h3 class="tool-title">Surface Mount Decoder</h3>
+      <p class="tool-description">Decode SMD resistor and capacitor codes including 3-digit, 4-digit, and EIA-96 marking systems. Essential for modern electronics.</p>
+      <ul class="tool-features">
+       <li>3-digit and 4-digit codes</li>
+       <li>EIA-96 code system</li>
+       <li>Capacitor value decoder</li>
+       <li>Tolerance identification</li>
+       <li>Reverse lookup function</li>
+      </ul>
+      <span class="tool-badge">SMD</span>
+     </a>
+    </div>
+   </section>
+  </div>
+
+  <footer>
+   <div class="footer-content">
+    <p>Electronics Tools - Part of the Interactive Electronics Tools collection. Licensed under <a href="../LICENSE" style="color: #0066CC; text-decoration: none; font-weight: 500;">MIT</a>.</p>
+    <div class="footer-links">
+     <a href="../index.html">← Back to All Tools</a>
+     <a href="https://github.com/isocialPractice/interactive-html" target="_blank">GitHub</a>
+    </div>
+   </div>
+  </footer>
+
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>

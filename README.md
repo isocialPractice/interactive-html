@@ -14,36 +14,48 @@ Or visit any tool directly from the list below.
 - **Interactive Visualizations**: Real-time visual feedback with SVG circuit diagrams and animated components
 - **Modern Design**: Professional light theme inspired by leading electronics education platforms
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
-- **Educational**: Perfect for electronics students, hobbyists, and engineers
+- **Educational**: Perfect for electronics students, hobbyists, and professionals
 - **GitHub Pages Ready**: Optimized for hosting on GitHub Pages with SEO-friendly structure
 
 ## Available Tools
 
+### General Tools
+
+**[Browse All General Tools](general/index.html)** | Measurement & utility calculators for everyday use
+
+- **[Volume Measurement Tool](general/general-volume-measurement.html)** - Interactive volume measurement and conversion calculator
+
 ### 555 Timer Tools
 
-- **[555 Timer Simulator](555-timer-simulator.html)** - Interactive 555 timer circuit simulator with tabs for Astable, Monostable, and Bistable modes
-- **[555 Astable Calculator](555-astable-calculator.html)** - Calculate frequency and duty cycle for 555 timer astable mode with resistor and capacitor values
-- **[555 Monostable Simulator](555-monostable-simulator.html)** - Simulate 555 timer monostable (one-shot) operation
-- **[555 Logic Simulator](555-logic-simulator.html)** - Explore 555 timer logic configurations
+**[Browse All 555 Timer Tools](555/index.html)** | Calculators and simulators for 555 timer circuits
 
-### Resistor Tools
+- **[555 Timer Simulator](555/555-timer-simulator.html)** - Interactive 555 timer circuit simulator with tabs for Astable, Monostable, and Bistable modes
+- **[555 Astable Calculator](555/555-astable-calculator.html)** - Calculate frequency and duty cycle for 555 timer astable mode with resistor and capacitor values
+- **[555 Monostable Simulator](555/555-monostable-simulator.html)** - Simulate 555 timer monostable (one-shot) operation
+- **[555 Logic Simulator](555/555-logic-simulator.html)** - Explore 555 timer logic configurations
 
-- **[Resistor Color Code Calculator](electronics-resistor-calculator.html)** - Interactive resistor color band decoder with visual representation
-- **[Parallel Resistor Calculator](electronics-parallel-resistor-calculator.html)** - Calculate equivalent resistance for parallel resistor networks
-- **[Fusible Resistor Calculator](electronics-fusible-resistor-calculator.html)** - Calculate specifications for fusible resistors
+### Electronics Tools
 
-### LED & Power Tools
+**[Browse All Electronics Tools](electronics/index.html)** | Component calculators & circuit simulators
 
-- **[LED Current Calculator](electronics-led-current-calculator.html)** - Calculate current-limiting resistor values for LEDs with visual circuit diagram
-- **[Voltage Divider Calculator](electronics-voltage-divider-calculator.html)** - Design voltage divider circuits with interactive SVG diagrams
-- **[Ohm's Law Calculator](electronics-ohms-law-calculator.html)** - Calculate voltage, current, resistance, and power using Ohm's Law (V = I × R)
+#### Resistor Tools
 
-### Component Tools
+- **[Resistor Color Code Calculator](electronics/electronics-resistor-calculator.html)** - Interactive resistor color band decoder with visual representation
+- **[Parallel Resistor Calculator](electronics/electronics-parallel-resistor-calculator.html)** - Calculate equivalent resistance for parallel resistor networks
+- **[Fusible Resistor Calculator](electronics/electronics-fusible-resistor-calculator.html)** - Calculate specifications for fusible resistors
 
-- **[Potentiometer Simulator](electronics-potentiometer-simulator.html)** - Interactive potentiometer simulator with adjustable wiper position
-- **[Potentiometer Decoder](electronics-potentiometer-decoder.html)** - Decode potentiometer markings and specifications
-- **[Surface Mount Decoder](electronics-electronics-surface-mount-decoder.html)** - Decode surface mount component markings
-- **[Varistor Simulator](electronics-varistor-simulator.html)** - Simulate varistor voltage-current characteristics
+#### LED & Power Tools
+
+- **[LED Current Calculator](electronics/electronics-led-current-calculator.html)** - Calculate current-limiting resistor values for LEDs with visual circuit diagram
+- **[Voltage Divider Calculator](electronics/electronics-voltage-divider-calculator.html)** - Design voltage divider circuits with interactive SVG diagrams
+- **[Ohm's Law Calculator](electronics/electronics-ohms-law-calculator.html)** - Calculate voltage, current, resistance, and power using Ohm's Law (V = I × R)
+
+#### Component Tools
+
+- **[Potentiometer Simulator](electronics/electronics-potentiometer-simulator.html)** - Interactive potentiometer simulator with adjustable wiper position
+- **[Potentiometer Decoder](electronics/electronics-potentiometer-decoder.html)** - Decode potentiometer markings and specifications
+- **[Surface Mount Decoder](electronics/electronics-surface-mount-decoder.html)** - Decode surface mount component markings
+- **[Varistor Simulator](electronics/electronics-varistor-simulator.html)** - Simulate varistor voltage-current characteristics
 
 ## Usage
 
@@ -61,27 +73,39 @@ All tools are self-contained single-file applications. No web server, npm packag
 
 **For LED projects:**
 ```
-1. Open electronics-led-current-calculator.html
-2. Enter your supply voltage (e.g., 5V)
-3. Enter LED forward voltage (e.g., 2.0V for red LED)
-4. Enter desired LED current (e.g., 20mA)
-5. See the required resistor value and power rating
+1. Navigate to electronics/ folder
+2. Open electronics-led-current-calculator.html
+3. Enter your supply voltage (e.g., 5V)
+4. Enter LED forward voltage (e.g., 2.0V for red LED)
+5. Enter desired LED current (e.g., 20mA)
+6. See the required resistor value and power rating
 ```
 
 **For 555 timer circuits:**
 ```
-1. Open 555-astable-calculator.html
-2. Enter R1, R2, and C values
-3. See calculated frequency and duty cycle
-4. Adjust values to meet your timing requirements
+1. Navigate to 555/ folder
+2. Open 555-astable-calculator.html
+3. Enter R1, R2, and C values
+4. See calculated frequency and duty cycle
+5. Adjust values to meet your timing requirements
 ```
 
 **For resistor color codes:**
 ```
-1. Open electronics-resistor-calculator.html
-2. Select color bands from the dropdowns
-3. See the decoded resistance value and tolerance
-4. Visual resistor updates in real-time
+1. Navigate to electronics/ folder
+2. Open electronics-resistor-calculator.html
+3. Select color bands from the dropdowns
+4. See the decoded resistance value and tolerance
+5. Visual resistor updates in real-time
+```
+
+**For volume measurements:**
+```
+1. Navigate to general/ folder
+2. Open general-volume-measurement.html
+3. Enter dimensions or volume values
+4. See conversions and measurements
+5. Use for practical everyday calculations
 ```
 
 ## Technical Details
@@ -96,26 +120,41 @@ All tools are self-contained single-file applications. No web server, npm packag
 
 ```
 interactive-html/
+├── index.html                            # Landing page with tool browser
+├── LICENSE                               # MIT License
+├── README.md                             # This file
+├── task.bat                              # Build/deployment script
 ├── Templates/
 │   └── page.html                         # Master template file
-├── style.css                             # Global stylesheet
-├── favicon.svg                           # Site icon
-├── index.html                            # Landing page with tool browser
-├── 555-timer-simulator.html              # Main 555 timer simulator
-├── 555-astable-calculator.html           # 555 astable mode calculator
-├── 555-monostable-simulator.html         # 555 monostable simulator
-├── 555-logic-simulator.html              # 555 logic configurations
-├── electronics-resistor-calculator.html  # Resistor color code decoder
-├── electronics-parallel-resistor-calculator.html
-├── electronics-fusible-resistor-calculator.html
-├── electronics-led-current-calculator.html
-├── electronics-ohms-law-calculator.html
-├── electronics-voltage-divider-calculator.html
-├── electronics-potentiometer-simulator.html
-├── electronics-potentiometer-decoder.html
-├── electronics-electronics-surface-mount-decoder.html
-├── electronics-varistor-simulator.html
-└── README.md
+├── css/
+│   └── style.css                         # Global stylesheet
+├── img/
+│   └── favicon.svg                       # Site icon
+├── docs/
+│   ├── DESIGN_SYSTEM.md                  # Color palette and design guidelines
+│   ├── QUICK_START.md                    # Developer quick start guide
+│   └── STRUCTURE.md                      # Template structure visualization
+├── general/
+│   ├── index.html                        # General tools landing page
+│   └── general-volume-measurement.html   # Volume measurement calculator
+├── 555/
+│   ├── index.html                        # 555 timer tools landing page
+│   ├── 555-timer-simulator.html          # Main 555 timer simulator
+│   ├── 555-astable-calculator.html       # 555 astable mode calculator
+│   ├── 555-monostable-simulator.html     # 555 monostable simulator
+│   └── 555-logic-simulator.html          # 555 logic configurations
+└── electronics/
+    ├── index.html                        # Electronics tools landing page
+    ├── electronics-resistor-calculator.html
+    ├── electronics-parallel-resistor-calculator.html
+    ├── electronics-fusible-resistor-calculator.html
+    ├── electronics-led-current-calculator.html
+    ├── electronics-ohms-law-calculator.html
+    ├── electronics-voltage-divider-calculator.html
+    ├── electronics-potentiometer-simulator.html
+    ├── electronics-potentiometer-decoder.html
+    ├── electronics-surface-mount-decoder.html
+    └── electronics-varistor-simulator.html
 ```
 
 ## Template System
@@ -145,26 +184,18 @@ npm link  # Optional: makes html-dwt-cmd available globally
 ```bash
 # Update all HTML files after modifying Templates/page.html
 html-dwt-cmd update-all Templates/page.html --auto-apply
+
+# Update without creating backups (faster, but no rollback option)
+html-dwt-cmd update-all Templates/page.html --auto-apply --no-backup
 ```
 
 **What it does:**
 - Scans all HTML files using the template
 - Creates automatic backups in `.html-dwt-cmd-template-backups/`
+  - Use `--no-backup` to disable creation of backup directory from tool.
 - Updates non-editable template content (navigation, header, footer)
 - Preserves editable regions (page title, styles, content)
 - Ensures consistency across all 15+ pages
-
-**Common Commands:**
-```bash
-# Update all pages (with automatic application)
-html-dwt-cmd update-all Templates/page.html --auto-apply
-
-# Find all pages using the template
-html-dwt-cmd find-instances Templates/page.html
-
-# View editable regions in a file
-html-dwt-cmd show-regions 555-timer-simulator.html
-```
 
 #### Manual Template Structure
 
@@ -204,7 +235,7 @@ See [QUICK_START.md](QUICK_START.md) and [STRUCTURE.md](STRUCTURE.md) for detail
 - Decode resistor color codes quickly
 - Plan voltage divider circuits
 
-### For Engineers
+### For Professionals
 - Quick reference calculations
 - Prototype circuit design
 - Component selection assistance

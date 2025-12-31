@@ -1,0 +1,441 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+  <title>Interactive Potentiometer Simulator</title>
+  <style>
+   * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+  body {
+   font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
+   background: linear-gradient(135deg, #E6F2FF 0%, #F5F7FA 100%);
+   color: #1A1A1A;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   min-height: 100vh;
+   margin: 0;
+   padding: 24px;
+  }
+  .container {
+   background: #FFFFFF;
+   border-radius: 16px;
+   padding: 32px;
+   max-width: 800px;
+   width: 100%;
+   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+   border: 1px solid #E1E4E8;
+  }
+  h1 {
+   text-align: center;
+   color: #004080;
+   margin-bottom: 8px;
+   font-weight: 700;
+   font-size: 28px;
+  }
+  .subtitle {
+   text-align: center;
+   color: #6C757D;
+   margin-bottom: 32px;
+   font-size: 15px;
+   font-weight: 500;
+  }
+  .circuit-container {
+   background: #F5F7FA;
+   border-radius: 12px;
+   padding: 32px;
+   margin: 24px 0;
+   position: relative;
+   border: 1px solid #E1E4E8;
+  }
+  .potentiometer-visual {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   margin: 20px 0;
+  }
+  .pot-body {
+   width: 120px;
+   height: 120px;
+   background: #555;
+   border-radius: 50%;
+   position: relative;
+   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+   border: 4px solid #333;
+  }
+  .pot-dial {
+   width: 80px;
+   height: 80px;
+   background: #2a2a2a;
+   border-radius: 50%;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   border: 2px solid #666;
+  }
+  .pot-indicator {
+   width: 4px;
+   height: 35px;
+   background: #0066CC;
+   position: absolute;
+   top: 5px;
+   left: 50%;
+   transform: translateX(-50%);
+   transform-origin: center 35px;
+   transition: transform 0.1s;
+   border-radius: 2px;
+  }
+  .pot-pins {
+   display: flex;
+   justify-content: space-between;
+   width: 120px;
+   margin-top: 10px;
+  }
+  .pin {
+   width: 8px;
+   height: 30px;
+   background: #888;
+   border-radius: 2px;
+  }
+  .slider-control {
+   width: 100%;
+   margin: 30px 0;
+  }
+   input[type="range"] {
+   width: 100%;
+   height: 8px;
+   border-radius: 5px;
+   background: #4a4a4a;
+   outline: none;
+   -webkit-appearance: none;
+  }
+   input[type="range"]::-webkit-slider-thumb {
+   -webkit-appearance: none;
+   appearance: none;
+   width: 28px;
+   height: 28px;
+   border-radius: 50%;
+   background: #0066CC;
+   cursor: pointer;
+   box-shadow: 0 2px 8px rgba(0,102,204,0.3);
+  }
+   input[type="range"]::-moz-range-thumb {
+   width: 28px;
+   height: 28px;
+   border-radius: 50%;
+   background: #0066CC;
+   cursor: pointer;
+   border: none;
+   box-shadow: 0 2px 8px rgba(0,102,204,0.3);
+  }
+  .readings {
+   display: grid;
+   grid-template-columns: repeat(2, 1fr);
+   gap: 16px;
+   margin-top: 24px;
+  }
+  .reading-box {
+   background: #FFFFFF;
+   padding: 20px;
+   border-radius: 12px;
+   text-align: center;
+   border: 1px solid #E1E4E8;
+  }
+  .reading-label {
+   font-size: 12px;
+   color: #6C757D;
+   text-transform: uppercase;
+   margin-bottom: 8px;
+   font-weight: 600;
+   letter-spacing: 0.5px;
+  }
+  .reading-value {
+   font-size: 28px;
+   font-weight: 700;
+   color: #0066CC;
+  }
+  .info-box {
+   background: #E6F2FF;
+   border-left: 4px solid #0066CC;
+   padding: 16px 20px;
+   margin: 24px 0;
+   border-radius: 8px;
+   line-height: 1.6;
+  }
+   .info-box h3 {
+   margin: 0 0 12px 0;
+   color: #004080;
+   font-weight: 600;
+   font-size: 16px;
+  }
+   .info-box ul {
+   margin: 8px 0;
+   padding-left: 24px;
+   color: #1A1A1A;
+  }
+  .circuit-diagram {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   margin: 20px 0;
+   flex-wrap: wrap;
+   gap: 10px;
+  }
+  .component {
+   padding: 10px 20px;
+   background: #4a4a4a;
+   border-radius: 5px;
+   font-size: 14px;
+  }
+  .led-indicator {
+   width: 40px;
+   height: 40px;
+   border-radius: 50%;
+   background: #333;
+   margin: 0 auto;
+   transition: all 0.3s;
+   box-shadow: 0 0 0px rgba(255, 0, 0, 0);
+  }
+  .voltage-bar {
+   width: 100%;
+   height: 20px;
+   background: #4a4a4a;
+   border-radius: 10px;
+   overflow: hidden;
+   margin: 10px 0;
+  }
+  .voltage-fill {
+   height: 100%;
+   background: linear-gradient(to right, #4CAF50, #8BC34A);
+   width: 0%;
+   transition: width 0.3s;
+  }
+  </style>
+  
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+    <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+    </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+  <div class="container">
+   <h1>🎚️ Interactive Potentiometer Simulator</h1>
+   <p class="subtitle">Adjust the dial to control voltage and current</p>
+
+   <div class="circuit-container">
+    <h3 style="text-align: center; color: #4CAF50;">Circuit: 9V Battery → Potentiometer → LED</h3>
+
+    <div class="potentiometer-visual">
+     <div class="pot-body">
+      <div class="pot-dial">
+       <div class="pot-indicator" id="indicator"></div>
+      </div>
+     </div>
+     <div class="pot-pins">
+      <div class="pin"></div>
+      <div class="pin"></div>
+      <div class="pin"></div>
+     </div>
+    </div>
+
+    <div class="slider-control">
+     <label for="dial" style="color: #aaa; display: block; text-align: center; margin-bottom: 10px;">
+     Rotate Dial (0° - 270°)
+     </label>
+     <input type="range" id="dial" min="0" max="270" value="135" step="1">
+    </div>
+
+    <div class="led-indicator" id="led"></div>
+    <p style="text-align: center; color: #aaa; font-size: 12px; margin-top: 5px;">LED Brightness</p>
+
+    <div class="voltage-bar">
+     <div class="voltage-fill" id="voltageBar"></div>
+    </div>
+
+    <div class="readings">
+     <div class="reading-box">
+      <div class="reading-label">Output Voltage</div>
+      <div class="reading-value" id="voltage">4.50V</div>
+     </div>
+     <div class="reading-box">
+      <div class="reading-label">Current</div>
+      <div class="reading-value" id="current">15.0mA</div>
+     </div>
+     <div class="reading-box">
+      <div class="reading-label">Resistance</div>
+      <div class="reading-value" id="resistance">5.0kΩ</div>
+     </div>
+     <div class="reading-box">
+      <div class="reading-label">Dial Position</div>
+      <div class="reading-value" id="position">50%</div>
+     </div>
+    </div>
+   </div>
+
+   <div class="info-box">
+    <h3>How Potentiometers Work:</h3>
+    <ul>
+     <li><strong>Variable Resistance:</strong> Moving the dial changes the electron flow distance</li>
+     <li><strong>Three Terminals:</strong> Two end terminals and one center wiper terminal</li>
+     <li><strong>Voltage Control:</strong> Controls output voltage from the center pin</li>
+     <li><strong>Current Control:</strong> Can also limit current in circuit</li>
+     <li><strong>Brightness Control:</strong> Dial right = less resistance = brighter LED</li>
+     <li><strong>Voltage Divider:</strong> Creates variable voltage between 0V and supply voltage</li>
+    </ul>
+   </div>
+
+   <div class="info-box">
+    <h3>Common Applications:</h3>
+    <ul>
+     <li>Volume controls in audio equipment</li>
+     <li>Brightness adjustments in lights and displays</li>
+     <li>Temperature control in heaters</li>
+     <li>Speed control in motors</li>
+     <li>Analog input sensors for microcontrollers</li>
+    </ul>
+   </div>
+  </div>
+
+  <script>
+  const dial = document.getElementById('dial');
+  const indicator = document.getElementById('indicator');
+  const voltageDisplay = document.getElementById('voltage');
+  const currentDisplay = document.getElementById('current');
+  const resistanceDisplay = document.getElementById('resistance');
+  const positionDisplay = document.getElementById('position');
+  const led = document.getElementById('led');
+  const voltageBar = document.getElementById('voltageBar');
+
+  const maxResistance = 10; // 10kΩ potentiometer
+  const supplyVoltage = 9; // 9V battery
+  const ledResistance = 0.3; // 300Ω series resistor
+
+  function updatePotentiometer() {
+   const angle = parseInt(dial.value);
+   const percentage = (angle / 270) * 100;
+
+   // Update visual indicator
+   indicator.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+
+   // Calculate resistance (linear potentiometer)
+   const potResistance = (angle / 270) * maxResistance;
+   const totalResistance = potResistance + ledResistance;
+
+   // Calculate voltage (voltage divider)
+   const outputVoltage = supplyVoltage * (potResistance / maxResistance);
+
+   // Calculate current (Ohm's law: I = V / R)
+   const current = (supplyVoltage / totalResistance) * 1000; // Convert to mA
+
+   // Update displays
+   voltageDisplay.textContent = outputVoltage.toFixed(2) + 'V';
+   currentDisplay.textContent = current.toFixed(1) + 'mA';
+   resistanceDisplay.textContent = potResistance.toFixed(1) + 'kΩ';
+   positionDisplay.textContent = percentage.toFixed(0) + '%';
+
+   // Update LED brightness
+   const brightness = (angle / 270);
+   const ledOpacity = 0.3 + (brightness * 0.7);
+   const glowSize = brightness * 20;
+
+   if (angle > 10) {
+    led.style.background = `rgba(255, ${255 - (brightness * 200)}, 0, ${ledOpacity})`;
+    led.style.boxShadow = `0 0 ${glowSize}px rgba(255, ${255 - (brightness * 150)}, 0, ${ledOpacity})`;
+   } else {
+   led.style.background = '#333';
+   led.style.boxShadow = '0 0 0px rgba(255, 0, 0, 0)';
+  }
+
+  // Update voltage bar
+  voltageBar.style.width = percentage + '%';
+  }
+
+  dial.addEventListener('input', updatePotentiometer);
+  updatePotentiometer(); // Initial update
+  </script>
+  
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>

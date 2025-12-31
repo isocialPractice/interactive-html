@@ -1,523 +1,573 @@
 <html lang="en">
 <!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
- <head>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-  <!-- InstanceBeginEditable name="head" -->
-    <title>Interactive Electronics Tools | Educational Calculators & Simulators</title>
-    <meta name="description" content="Free interactive electronics calculators and simulators for learning and design. Includes 555 timer, resistor, LED, and component tools.">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
-            background: linear-gradient(135deg, #E6F2FF 0%, #F5F7FA 100%);
-            color: #1A1A1A;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-        
-        /* Header */
-        header {
-            background: #FFFFFF;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            padding: 24px 0;
-            margin-bottom: 48px;
-        }
-        
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            text-align: center;
-        }
-        
-        h1 {
-            color: #004080;
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-        
-        .tagline {
-            color: #6C757D;
-            font-size: 18px;
-            font-weight: 500;
-        }
-        
-        /* Container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px 48px;
-        }
-        
-        /* Search */
-        .search-container {
-            margin-bottom: 40px;
-        }
-        
-        .search-box {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            position: relative;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 16px 48px 16px 20px;
-            font-size: 16px;
-            border: 2px solid #E1E4E8;
-            border-radius: 12px;
-            background: #FFFFFF;
-            transition: all 0.3s;
-            font-family: inherit;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: #0066CC;
-            box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
-        }
-        
-        .search-icon {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6C757D;
-            font-size: 20px;
-        }
-        
-        /* Category Section */
-        .category {
-            margin-bottom: 48px;
-        }
-        
-        .category-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 12px;
-            border-bottom: 3px solid #0066CC;
-        }
-        
-        .category-icon {
-            font-size: 28px;
-            margin-right: 12px;
-        }
-        
-        .category-title {
-            color: #004080;
-            font-size: 24px;
-            font-weight: 700;
-        }
-        
-        /* Tool Cards Grid */
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-        }
-        
-        .tool-card {
-            background: #FFFFFF;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: 1px solid #E1E4E8;
-            transition: all 0.3s;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-        
-        .tool-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,102,204,0.2);
-            border-color: #0066CC;
-        }
-        
-        .tool-icon {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #0066CC 0%, #004080 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin-bottom: 16px;
-            color: #FFFFFF;
-        }
-        
-        .tool-title {
-            color: #1A1A1A;
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        
-        .tool-description {
-            color: #6C757D;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .tool-badge {
-            display: inline-block;
-            background: #E6F2FF;
-            color: #0066CC;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 12px;
-        }
-        
-        /* Footer */
-        footer {
-            background: #FFFFFF;
-            border-top: 1px solid #E1E4E8;
-            padding: 32px 0;
-            margin-top: 48px;
-            text-align: center;
-        }
-        
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            color: #6C757D;
-            font-size: 14px;
-        }
-        
-        .footer-links {
-            margin-top: 16px;
-        }
-        
-        .footer-links a {
-            color: #0066CC;
-            text-decoration: none;
-            margin: 0 12px;
-            font-weight: 500;
-        }
-        
-        .footer-links a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 28px;
-            }
-            
-            .tagline {
-                font-size: 16px;
-            }
-            
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .category-title {
-                font-size: 20px;
-            }
-        }
-        
-        /* Hidden class for search filter */
-        .hidden {
-            display: none !important;
-        }
-    </style>
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+ <title>Interactive Electronics Tools | Educational Calculators & Simulators</title>
+ <meta name="description" content="Free interactive electronics calculators and simulators for learning and design. Includes 555 timer, resistor, LED, and component tools.">
+ <style>
+  * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+  
+  body {
+   font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
+   background: linear-gradient(135deg, #E6F2FF 0%, #F5F7FA 100%);
+   color: #1A1A1A;
+   line-height: 1.6;
+   min-height: 100vh;
+  }
+  
+  /* Header */
+  header {
+   background: #FFFFFF;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+   padding: 24px 0;
+   margin-bottom: 48px;
+  }
+  
+  .header-content {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px;
+   text-align: center;
+  }
+  
+  h1 {
+   color: #004080;
+   font-size: 36px;
+   font-weight: 700;
+   margin-bottom: 12px;
+  }
+  
+  .tagline {
+   color: #6C757D;
+   font-size: 18px;
+   font-weight: 500;
+  }
+  
+  /* Container */
+  .container {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px 48px;
+  }
+  
+  /* Search */
+  .search-container {
+   margin-bottom: 40px;
+  }
+  
+  .search-box {
+   width: 100%;
+   max-width: 600px;
+   margin: 0 auto;
+   position: relative;
+  }
+  
+  .search-input {
+   width: 100%;
+   padding: 16px 48px 16px 20px;
+   font-size: 16px;
+   border: 2px solid #E1E4E8;
+   border-radius: 12px;
+   background: #FFFFFF;
+   transition: all 0.3s;
+   font-family: inherit;
+  }
+  
+  .search-input:focus {
+   outline: none;
+   border-color: #0066CC;
+   box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+  }
+  
+  .search-icon {
+   position: absolute;
+   right: 16px;
+   top: 50%;
+   transform: translateY(-50%);
+   color: #6C757D;
+   font-size: 20px;
+   margin-top: 10px;
+  }
+  
+  /* Category Section */
+  .category {
+   margin-bottom: 48px;
+  }
+  
+  .category-header {
+   display: flex;
+   align-items: center;
+   margin-bottom: 24px;
+   padding-bottom: 12px;
+   border-bottom: 3px solid #0066CC;
+  }
+  
+  .category-icon {
+   font-size: 28px;
+   margin-right: 12px;
+  }
+  
+  .category-title {
+   color: #004080;
+   font-size: 24px;
+   font-weight: 700;
+  }
+  
+  /* Tool Cards Grid */
+  .tools-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+   gap: 24px;
+  }
+  
+  .tool-card {
+   background: #FFFFFF;
+   border-radius: 16px;
+   padding: 24px;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+   border: 1px solid #E1E4E8;
+   transition: all 0.3s;
+   text-decoration: none;
+   color: inherit;
+   display: block;
+  }
+  
+  .tool-card:hover {
+   transform: translateY(-4px);
+   box-shadow: 0 8px 24px rgba(0,102,204,0.2);
+   border-color: #0066CC;
+  }
+  
+  .tool-icon {
+   width: 56px;
+   height: 56px;
+   background: linear-gradient(135deg, #0066CC 0%, #004080 100%);
+   border-radius: 12px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 28px;
+   margin-bottom: 16px;
+   color: #FFFFFF;
+  }
+  
+  .tool-title {
+   color: #1A1A1A;
+   font-size: 18px;
+   font-weight: 700;
+   margin-bottom: 8px;
+  }
+  
+  .tool-description {
+   color: #6C757D;
+   font-size: 14px;
+   line-height: 1.5;
+  }
+  
+  .tool-badge {
+   display: inline-block;
+   background: #E6F2FF;
+   color: #0066CC;
+   padding: 4px 12px;
+   border-radius: 6px;
+   font-size: 12px;
+   font-weight: 600;
+   margin-top: 12px;
+  }
+  
+  /* Footer */
+  footer {
+   background: #FFFFFF;
+   border-top: 1px solid #E1E4E8;
+   padding: 32px 0;
+   margin-top: 48px;
+   text-align: center;
+  }
+  
+  .footer-content {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 24px;
+   color: #6C757D;
+   font-size: 14px;
+  }
+  
+  .footer-links {
+   margin-top: 16px;
+  }
+  
+  .footer-links a {
+   color: #0066CC;
+   text-decoration: none;
+   margin: 0 12px;
+   font-weight: 500;
+  }
+  
+  .footer-links a:hover {
+   text-decoration: underline;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+   h1 {
+    font-size: 28px;
+   }
+   
+   .tagline {
+    font-size: 16px;
+   }
+   
+   .tools-grid {
+    grid-template-columns: 1fr;
+   }
+   
+   .category-title {
+    font-size: 20px;
+   }
+  }
+  
+  /* Hidden class for search filter */
+  .hidden {
+   display: none !important;
+  }
+ </style>
 <!-- InstanceEndEditable -->
- </head>
- 
-<body>
-    <nav class="site-nav">
-        <div class="nav-container">
-            <a href="index.html" class="nav-brand">
-                <img src="favicon.svg" alt="Electronics Tools" class="nav-logo">
-                <span>Electronics Tools</span>
-            </a>
-            <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
-            <ul class="nav-menu">
-                <li class="nav-item nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
-                    <div class="dropdown-menu">
-                        <a href="555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
-                        <a href="555-astable-calculator.html" class="nav-link">Astable Calculator</a>
-                        <a href="555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
-                        <a href="555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
-                    </div>
-                </li>
-                <li class="nav-item nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
-                    <div class="dropdown-menu">
-                        <a href="electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
-                        <a href="electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
-                        <a href="electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
-                    </div>
-                </li>
-                <li class="nav-item nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
-                    <div class="dropdown-menu">
-                        <a href="electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
-                        <a href="electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
-                        <a href="electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
-                        <a href="electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
-                    </div>
-                </li>
-                <li class="nav-item nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
-                    <div class="dropdown-menu">
-                        <a href="electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
-                        <a href="electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
-                        <a href="electronics-electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a href="index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+</head>
 
-  <!-- InstanceBeginEditable name="page" -->
-    <header style="margin-top: -72px; padding-top: 96px;">
-        <div class="header-content">
-            <h1>⚡ Interactive Electronics Tools</h1>
-            <p class="tagline">Free calculators and simulators for learning and design</p>
-        </div>
-    </header>
-    
-    <div class="container">
-        <!-- Search Box -->
-        <div class="search-container">
-            <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" placeholder="Search for a tool..." autocomplete="off">
-                <span class="search-icon">🔍</span>
-            </div>
-        </div>
-        
-        <!-- 555 Timer Tools -->
-        <section class="category" data-category="555">
-            <div class="category-header">
-                <span class="category-icon">⏱️</span>
-                <h2 class="category-title">555 Timer Tools</h2>
-            </div>
-            <div class="tools-grid">
-                <a href="555-timer-simulator.html" class="tool-card" data-keywords="555 timer simulator interactive astable monostable bistable">
-                    <div class="tool-icon">⚙️</div>
-                    <h3 class="tool-title">555 Timer Interactive Simulator</h3>
-                    <p class="tool-description">Explore astable, monostable, and bistable modes with real-time waveform visualization and component value adjustments.</p>
-                    <span class="tool-badge">Interactive</span>
-                </a>
-                
-                <a href="555-astable-calculator.html" class="tool-card" data-keywords="555 astable calculator frequency duty cycle">
-                    <div class="tool-icon">📊</div>
-                    <h3 class="tool-title">555 Astable Calculator</h3>
-                    <p class="tool-description">Calculate frequency, duty cycle, and timing values for 555 timer circuits in astable mode.</p>
-                    <span class="tool-badge">Calculator</span>
-                </a>
-                
-                <a href="555-monostable-simulator.html" class="tool-card" data-keywords="555 monostable one-shot pulse timer">
-                    <div class="tool-icon">⏲️</div>
-                    <h3 class="tool-title">555 Monostable Simulator</h3>
-                    <p class="tool-description">Simulate one-shot pulse generation with adjustable timing resistors and capacitors.</p>
-                    <span class="tool-badge">Simulator</span>
-                </a>
-                
-                <a href="555-logic-simulator.html" class="tool-card" data-keywords="555 logic clock computer timing">
-                    <div class="tool-icon">💻</div>
-                    <h3 class="tool-title">Computer Clock Logic Simulator</h3>
-                    <p class="tool-description">Interactive 555-based computer clock with adjustable frequency and logic level visualization.</p>
-                    <span class="tool-badge">Advanced</span>
-                </a>
-            </div>
-        </section>
-        
-        <!-- Resistor Tools -->
-        <section class="category" data-category="resistor">
-            <div class="category-header">
-                <span class="category-icon">🔌</span>
-                <h2 class="category-title">Resistor Tools</h2>
-            </div>
-            <div class="tools-grid">
-                <a href="electronics-resistor-calculator.html" class="tool-card" data-keywords="resistor color code calculator 4-band 5-band">
-                    <div class="tool-icon">🎨</div>
-                    <h3 class="tool-title">Resistor Color Code Calculator</h3>
-                    <p class="tool-description">Decode 4-band and 5-band resistor color codes with visual representation and tolerance information.</p>
-                    <span class="tool-badge">Essential</span>
-                </a>
-                
-                <a href="electronics-parallel-resistor-calculator.html" class="tool-card" data-keywords="resistor parallel calculator equivalent resistance">
-                    <div class="tool-icon">➗</div>
-                    <h3 class="tool-title">Parallel Resistor Calculator</h3>
-                    <p class="tool-description">Calculate equivalent resistance for multiple resistors in parallel configuration.</p>
-                    <span class="tool-badge">Calculator</span>
-                </a>
-                
-                <a href="electronics-fusible-resistor-calculator.html" class="tool-card" data-keywords="fusible resistor fuse calculator safety">
-                    <div class="tool-icon">🔥</div>
-                    <h3 class="tool-title">Fusible Resistor Calculator</h3>
-                    <p class="tool-description">Calculate safe operating limits and fusing current for fusible resistors in power circuits.</p>
-                    <span class="tool-badge">Safety</span>
-                </a>
-            </div>
-        </section>
-        
-        <!-- LED & Power Tools -->
-        <section class="category" data-category="led">
-            <div class="category-header">
-                <span class="category-icon">💡</span>
-                <h2 class="category-title">LED & Power Tools</h2>
-            </div>
-            <div class="tools-grid">
-                <a href="electronics-ohms-law-calculator.html" class="tool-card" data-keywords="ohm's law calculator voltage current resistance power">
-                    <div class="tool-icon">⚡</div>
-                    <h3 class="tool-title">Ohm's Law Calculator</h3>
-                    <p class="tool-description">Calculate voltage, current, resistance, and power using Ohm's Law with interactive formula display.</p>
-                    <span class="tool-badge">Fundamental</span>
-                </a>
-                
-                <a href="electronics-led-current-calculator.html" class="tool-card" data-keywords="led current limiting resistor calculator">
-                    <div class="tool-icon">💡</div>
-                    <h3 class="tool-title">LED Current Limiting Resistor Calculator</h3>
-                    <p class="tool-description">Calculate the perfect current limiting resistor for your LED circuits with voltage drop and power dissipation.</p>
-                    <span class="tool-badge">Popular</span>
-                </a>
-                
-                <a href="electronics-voltage-divider-calculator.html" class="tool-card" data-keywords="voltage divider calculator resistor ratio">
-                    <div class="tool-icon">📉</div>
-                    <h3 class="tool-title">Voltage Divider Calculator</h3>
-                    <p class="tool-description">Design voltage divider circuits with automatic resistor value calculation and output voltage prediction.</p>
-                    <span class="tool-badge">Design</span>
-                </a>
-                
-                <a href="electronics-varistor-simulator.html" class="tool-card" data-keywords="varistor mov surge protection simulator">
-                    <div class="tool-icon">🛡️</div>
-                    <h3 class="tool-title">Varistor (MOV) Simulator</h3>
-                    <p class="tool-description">Simulate voltage-dependent resistor behavior for surge protection circuit design.</p>
-                    <span class="tool-badge">Protection</span>
-                </a>
-            </div>
-        </section>
-        
-        <!-- Component Tools -->
-        <section class="category" data-category="component">
-            <div class="category-header">
-                <span class="category-icon">🔧</span>
-                <h2 class="category-title">Component Tools</h2>
-            </div>
-            <div class="tools-grid">
-                <a href="electronics-potentiometer-simulator.html" class="tool-card" data-keywords="potentiometer simulator variable resistor pot">
-                    <div class="tool-icon">🎛️</div>
-                    <h3 class="tool-title">Potentiometer Simulator</h3>
-                    <p class="tool-description">Interactive potentiometer simulator with real-time resistance and voltage readings as you adjust the dial.</p>
-                    <span class="tool-badge">Interactive</span>
-                </a>
-                
-                <a href="electronics-potentiometer-decoder.html" class="tool-card" data-keywords="potentiometer code decoder marking">
-                    <div class="tool-icon">🔍</div>
-                    <h3 class="tool-title">Potentiometer Code Decoder</h3>
-                    <p class="tool-description">Decode potentiometer markings and 3-digit codes to determine resistance values and tolerances.</p>
-                    <span class="tool-badge">Reference</span>
-                </a>
-                
-                <a href="electronics-electronics-surface-mount-decoder.html" class="tool-card" data-keywords="smd surface mount resistor decoder eia-96">
-                    <div class="tool-icon">📱</div>
-                    <h3 class="tool-title">Surface Mount Resistor Decoder</h3>
-                    <p class="tool-description">Decode SMD resistor codes including 3-digit, 4-digit, and EIA-96 marking systems.</p>
-                    <span class="tool-badge">SMD</span>
-                </a>
-            </div>
-        </section>
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+    <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+    <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+    </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+    <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+    <div class="dropdown-menu">
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+    <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+    </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+ <header style="margin-top: -72px; padding-top: 96px;">
+  <div class="header-content">
+   <h1>⚡ Interactive HTML Tools</h1>
+   <p class="tagline">Free calculators and simulators for learning and design</p>
+  </div>
+ </header>
+ 
+ <div class="container">
+  <!-- Search Box -->
+  <div class="search-container">
+   <div class="search-box">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search for a tool..." autocomplete="off">
+    <span class="search-icon">🔍</span>
+   </div>
+  </div>
+  
+  <!-- 555 Timer Tools -->
+  <section class="category" data-category="555">
+   <div class="category-header">
+    <span class="category-icon">⏱️</span>
+    <h2 class="category-title">555 Timer Tools</h2>
+    <a href="555/index.html" style="margin-left: auto; color: #FF8C00; text-decoration: none; font-weight: 600; font-size: 14px;">View All →</a>
+   </div>
+   <div class="tools-grid">
+    <a href="555-timer-simulator.html" class="tool-card" data-keywords="555 timer simulator interactive astable monostable bistable">
+     <div class="tool-icon">⚙️</div>
+     <h3 class="tool-title">555 Timer Interactive Simulator</h3>
+     <p class="tool-description">Explore astable, monostable, and bistable modes with real-time waveform visualization and component value adjustments.</p>
+     <span class="tool-badge">Interactive</span>
+    </a>
     
-    <footer>
-        <div class="footer-content">
-            <p>Interactive Electronics Tools - Free educational resources. Licensed under <a href="LICENSE" style="color: #0066CC; text-decoration: none; font-weight: 500;">MIT</a>.</p>
-            <div class="footer-links">
-                <a href="README.md">Documentation</a>
-                <a href="https://github.com/isocialPractice/interactive-html" target="_blank">GitHub</a>
-            </div>
-        </div>
-    </footer>
+    <a href="555-astable-calculator.html" class="tool-card" data-keywords="555 astable calculator frequency duty cycle">
+     <div class="tool-icon">📊</div>
+     <h3 class="tool-title">555 Astable Calculator</h3>
+     <p class="tool-description">Calculate frequency, duty cycle, and timing values for 555 timer circuits in astable mode.</p>
+     <span class="tool-badge">Calculator</span>
+    </a>
     
-    <script>
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-        const toolCards = document.querySelectorAll('.tool-card');
-        const categories = document.querySelectorAll('.category');
-        
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
-            
-            if (searchTerm === '') {
-                // Show all cards and categories
-                toolCards.forEach(card => card.classList.remove('hidden'));
-                categories.forEach(category => category.classList.remove('hidden'));
-                return;
-            }
-            
-            let visibleCardsPerCategory = {};
-            
-            // Filter cards
-            toolCards.forEach(card => {
-                const title = card.querySelector('.tool-title').textContent.toLowerCase();
-                const description = card.querySelector('.tool-description').textContent.toLowerCase();
-                const keywords = card.getAttribute('data-keywords').toLowerCase();
-                const category = card.closest('.category').getAttribute('data-category');
-                
-                const isMatch = title.includes(searchTerm) || 
-                               description.includes(searchTerm) || 
-                               keywords.includes(searchTerm);
-                
-                if (isMatch) {
-                    card.classList.remove('hidden');
-                    visibleCardsPerCategory[category] = (visibleCardsPerCategory[category] || 0) + 1;
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-            
-            // Hide categories with no visible cards
-            categories.forEach(category => {
-                const categoryName = category.getAttribute('data-category');
-                if (visibleCardsPerCategory[categoryName] > 0) {
-                    category.classList.remove('hidden');
-                } else {
-                    category.classList.add('hidden');
-                }
-            });
-        });
-        
-        // Add keyboard navigation
-        searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                this.value = '';
-                this.dispatchEvent(new Event('input'));
-                this.blur();
-            }
-        });
-        
-        // Analytics tracking (placeholder)
-        toolCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const toolName = this.querySelector('.tool-title').textContent;
-                console.log('Tool accessed:', toolName);
-                // Add your analytics tracking here
-            });
-        });
-    </script>
+    <a href="555-monostable-simulator.html" class="tool-card" data-keywords="555 monostable one-shot pulse timer">
+     <div class="tool-icon">⏲️</div>
+     <h3 class="tool-title">555 Monostable Simulator</h3>
+     <p class="tool-description">Simulate one-shot pulse generation with adjustable timing resistors and capacitors.</p>
+     <span class="tool-badge">Simulator</span>
+    </a>
     
+    <a href="555-logic-simulator.html" class="tool-card" data-keywords="555 logic clock computer timing">
+     <div class="tool-icon">💻</div>
+     <h3 class="tool-title">Computer Clock Logic Simulator</h3>
+     <p class="tool-description">Interactive 555-based computer clock with adjustable frequency and logic level visualization.</p>
+     <span class="tool-badge">Advanced</span>
+    </a>
+   </div>
+  </section>
+  
+  <!-- Resistor Tools -->
+  <section class="category" data-category="resistor">
+   <div class="category-header">
+    <span class="category-icon">🔌</span>
+    <h2 class="category-title">Resistor Tools</h2>
+    <a href="electronics/index.html" style="margin-left: auto; color: #0066CC; text-decoration: none; font-weight: 600; font-size: 14px;">View All →</a>
+   </div>
+   <div class="tools-grid">
+    <a href="electronics-resistor-calculator.html" class="tool-card" data-keywords="resistor color code calculator 4-band 5-band">
+     <div class="tool-icon">🎨</div>
+     <h3 class="tool-title">Resistor Color Code Calculator</h3>
+     <p class="tool-description">Decode 4-band and 5-band resistor color codes with visual representation and tolerance information.</p>
+     <span class="tool-badge">Essential</span>
+    </a>
+    
+    <a href="electronics-parallel-resistor-calculator.html" class="tool-card" data-keywords="resistor parallel calculator equivalent resistance">
+     <div class="tool-icon">➗</div>
+     <h3 class="tool-title">Parallel Resistor Calculator</h3>
+     <p class="tool-description">Calculate equivalent resistance for multiple resistors in parallel configuration.</p>
+     <span class="tool-badge">Calculator</span>
+    </a>
+    
+    <a href="electronics-fusible-resistor-calculator.html" class="tool-card" data-keywords="fusible resistor fuse calculator safety">
+     <div class="tool-icon">🔥</div>
+     <h3 class="tool-title">Fusible Resistor Calculator</h3>
+     <p class="tool-description">Calculate safe operating limits and fusing current for fusible resistors in power circuits.</p>
+     <span class="tool-badge">Safety</span>
+    </a>
+   </div>
+  </section>
+  
+  <!-- LED & Power Tools -->
+  <section class="category" data-category="led">
+   <div class="category-header">
+    <span class="category-icon">💡</span>
+    <a href="electronics/index.html" style="margin-left: auto; color: #0066CC; text-decoration: none; font-weight: 600; font-size: 14px;">View All →</a>
+    <h2 class="category-title">LED & Power Tools</h2>
+   </div>
+   <div class="tools-grid">
+    <a href="electronics-ohms-law-calculator.html" class="tool-card" data-keywords="ohm's law calculator voltage current resistance power">
+     <div class="tool-icon">⚡</div>
+     <h3 class="tool-title">Ohm's Law Calculator</h3>
+     <p class="tool-description">Calculate voltage, current, resistance, and power using Ohm's Law with interactive formula display.</p>
+     <span class="tool-badge">Fundamental</span>
+    </a>
+    
+    <a href="electronics-led-current-calculator.html" class="tool-card" data-keywords="led current limiting resistor calculator">
+     <div class="tool-icon">💡</div>
+     <h3 class="tool-title">LED Current Limiting Resistor Calculator</h3>
+     <p class="tool-description">Calculate the perfect current limiting resistor for your LED circuits with voltage drop and power dissipation.</p>
+     <span class="tool-badge">Popular</span>
+    </a>
+    
+    <a href="electronics-voltage-divider-calculator.html" class="tool-card" data-keywords="voltage divider calculator resistor ratio">
+     <div class="tool-icon">📉</div>
+     <h3 class="tool-title">Voltage Divider Calculator</h3>
+     <p class="tool-description">Design voltage divider circuits with automatic resistor value calculation and output voltage prediction.</p>
+     <span class="tool-badge">Design</span>
+    </a>
+    
+    <a href="electronics-varistor-simulator.html" class="tool-card" data-keywords="varistor mov surge protection simulator">
+     <div class="tool-icon">🛡️</div>
+     <h3 class="tool-title">Varistor (MOV) Simulator</h3>
+     <p class="tool-description">Simulate voltage-dependent resistor behavior for surge protection circuit design.</p>
+     <span class="tool-badge">Protection</span>
+    </a>
+   </div>
+  </section>
+  
+  <!-- Component Tools -->
+  <section class="category" data-category="component">
+   <div class="category-header">
+    <a href="electronics/index.html" style="margin-left: auto; color: #0066CC; text-decoration: none; font-weight: 600; font-size: 14px;">View All →</a>
+    <span class="category-icon">🔧</span>
+    <h2 class="category-title">Component Tools</h2>
+   </div>
+   <div class="tools-grid">
+    <a href="electronics-potentiometer-simulator.html" class="tool-card" data-keywords="potentiometer simulator variable resistor pot">
+     <div class="tool-icon">🎛️</div>
+     <h3 class="tool-title">Potentiometer Simulator</h3>
+     <p class="tool-description">Interactive potentiometer simulator with real-time resistance and voltage readings as you adjust the dial.</p>
+     <span class="tool-badge">Interactive</span>
+    </a>
+    
+    <a href="electronics-potentiometer-decoder.html" class="tool-card" data-keywords="potentiometer code decoder marking">
+     <div class="tool-icon">🔍</div>
+     <h3 class="tool-title">Potentiometer Code Decoder</h3>
+     <p class="tool-description">Decode potentiometer markings and 3-digit codes to determine resistance values and tolerances.</p>
+     <span class="tool-badge">Reference</span>
+    </a>
+    
+    <a href="electronics-electronics-surface-mount-decoder.html" class="tool-card" data-keywords="smd surface mount resistor decoder eia-96">
+     <div class="tool-icon">📱</div>
+     <h3 class="tool-title">Surface Mount Resistor Decoder</h3>
+     <p class="tool-description">Decode SMD resistor codes including 3-digit, 4-digit, and EIA-96 marking systems.</p>
+     <span class="tool-badge">SMD</span>
+    </a>
+   </div>
+  </section>
+  
+  <!-- General Tools -->
+  <section class="category" data-category="general">
+   <div class="category-header">
+    <span class="category-icon">📐</span>
+    <h2 class="category-title">General Tools</h2>
+    <a href="general/index.html" style="margin-left: auto; color: #7B3FF2; text-decoration: none; font-weight: 600; font-size: 14px;">View All →</a>
+   </div>
+   <div class="tools-grid">
+    <a href="general/general-volume-measurement.html" class="tool-card" data-keywords="volume measurement calculator shapes geometry">
+     <div class="tool-icon">📏</div>
+     <h3 class="tool-title">Volume Measurement Calculator</h3>
+     <p class="tool-description">Calculate volumes for various geometric shapes and convert between different units.</p>
+     <span class="tool-badge">Measurement</span>
+    </a>
+   </div>
+  </section>
+ </div>
+ 
+ <footer>
+  <div class="footer-content">
+   <p>Interactive Electronics Tools - Free educational resources. Licensed under <a href="LICENSE" style="color: #0066CC; text-decoration: none; font-weight: 500;">MIT</a>.</p>
+   <div class="footer-links">
+    <a href="https://isocialpractice.github.io/interactive-html/docs/docs.html">Documentation</a>
+    <a href="https://github.com/isocialPractice/interactive-html" target="_blank">GitHub</a>
+   </div>
+  </div>
+ </footer>
+ 
+ <script>
+  // Search functionality
+  const searchInput = document.getElementById('searchInput');
+  const toolCards = document.querySelectorAll('.tool-card');
+  const categories = document.querySelectorAll('.category');
+  
+  searchInput.addEventListener('input', function() {
+   const searchTerm = this.value.toLowerCase().trim();
+   
+   if (searchTerm === '') {
+    // Show all cards and categories
+    toolCards.forEach(card => card.classList.remove('hidden'));
+    categories.forEach(category => category.classList.remove('hidden'));
+    return;
+   }
+   
+   let visibleCardsPerCategory = {};
+   
+   // Filter cards
+   toolCards.forEach(card => {
+    const title = card.querySelector('.tool-title').textContent.toLowerCase();
+    const description = card.querySelector('.tool-description').textContent.toLowerCase();
+    const keywords = card.getAttribute('data-keywords').toLowerCase();
+    const category = card.closest('.category').getAttribute('data-category');
+    
+    const isMatch = title.includes(searchTerm) || 
+       description.includes(searchTerm) || 
+       keywords.includes(searchTerm);
+    
+    if (isMatch) {
+     card.classList.remove('hidden');
+     visibleCardsPerCategory[category] = (visibleCardsPerCategory[category] || 0) + 1;
+    } else {
+     card.classList.add('hidden');
+    }
+   });
+   
+   // Hide categories with no visible cards
+   categories.forEach(category => {
+    const categoryName = category.getAttribute('data-category');
+    if (visibleCardsPerCategory[categoryName] > 0) {
+     category.classList.remove('hidden');
+    } else {
+     category.classList.add('hidden');
+    }
+   });
+  });
+  
+  // Add keyboard navigation
+  searchInput.addEventListener('keydown', function(e) {
+   if (e.key === 'Escape') {
+    this.value = '';
+    this.dispatchEvent(new Event('input'));
+    this.blur();
+   }
+  });
+  
+  // Analytics tracking (placeholder)
+  toolCards.forEach(card => {
+   card.addEventListener('click', function() {
+    const toolName = this.querySelector('.tool-title').textContent;
+    console.log('Tool accessed:', toolName);
+    // Add your analytics tracking here
+   });
+  });
+ </script>
+ 
 <!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
 </body>
 <!-- InstanceEnd --></html>
