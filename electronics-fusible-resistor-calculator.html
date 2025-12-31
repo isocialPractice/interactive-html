@@ -1,0 +1,500 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+ <head>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- InstanceBeginEditable name="head" -->
+ <title>Interactive Fusible Resistor Calculator</title>
+ <style>
+  * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+  body {
+   font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
+   background: linear-gradient(135deg, #FFE6E6 0%, #F5F7FA 100%);
+   color: #1A1A1A;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   min-height: 100vh;
+   margin: 0;
+   padding: 24px;
+  }
+  .container {
+   background: #FFFFFF;
+   border-radius: 16px;
+   padding: 32px;
+   max-width: 800px;
+   width: 100%;
+   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+   border: 1px solid #E1E4E8;
+  }
+  h1 {
+   text-align: center;
+   color: #C1121F;
+   margin-bottom: 8px;
+   font-weight: 700;
+   font-size: 28px;
+  }
+  .subtitle {
+   text-align: center;
+   color: #6C757D;
+   margin-bottom: 32px;
+   font-size: 15px;
+   font-weight: 500;
+  }
+  .resistor-display {
+   background: #e8d4b0;
+   border-radius: 20px;
+   height: 80px;
+   position: relative;
+   margin: 30px 0;
+   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+  .resistor-lead {
+   position: absolute;
+   height: 4px;
+   background: #999;
+   top: 38px;
+   width: 40px;
+  }
+  .resistor-lead.left { left: -40px; }
+  .resistor-lead.right { right: -40px; }
+  .color-band {
+   position: absolute;
+   height: 100%;
+   width: 40px;
+   top: 0;
+  }
+  .band1 { left: 8%; }
+  .band2 { left: 28%; }
+  .band3 { left: 48%; }
+  .band4 { left: 78%; width: 30px; }
+  
+  .controls {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+   gap: 15px;
+   margin: 25px 0;
+  }
+  .control-group {
+   display: flex;
+   flex-direction: column;
+  }
+  label {
+   margin-bottom: 8px;
+   font-weight: 600;
+   color: #1A1A1A;
+   font-size: 14px;
+  }
+  select {
+   padding: 12px 16px;
+   border-radius: 8px;
+   border: 2px solid #E1E4E8;
+   background: #FFFFFF;
+   color: #1A1A1A;
+   font-size: 16px;
+   cursor: pointer;
+   transition: all 0.2s ease;
+  }
+  select:focus {
+   outline: none;
+   border-color: #E63946;
+   box-shadow: 0 0 0 3px rgba(230,57,70,0.1);
+  }
+  .result {
+   background: #F5F7FA;
+   border-radius: 12px;
+   padding: 24px;
+   margin-top: 24px;
+   border: 1px solid #E1E4E8;
+  }
+  .result-row {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 14px;
+   margin: 8px 0;
+   background: #FFFFFF;
+   border-radius: 8px;
+   border: 1px solid #E1E4E8;
+  }
+  .result-label {
+   color: #6C757D;
+   font-size: 14px;
+  }
+  .result-value {
+   font-size: 20px;
+   font-weight: 700;
+   color: #E63946;
+  }
+  .warning-box {
+   background: #FFF4E6;
+   border: 2px solid #FFB800;
+   border-radius: 12px;
+   padding: 20px;
+   margin: 24px 0;
+  }
+  .warning-box h3 {
+   color: #8B5A00;
+   margin: 0 0 12px 0;
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   font-weight: 600;
+   font-size: 16px;
+  }
+  .status-indicator {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding: 16px;
+   background: #F5F7FA;
+   border-radius: 12px;
+   margin: 12px 0;
+   border: 1px solid #E1E4E8;
+  }
+  .status-light {
+   width: 24px;
+   height: 24px;
+   border-radius: 50%;
+   background: #00A86B;
+   box-shadow: 0 0 12px rgba(0,168,107,0.5);
+  }
+  .status-light.warning {
+   background: #FFB800;
+   box-shadow: 0 0 12px rgba(255,184,0,0.5);
+  }
+  .status-light.danger {
+   background: #E63946;
+   box-shadow: 0 0 16px rgba(230,57,70,0.6);
+   animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+   0%, 100% { transform: scale(1); opacity: 1; }
+   50% { transform: scale(1.2); opacity: 0.7; }
+  }
+  .info-box {
+   background: #3a3a3a;
+   border-left: 4px solid #ff5722;
+   padding: 15px;
+   margin: 20px 0;
+   border-radius: 5px;
+  }
+  .info-box h3 {
+   margin: 0 0 10px 0;
+   color: #ff5722;
+  }
+  .test-inputs {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 15px;
+   margin: 15px 0;
+  }
+  .input-group {
+   display: flex;
+   flex-direction: column;
+  }
+  .input-group input {
+   padding: 10px;
+   border-radius: 5px;
+   border: 2px solid #4a4a4a;
+   background: #2a2a2a;
+   color: #fff;
+   font-size: 16px;
+  }
+  .input-group input:focus {
+   outline: none;
+   border-color: #ff5722;
+  }
+ </style>
+<!-- InstanceEndEditable -->
+ </head>
+ 
+<body>
+    <nav class="site-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">
+                <img src="favicon.svg" alt="Electronics Tools" class="nav-logo">
+                <span>Electronics Tools</span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+            <ul class="nav-menu">
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+                    <div class="dropdown-menu">
+                        <a href="555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+                        <a href="555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+                        <a href="555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+                        <a href="555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+                        <a href="electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+                        <a href="electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+                        <a href="electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+                        <a href="electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+                        <a href="electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+                        <a href="electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+                        <a href="electronics-electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+  <!-- InstanceBeginEditable name="page" -->
+ <div class="container">
+  <h1>🛡️ Fusible Resistor Calculator</h1>
+  <p class="subtitle">Calculate resistance and check circuit protection</p>
+  
+  <div class="resistor-display">
+   <div class="resistor-lead left"></div>
+   <div class="resistor-lead right"></div>
+   <div class="color-band band1" id="band1" style="background: brown;"></div>
+   <div class="color-band band2" id="band2" style="background: black;"></div>
+   <div class="color-band band3" id="band3" style="background: brown;"></div>
+   <div class="color-band band4" id="band4" style="background: gold;"></div>
+  </div>
+  
+  <div class="controls">
+   <div class="control-group">
+    <label for="digit1">1st Band (Digit)</label>
+    <select id="digit1" onchange="calculate()">
+     <option value="0" data-color="black">Black (0)</option>
+     <option value="1" data-color="brown" selected>Brown (1)</option>
+     <option value="2" data-color="red">Red (2)</option>
+     <option value="3" data-color="orange">Orange (3)</option>
+     <option value="4" data-color="yellow">Yellow (4)</option>
+     <option value="5" data-color="green">Green (5)</option>
+     <option value="6" data-color="blue">Blue (6)</option>
+     <option value="7" data-color="violet">Violet (7)</option>
+     <option value="8" data-color="gray">Gray (8)</option>
+     <option value="9" data-color="white">White (9)</option>
+    </select>
+   </div>
+   
+   <div class="control-group">
+    <label for="digit2">2nd Band (Digit)</label>
+    <select id="digit2" onchange="calculate()">
+     <option value="0" data-color="black" selected>Black (0)</option>
+     <option value="1" data-color="brown">Brown (1)</option>
+     <option value="2" data-color="red">Red (2)</option>
+     <option value="3" data-color="orange">Orange (3)</option>
+     <option value="4" data-color="yellow">Yellow (4)</option>
+     <option value="5" data-color="green">Green (5)</option>
+     <option value="6" data-color="blue">Blue (6)</option>
+     <option value="7" data-color="violet">Violet (7)</option>
+     <option value="8" data-color="gray">Gray (8)</option>
+     <option value="9" data-color="white">White (9)</option>
+    </select>
+   </div>
+   
+   <div class="control-group">
+    <label for="multiplier">3rd Band (Multiplier)</label>
+    <select id="multiplier" onchange="calculate()">
+     <option value="0" data-color="black">Black (×1)</option>
+     <option value="1" data-color="brown" selected>Brown (×10)</option>
+     <option value="2" data-color="red">Red (×100)</option>
+     <option value="3" data-color="orange">Orange (×1K)</option>
+     <option value="4" data-color="yellow">Yellow (×10K)</option>
+     <option value="5" data-color="green">Green (×100K)</option>
+     <option value="6" data-color="blue">Blue (×1M)</option>
+    </select>
+   </div>
+   
+   <div class="control-group">
+    <label for="tolerance">4th Band (Tolerance)</label>
+    <select id="tolerance" onchange="calculate()">
+     <option value="5" data-color="gold" selected>Gold (±5%)</option>
+     <option value="10" data-color="silver">Silver (±10%)</option>
+     <option value="1" data-color="brown">Brown (±1%)</option>
+     <option value="2" data-color="red">Red (±2%)</option>
+    </select>
+   </div>
+  </div>
+  
+  <div class="result">
+   <div class="result-row">
+    <span class="result-label">Resistance Value:</span>
+    <span class="result-value" id="resistance">100Ω</span>
+   </div>
+   <div class="result-row">
+    <span class="result-label">Tolerance:</span>
+    <span class="result-value" id="toleranceValue">±5%</span>
+   </div>
+   <div class="result-row">
+    <span class="result-label">Range:</span>
+    <span class="result-value" id="range">95Ω - 105Ω</span>
+   </div>
+  </div>
+  
+  <div class="warning-box">
+   <h3>⚠️ Circuit Protection Test</h3>
+   <div class="test-inputs">
+    <div class="input-group">
+     <label for="voltage" style="color: #ff5722;">Supply Voltage (V)</label>
+     <input type="number" id="voltage" value="9" min="0" max="240" oninput="testCircuit()">
+    </div>
+    <div class="input-group">
+     <label for="maxCurrent" style="color: #ff5722;">Max Safe Current (mA)</label>
+     <input type="number" id="maxCurrent" value="50" min="1" max="5000" oninput="testCircuit()">
+    </div>
+   </div>
+   
+   <div class="status-indicator" id="statusIndicator">
+    <div class="status-light" id="statusLight"></div>
+    <div>
+     <div style="font-weight: bold; color: #fff;" id="statusText">Safe</div>
+     <div style="font-size: 12px; color: #aaa;" id="statusDetail">Current: 90mA - Within safe limits</div>
+    </div>
+   </div>
+  </div>
+  
+  <div class="info-box">
+   <h3>🛡️ Fusible Resistor Features:</h3>
+   <ul style="color: #ccc; line-height: 1.8;">
+    <li><strong>Dual Purpose:</strong> Acts as both resistor and fuse</li>
+    <li><strong>Circuit Protection:</strong> Burns out to protect delicate components</li>
+    <li><strong>Fire Resistant:</strong> Covered with fire-resistant resin layer</li>
+    <li><strong>Metal Alloy:</strong> Can have metal alloy covering for safety</li>
+    <li><strong>Color Coded:</strong> Same color code system as standard resistors</li>
+    <li><strong>One-Time Use:</strong> Must be replaced after it blows like a fuse</li>
+   </ul>
+  </div>
+  
+  <div class="info-box">
+   <h3>⚡ When Fusible Resistors Fail:</h3>
+   <ul style="color: #ccc; line-height: 1.8;">
+    <li><strong>Overcurrent:</strong> Too much current causes resistor to heat up</li>
+    <li><strong>Thermal Runaway:</strong> Heat causes resistance material to break down</li>
+    <li><strong>Open Circuit:</strong> Resistor "blows" and creates open circuit</li>
+    <li><strong>Protection:</strong> Prevents damage to expensive downstream components</li>
+    <li><strong>Visual Indicator:</strong> Often shows visible burn marks when failed</li>
+   </ul>
+  </div>
+ </div>
+ 
+ <script>
+  const colorMap = {
+   'black': '#000000',
+   'brown': '#8B4513',
+   'red': '#FF0000',
+   'orange': '#FF8C00',
+   'yellow': '#FFFF00',
+   'green': '#008000',
+   'blue': '#0000FF',
+   'violet': '#8B00FF',
+   'gray': '#808080',
+   'white': '#FFFFFF',
+   'gold': '#FFD700',
+   'silver': '#C0C0C0'
+  };
+  
+  function calculate() {
+   const d1 = parseInt(document.getElementById('digit1').value);
+   const d2 = parseInt(document.getElementById('digit2').value);
+   const mult = parseInt(document.getElementById('multiplier').value);
+   const tol = parseFloat(document.getElementById('tolerance').value);
+   
+   // Update color bands
+   const band1 = document.getElementById('band1');
+   const band2 = document.getElementById('band2');
+   const band3 = document.getElementById('band3');
+   const band4 = document.getElementById('band4');
+   
+   band1.style.background = colorMap[document.getElementById('digit1').selectedOptions[0].dataset.color];
+   band2.style.background = colorMap[document.getElementById('digit2').selectedOptions[0].dataset.color];
+   band3.style.background = colorMap[document.getElementById('multiplier').selectedOptions[0].dataset.color];
+   band4.style.background = colorMap[document.getElementById('tolerance').selectedOptions[0].dataset.color];
+   
+   // Calculate resistance
+   const base = (d1 * 10) + d2;
+   const resistance = base * Math.pow(10, mult);
+   
+   // Format resistance
+   let formattedR;
+   if (resistance >= 1000000) {
+    formattedR = (resistance / 1000000).toFixed(2) + 'MΩ';
+   } else if (resistance >= 1000) {
+    formattedR = (resistance / 1000).toFixed(2) + 'kΩ';
+   } else {
+    formattedR = resistance + 'Ω';
+   }
+   
+   // Calculate tolerance range
+   const tolValue = resistance * (tol / 100);
+   const minR = resistance - tolValue;
+   const maxR = resistance + tolValue;
+   
+   // Format range
+   let formattedMin, formattedMax;
+   if (minR >= 1000) {
+    formattedMin = (minR / 1000).toFixed(2) + 'kΩ';
+    formattedMax = (maxR / 1000).toFixed(2) + 'kΩ';
+   } else {
+    formattedMin = minR.toFixed(0) + 'Ω';
+    formattedMax = maxR.toFixed(0) + 'Ω';
+   }
+   
+   document.getElementById('resistance').textContent = formattedR;
+   document.getElementById('toleranceValue').textContent = '±' + tol + '%';
+   document.getElementById('range').textContent = formattedMin + ' - ' + formattedMax;
+   
+   // Store for circuit test
+   window.currentResistance = resistance;
+   testCircuit();
+  }
+  
+  function testCircuit() {
+   const voltage = parseFloat(document.getElementById('voltage').value) || 0;
+   const maxCurrent = parseFloat(document.getElementById('maxCurrent').value) || 0;
+   const resistance = window.currentResistance || 100;
+   
+   // Calculate actual current (Ohm's law: I = V/R)
+   const actualCurrent = (voltage / resistance) * 1000; // Convert to mA
+   
+   const statusLight = document.getElementById('statusLight');
+   const statusText = document.getElementById('statusText');
+   const statusDetail = document.getElementById('statusDetail');
+   
+   if (actualCurrent <= maxCurrent) {
+    statusLight.className = 'status-light';
+    statusText.textContent = '✓ Safe Operation';
+    statusDetail.textContent = `Current: ${actualCurrent.toFixed(1)}mA - Within safe limits`;
+   } else if (actualCurrent <= maxCurrent * 1.2) {
+    statusLight.className = 'status-light warning';
+    statusText.textContent = '⚠ Warning';
+    statusDetail.textContent = `Current: ${actualCurrent.toFixed(1)}mA - Approaching limit (${maxCurrent}mA)`;
+   } else {
+    statusLight.className = 'status-light danger';
+    statusText.textContent = '🔥 DANGER - Will Blow!';
+    statusDetail.textContent = `Current: ${actualCurrent.toFixed(1)}mA - EXCEEDS safe limit (${maxCurrent}mA)`;
+   }
+  }
+  
+  calculate();
+ </script>    
+<!-- InstanceEndEditable -->
+</body>
+<!-- InstanceEnd --></html>

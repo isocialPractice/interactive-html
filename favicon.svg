@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background Circle -->
+  <circle cx="50" cy="50" r="45" fill="#0066CC"/>
+  
+  <!-- Lightning Bolt Symbol (Electronics) -->
+  <path d="M60 20 L40 50 L50 50 L35 80 L60 45 L48 45 Z" 
+        fill="#FFFFFF" 
+        stroke="#E6F2FF" 
+        stroke-width="2"
+        stroke-linejoin="round"/>
+  
+  <!-- Circuit Connection Dots -->
+  <circle cx="30" cy="35" r="3" fill="#00A86B"/>
+  <circle cx="70" cy="35" r="3" fill="#00A86B"/>
+  <circle cx="50" cy="70" r="3" fill="#FF6B35"/>
+</svg>

@@ -1,0 +1,810 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+ <head>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- InstanceBeginEditable name="head" -->
+ <title>555 Timer Interactive Simulator</title>
+ <style>
+  body {
+   font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
+   background: linear-gradient(135deg, #E6F2FF 0%, #F5F7FA 100%);
+   color: #1A1A1A;
+   margin: 0;
+   padding: 24px;
+  }
+  .container {
+   max-width: 1200px;
+   margin: 0 auto;
+   background: #FFFFFF;
+   border-radius: 16px;
+   padding: 32px;
+   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+   border: 1px solid #E1E4E8;
+  }
+  h1 {
+   text-align: center;
+   color: #004080;
+   margin-bottom: 8px;
+   font-size: 28px;
+   font-weight: 700;
+  }
+  .subtitle {
+   text-align: center;
+   color: #6C757D;
+   margin-bottom: 32px;
+   font-size: 15px;
+   font-weight: 500;
+  }
+  .tabs {
+   display: flex;
+   gap: 8px;
+   margin-bottom: 24px;
+   border-bottom: 2px solid #E1E4E8;
+  }
+  .tabs button {
+   padding: 12px 24px;
+   border: none;
+   background: transparent;
+   color: #6C757D;
+   cursor: pointer;
+   font-size: 15px;
+   font-weight: 600;
+   border-bottom: 3px solid transparent;
+   transition: all 0.2s;
+  }
+  .tabs button:hover {
+   color: #0066CC;
+   background: #F5F7FA;
+  }
+  .tabs button.active {
+   color: #0066CC;
+   border-bottom-color: #0066CC;
+  }
+  .tab-content {
+   display: none;
+  }
+  .tab-content.active {
+   display: block;
+  }
+  .diagram-container {
+   background: #3a3a3a;
+   border-radius: 10px;
+   padding: 30px;
+   margin: 20px 0;
+   min-height: 500px;
+  }
+  svg {
+   width: 100%;
+   height: auto;
+  }
+  .controls {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+   gap: 20px;
+   margin: 20px 0;
+  }
+  .control-group {
+   background: #3a3a3a;
+   padding: 15px;
+   border-radius: 8px;
+  }
+  label {
+   display: block;
+   margin-bottom: 8px;
+   font-weight: bold;
+   color: #4CAF50;
+  }
+  input[type="range"] {
+   width: 100%;
+   height: 40px;
+   background: #2a2a2a;
+   border-radius: 5px;
+  }
+  .value-display {
+   text-align: center;
+   color: #fff;
+   margin-top: 5px;
+   font-size: 18px;
+   font-weight: bold;
+  }
+  .pin-diagram {
+   display: grid;
+   grid-template-columns: 1fr auto 1fr;
+   gap: 20px;
+   align-items: center;
+   margin: 30px 0;
+  }
+  .pin-list {
+   list-style: none;
+   padding: 0;
+  }
+  .pin-item {
+   background: #3a3a3a;
+   padding: 12px;
+   margin: 8px 0;
+   border-radius: 5px;
+   border-left: 4px solid #4CAF50;
+  }
+  .pin-number {
+   color: #4CAF50;
+   font-weight: bold;
+   margin-right: 10px;
+  }
+  .chip-visual {
+   background: #1a1a1a;
+   border: 3px solid #888;
+   border-radius: 10px;
+   padding: 40px 20px;
+   position: relative;
+   min-width: 150px;
+  }
+  .chip-notch {
+   position: absolute;
+   top: -3px;
+   left: 50%;
+   transform: translateX(-50%);
+   width: 30px;
+   height: 15px;
+   background: #2a2a2a;
+   border-radius: 0 0 15px 15px;
+   border: 3px solid #888;
+   border-top: none;
+  }
+  .chip-label {
+   text-align: center;
+   color: #fff;
+   font-weight: bold;
+   font-size: 20px;
+  }
+  .info-box {
+   background: #2a2a2a;
+   border-left: 4px solid #4CAF50;
+   padding: 15px;
+   margin: 20px 0;
+   border-radius: 5px;
+  }
+  .signal-high {
+   color: #4CAF50;
+   font-weight: bold;
+  }
+  .signal-low {
+   color: #f44336;
+   font-weight: bold;
+  }
+  .comparator-display {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 20px;
+   margin: 20px 0;
+  }
+  .comparator-box {
+   background: #3a3a3a;
+   padding: 20px;
+   border-radius: 10px;
+   border: 2px solid #4CAF50;
+  }
+  .comparator-box h3 {
+   color: #4CAF50;
+   margin-top: 0;
+  }
+  .flipflop-display {
+   background: #3a3a3a;
+   padding: 30px;
+   border-radius: 10px;
+   margin: 20px 0;
+  }
+  .flipflop-visual {
+   display: grid;
+   grid-template-columns: 1fr auto 1fr;
+   gap: 30px;
+   align-items: center;
+  }
+  .flipflop-inputs, .flipflop-outputs {
+   display: flex;
+   flex-direction: column;
+   gap: 15px;
+  }
+  .signal-indicator {
+   padding: 12px 20px;
+   border-radius: 5px;
+   text-align: center;
+   font-weight: bold;
+   transition: all 0.3s;
+  }
+  .signal-indicator.high {
+   background: #4CAF50;
+   color: #fff;
+  }
+  .signal-indicator.low {
+   background: #f44336;
+   color: #fff;
+  }
+  .discharge-animation {
+   display: flex;
+   align-items: center;
+   gap: 20px;
+   margin: 30px 0;
+  }
+  .capacitor-visual {
+   position: relative;
+   width: 100px;
+   height: 150px;
+  }
+  .cap-level {
+   position: absolute;
+   bottom: 0;
+   width: 100%;
+   background: linear-gradient(to top, #4CAF50, #81C784);
+   transition: height 0.3s;
+   border-radius: 0 0 10px 10px;
+  }
+  .cap-outline {
+   position: absolute;
+   width: 100%;
+   height: 100%;
+   border: 3px solid #888;
+   border-radius: 10px;
+  }
+  button.control-btn {
+   padding: 12px 24px;
+   border: none;
+   border-radius: 5px;
+   background: #4CAF50;
+   color: #fff;
+   font-size: 16px;
+   cursor: pointer;
+   transition: background 0.3s;
+  }
+  button.control-btn:hover {
+   background: #45a049;
+  }
+  button.control-btn:active {
+   background: #357a38;
+  }
+ </style>
+<!-- InstanceEndEditable -->
+ </head>
+ 
+<body>
+    <nav class="site-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">
+                <img src="favicon.svg" alt="Electronics Tools" class="nav-logo">
+                <span>Electronics Tools</span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+            <ul class="nav-menu">
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+                    <div class="dropdown-menu">
+                        <a href="555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+                        <a href="555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+                        <a href="555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+                        <a href="555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+                        <a href="electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+                        <a href="electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+                        <a href="electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+                        <a href="electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+                        <a href="electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+                        <a href="electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+                        <a href="electronics-electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+  <!-- InstanceBeginEditable name="page" -->
+ <div class="container">
+  <h1>⏲️ 555 Timer Interactive Simulator</h1>
+  <div class="subtitle">Explore how the 555 timer IC works internally</div>
+  
+  <div class="tabs">
+   <button class="active" onclick="showTab('pinout')">Pin Diagram</button>
+   <button onclick="showTab('schematic')">Internal Schematic</button>
+   <button onclick="showTab('comparator')">Comparator Operation</button>
+   <button onclick="showTab('flipflop')">SR Flip-Flop</button>
+   <button onclick="showTab('discharge')">Pin 7 Discharge</button>
+  </div>
+  
+  <!-- Pin Diagram Tab -->
+  <div id="pinout" class="tab-content active">
+   <h2 style="color: #4CAF50;">555 Timer Pin Configuration</h2>
+   <div class="pin-diagram">
+    <ul class="pin-list">
+     <li class="pin-item"><span class="pin-number">Pin 1:</span> Ground (GND)</li>
+     <li class="pin-item"><span class="pin-number">Pin 2:</span> Trigger</li>
+     <li class="pin-item"><span class="pin-number">Pin 3:</span> Output</li>
+     <li class="pin-item"><span class="pin-number">Pin 4:</span> Reset</li>
+    </ul>
+    
+    <div class="chip-visual">
+     <div class="chip-notch"></div>
+     <div class="chip-label">555</div>
+     <svg viewBox="0 0 150 300" style="max-width: 150px;">
+      <!-- Left pins -->
+      <line x1="0" y1="60" x2="30" y2="60" stroke="#c0c0c0" stroke-width="4"/>
+      <text x="35" y="65" fill="#4CAF50" font-size="14" font-weight="bold">1</text>
+      <line x1="0" y1="120" x2="30" y2="120" stroke="#c0c0c0" stroke-width="4"/>
+      <text x="35" y="125" fill="#4CAF50" font-size="14" font-weight="bold">2</text>
+      <line x1="0" y1="180" x2="30" y2="180" stroke="#c0c0c0" stroke-width="4"/>
+      <text x="35" y="185" fill="#4CAF50" font-size="14" font-weight="bold">3</text>
+      <line x1="0" y1="240" x2="30" y2="240" stroke="#c0c0c0" stroke-width="4"/>
+      <text x="35" y="245" fill="#4CAF50" font-size="14" font-weight="bold">4</text>
+      <!-- Right pins -->
+      <line x1="120" y1="60" x2="150" y2="60" stroke="#c0c0c0" stroke-width="4"/>
+      <text x="105" y="65" fill="#4CAF50" font-size="14" font-weight="bold">8</text>
+      <line x1="120" y1="120" x2="150" y2="120" stroke="#c0c0c0" stroke-width="4"/>
+      <text x="105" y="125" fill="#4CAF50" font-size="14" font-weight="bold">7</text>
+      <line x1="120" y1="180" x2="150" y2="180" stroke="#c0c0c0" stroke-width="4"/>
+      <text x="105" y="185" fill="#4CAF50" font-size="14" font-weight="bold">6</text>
+      <line x1="120" y1="240" x2="150" y2="240" stroke="#c0c0c0" stroke-width="4"/>
+      <text x="105" y="245" fill="#4CAF50" font-size="14" font-weight="bold">5</text>
+     </svg>
+    </div>
+    
+    <ul class="pin-list">
+     <li class="pin-item"><span class="pin-number">Pin 8:</span> Vcc (Power Supply)</li>
+     <li class="pin-item"><span class="pin-number">Pin 7:</span> Discharge</li>
+     <li class="pin-item"><span class="pin-number">Pin 6:</span> Threshold</li>
+     <li class="pin-item"><span class="pin-number">Pin 5:</span> Control Voltage</li>
+    </ul>
+   </div>
+   
+   <div class="info-box">
+    <strong>Pin Functions:</strong>
+    <ul style="margin: 10px 0; padding-left: 20px;">
+     <li><strong>Trigger (Pin 2):</strong> Starts the timer when voltage drops below 1/3 Vcc</li>
+     <li><strong>Threshold (Pin 6):</strong> Resets the timer when voltage exceeds 2/3 Vcc</li>
+     <li><strong>Output (Pin 3):</strong> Provides the timer output signal (HIGH or LOW)</li>
+     <li><strong>Discharge (Pin 7):</strong> Discharges the timing capacitor</li>
+     <li><strong>Control Voltage (Pin 5):</strong> Allows manual control of threshold voltage</li>
+     <li><strong>Reset (Pin 4):</strong> Forces output LOW when grounded</li>
+    </ul>
+   </div>
+  </div>
+  
+  <!-- Schematic Tab -->
+  <div id="schematic" class="tab-content">
+   <h2 style="color: #4CAF50;">Internal Schematic</h2>
+   <div class="diagram-container">
+    <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+     <!-- Voltage Divider -->
+     <text x="50" y="30" fill="#4CAF50" font-size="16" font-weight="bold">Voltage Divider (3 × 5kΩ)</text>
+     <line x1="100" y1="50" x2="100" y2="80" stroke="#4CAF50" stroke-width="3"/>
+     <text x="110" y="65" fill="#4CAF50" font-size="12">Vcc</text>
+     <rect x="80" y="80" width="40" height="60" fill="#e8d4b0" stroke="#999" stroke-width="2" rx="5"/>
+     <text x="100" y="115" text-anchor="middle" fill="#000" font-size="11" font-weight="bold">5kΩ</text>
+     <line x1="100" y1="140" x2="100" y2="160" stroke="#4CAF50" stroke-width="3"/>
+     <circle cx="100" cy="160" r="5" fill="#FF5722"/>
+     <text x="110" y="165" fill="#FF5722" font-size="12">2/3 Vcc</text>
+     
+     <rect x="80" y="160" width="40" height="60" fill="#e8d4b0" stroke="#999" stroke-width="2" rx="5"/>
+     <text x="100" y="195" text-anchor="middle" fill="#000" font-size="11" font-weight="bold">5kΩ</text>
+     <line x1="100" y1="220" x2="100" y2="240" stroke="#4CAF50" stroke-width="3"/>
+     <circle cx="100" cy="240" r="5" fill="#FF5722"/>
+     <text x="110" y="245" fill="#FF5722" font-size="12">1/3 Vcc</text>
+     
+     <rect x="80" y="240" width="40" height="60" fill="#e8d4b0" stroke="#999" stroke-width="2" rx="5"/>
+     <text x="100" y="275" text-anchor="middle" fill="#000" font-size="11" font-weight="bold">5kΩ</text>
+     <line x1="100" y1="300" x2="100" y2="330" stroke="#4CAF50" stroke-width="3"/>
+     <line x1="70" y1="330" x2="130" y2="330" stroke="#4CAF50" stroke-width="3"/>
+     <text x="110" y="350" fill="#4CAF50" font-size="12">GND</text>
+     
+     <!-- Comparator 1 -->
+     <text x="280" y="130" fill="#4CAF50" font-size="14" font-weight="bold">Comparator 1</text>
+     <polygon points="250,150 250,210 320,180" fill="none" stroke="#4CAF50" stroke-width="3"/>
+     <text x="240" y="170" fill="#4CAF50" font-size="16">+</text>
+     <text x="240" y="200" fill="#4CAF50" font-size="16">-</text>
+     <line x1="150" y1="160" x2="250" y2="160" stroke="#FF5722" stroke-width="2"/>
+     <line x1="400" y1="100" x2="250" y2="190" stroke="#4CAF50" stroke-width="2"/>
+     <text x="410" y="105" fill="#4CAF50" font-size="11">Pin 6 (Threshold)</text>
+     <line x1="320" y1="180" x2="450" y2="180" stroke="#4CAF50" stroke-width="3"/>
+     <text x="360" y="175" fill="#4CAF50" font-size="11">Reset</text>
+     
+     <!-- Comparator 2 -->
+     <text x="280" y="250" fill="#4CAF50" font-size="14" font-weight="bold">Comparator 2</text>
+     <polygon points="250,270 250,330 320,300" fill="none" stroke="#4CAF50" stroke-width="3"/>
+     <text x="240" y="290" fill="#4CAF50" font-size="16">+</text>
+     <text x="240" y="320" fill="#4CAF50" font-size="16">-</text>
+     <line x1="150" y1="240" x2="250" y2="310" stroke="#FF5722" stroke-width="2"/>
+     <line x1="400" y1="360" x2="250" y2="280" stroke="#4CAF50" stroke-width="2"/>
+     <text x="410" y="365" fill="#4CAF50" font-size="11">Pin 2 (Trigger)</text>
+     <line x1="320" y1="300" x2="450" y2="300" stroke="#4CAF50" stroke-width="3"/>
+     <text x="360" y="315" fill="#4CAF50" font-size="11">Set</text>
+     
+     <!-- SR Flip-Flop -->
+     <rect x="450" y="200" width="120" height="120" fill="none" stroke="#4CAF50" stroke-width="3" rx="10"/>
+     <text x="510" y="225" text-anchor="middle" fill="#4CAF50" font-size="14" font-weight="bold">SR</text>
+     <text x="510" y="245" text-anchor="middle" fill="#4CAF50" font-size="14" font-weight="bold">Flip-Flop</text>
+     <text x="430" y="230" fill="#4CAF50" font-size="12">R</text>
+     <text x="430" y="310" fill="#4CAF50" font-size="12">S</text>
+     <text x="580" y="240" fill="#4CAF50" font-size="12">Q</text>
+     <text x="580" y="280" fill="#4CAF50" font-size="12">Q̄</text>
+     
+     <!-- Output -->
+     <line x1="570" y1="270" x2="620" y2="270" stroke="#4CAF50" stroke-width="3"/>
+     <circle cx="620" cy="270" r="15" fill="none" stroke="#4CAF50" stroke-width="3"/>
+     <text x="620" y="275" text-anchor="middle" fill="#4CAF50" font-size="18" font-weight="bold">1</text>
+     <line x1="635" y1="270" x2="700" y2="270" stroke="#4CAF50" stroke-width="3"/>
+     <text x="710" y="275" fill="#4CAF50" font-size="12" font-weight="bold">Pin 3 (Output)</text>
+     
+     <!-- Discharge Transistor -->
+     <line x1="510" y1="320" x2="510" y2="450" stroke="#4CAF50" stroke-width="2"/>
+     <circle cx="510" cy="450" r="30" fill="none" stroke="#4CAF50" stroke-width="3"/>
+     <text x="510" y="460" text-anchor="middle" fill="#4CAF50" font-size="14" font-weight="bold">T</text>
+     <line x1="510" y1="480" x2="510" y2="520" stroke="#4CAF50" stroke-width="3"/>
+     <line x1="480" y1="520" x2="540" y2="520" stroke="#4CAF50" stroke-width="3"/>
+     <text x="510" y="540" text-anchor="middle" fill="#4CAF50" font-size="12">GND</text>
+     <line x1="540" y1="450" x2="650" y2="450" stroke="#4CAF50" stroke-width="3"/>
+     <text x="660" y="455" fill="#4CAF50" font-size="12" font-weight="bold">Pin 7 (Discharge)</text>
+    </svg>
+   </div>
+   
+   <div class="info-box">
+    <strong>How it works:</strong>
+    <p>The voltage divider creates two reference voltages: 2/3 Vcc (for Comparator 1) and 1/3 Vcc (for Comparator 2). These comparators control the SR flip-flop, which determines the output state and the discharge transistor.</p>
+   </div>
+  </div>
+  
+  <!-- Comparator Tab -->
+  <div id="comparator" class="tab-content">
+   <h2 style="color: #4CAF50;">Comparator Operation</h2>
+   
+   <div class="controls">
+    <div class="control-group">
+     <label>Supply Voltage (Vcc)</label>
+     <input type="range" id="vccSlider" min="5" max="15" value="9" step="0.1" oninput="updateComparators()">
+     <div class="value-display" id="vccDisplay">9.0 V</div>
+    </div>
+    <div class="control-group">
+     <label>Pin 6 Threshold Voltage</label>
+     <input type="range" id="pin6Slider" min="0" max="15" value="4" step="0.1" oninput="updateComparators()">
+     <div class="value-display" id="pin6Display">4.0 V</div>
+    </div>
+    <div class="control-group">
+     <label>Pin 2 Trigger Voltage</label>
+     <input type="range" id="pin2Slider" min="0" max="15" value="4" step="0.1" oninput="updateComparators()">
+     <div class="value-display" id="pin2Display">4.0 V</div>
+    </div>
+   </div>
+   
+   <div class="comparator-display">
+    <div class="comparator-box">
+     <h3>Comparator 1 (Threshold)</h3>
+     <p>Positive Input: <span id="comp1Pos">4.0 V</span> (Pin 6)</p>
+     <p>Negative Input: <span id="comp1Neg">6.0 V</span> (2/3 Vcc)</p>
+     <p>Output: <span id="comp1Out" class="signal-low">LOW</span></p>
+     <p style="font-size: 12px; color: #aaa; margin-top: 15px;">
+      Outputs HIGH when Pin 6 > 2/3 Vcc<br>
+      This resets the flip-flop
+     </p>
+    </div>
+    
+    <div class="comparator-box">
+     <h3>Comparator 2 (Trigger)</h3>
+     <p>Positive Input: <span id="comp2Pos">3.0 V</span> (1/3 Vcc)</p>
+     <p>Negative Input: <span id="comp2Neg">4.0 V</span> (Pin 2)</p>
+     <p>Output: <span id="comp2Out" class="signal-low">LOW</span></p>
+     <p style="font-size: 12px; color: #aaa; margin-top: 15px;">
+      Outputs HIGH when Pin 2 < 1/3 Vcc<br>
+      This sets the flip-flop
+     </p>
+    </div>
+   </div>
+   
+   <div class="info-box">
+    <strong>Comparator Rules:</strong>
+    <ul style="margin: 10px 0; padding-left: 20px;">
+     <li>If positive input > negative input → Output is <span class="signal-high">HIGH</span></li>
+     <li>If positive input < negative input → Output is <span class="signal-low">LOW</span></li>
+     <li>Comparator 1 triggers reset when threshold exceeds 2/3 Vcc</li>
+     <li>Comparator 2 triggers set when trigger drops below 1/3 Vcc</li>
+    </ul>
+   </div>
+  </div>
+  
+  <!-- Flip-Flop Tab -->
+  <div id="flipflop" class="tab-content">
+   <h2 style="color: #4CAF50;">SR Flip-Flop Operation</h2>
+   
+   <div class="flipflop-display">
+    <div class="flipflop-visual">
+     <div class="flipflop-inputs">
+      <div>
+       <label>Set (S)</label>
+       <div class="signal-indicator" id="ffSet" onclick="toggleFF('set')">LOW</div>
+      </div>
+      <div>
+       <label>Reset (R)</label>
+       <div class="signal-indicator" id="ffReset" onclick="toggleFF('reset')">LOW</div>
+      </div>
+     </div>
+     
+     <div style="text-align: center;">
+      <svg viewBox="0 0 150 120" style="max-width: 150px;">
+       <rect x="10" y="10" width="130" height="100" fill="none" stroke="#4CAF50" stroke-width="3" rx="10"/>
+       <text x="75" y="50" text-anchor="middle" fill="#4CAF50" font-size="20" font-weight="bold">SR</text>
+       <text x="75" y="75" text-anchor="middle" fill="#4CAF50" font-size="16" font-weight="bold">Flip-Flop</text>
+      </svg>
+     </div>
+     
+     <div class="flipflop-outputs">
+      <div>
+       <label>Q (Output)</label>
+       <div class="signal-indicator" id="ffQ">LOW</div>
+      </div>
+      <div>
+       <label>Q̄ (Inverted)</label>
+       <div class="signal-indicator high" id="ffQbar">HIGH</div>
+      </div>
+     </div>
+    </div>
+   </div>
+   
+   <div class="info-box">
+    <strong>Truth Table:</strong>
+    <table style="width: 100%; margin-top: 10px; border-collapse: collapse;">
+     <tr style="background: #3a3a3a;">
+      <th style="padding: 8px; border: 1px solid #4a4a4a;">S (Set)</th>
+      <th style="padding: 8px; border: 1px solid #4a4a4a;">R (Reset)</th>
+      <th style="padding: 8px; border: 1px solid #4a4a4a;">Q</th>
+      <th style="padding: 8px; border: 1px solid #4a4a4a;">Q̄</th>
+      <th style="padding: 8px; border: 1px solid #4a4a4a;">State</th>
+     </tr>
+     <tr>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">0</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">0</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">No Change</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">No Change</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">Memory</td>
+     </tr>
+     <tr>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">1</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">0</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">1</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">0</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">Set</td>
+     </tr>
+     <tr>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">0</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">1</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">0</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">1</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">Reset</td>
+     </tr>
+     <tr>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">1</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">1</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">Invalid</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a;">Invalid</td>
+      <td style="padding: 8px; border: 1px solid #4a4a4a; color: #f44336;">⚠️ Forbidden</td>
+     </tr>
+    </table>
+    <p style="margin-top: 15px; color: #f44336;">
+     <strong>Warning:</strong> Both S and R should never be HIGH at the same time!
+    </p>
+   </div>
+  </div>
+  
+  <!-- Discharge Tab -->
+  <div id="discharge" class="tab-content">
+   <h2 style="color: #4CAF50;">Pin 7 Discharge Operation</h2>
+   
+   <div class="diagram-container">
+    <div class="discharge-animation">
+     <div>
+      <h3>555 Output State</h3>
+      <button class="control-btn" id="outputToggle" onclick="toggleOutput()">Output: LOW</button>
+      <p style="margin-top: 15px; color: #aaa;">Click to toggle output state</p>
+     </div>
+     
+     <div>
+      <h3>Discharge Transistor</h3>
+      <div style="text-align: center;">
+       <svg viewBox="0 0 150 150" style="max-width: 150px;">
+        <circle cx="75" cy="75" r="50" fill="none" stroke="#4CAF50" stroke-width="3"/>
+        <text x="75" y="85" text-anchor="middle" fill="#4CAF50" font-size="20" font-weight="bold" id="transistorState">OFF</text>
+       </svg>
+      </div>
+      <p style="text-align: center; color: #aaa; margin-top: 10px;">
+       When Output = HIGH → Transistor is <span class="signal-low">OFF</span><br>
+       When Output = LOW → Transistor is <span class="signal-high">ON</span>
+      </p>
+     </div>
+     
+     <div>
+      <h3>Capacitor</h3>
+      <div class="capacitor-visual">
+       <div class="cap-level" id="capLevel" style="height: 0%;"></div>
+       <div class="cap-outline"></div>
+      </div>
+      <p style="text-align: center; margin-top: 10px; color: #aaa;">
+       <span id="capState">Discharged (0%)</span>
+      </p>
+     </div>
+    </div>
+   </div>
+   
+   <div class="info-box">
+    <strong>How Pin 7 Works:</strong>
+    <ul style="margin: 10px 0; padding-left: 20px;">
+     <li>Pin 7 is connected to a transistor controlled by the flip-flop output</li>
+     <li>When <strong>Output = HIGH</strong>: Transistor is OFF, capacitor can charge</li>
+     <li>When <strong>Output = LOW</strong>: Transistor is ON, connects capacitor to ground, allowing discharge</li>
+     <li>This mechanism controls the timing interval of the 555 timer</li>
+    </ul>
+   </div>
+  </div>
+ </div>
+ 
+ <script>
+  let currentTab = 'pinout';
+  let ffState = { set: false, reset: false, q: false, qbar: true };
+  let outputHigh = false;
+  let capCharging = false;
+  let capLevel = 0;
+  let capInterval = null;
+  
+  function showTab(tab) {
+   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+   document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+   document.getElementById(tab).classList.add('active');
+   event.target.classList.add('active');
+   currentTab = tab;
+  }
+  
+  function updateComparators() {
+   const vcc = parseFloat(document.getElementById('vccSlider').value);
+   const pin6 = parseFloat(document.getElementById('pin6Slider').value);
+   const pin2 = parseFloat(document.getElementById('pin2Slider').value);
+   
+   const threshold = (2/3) * vcc;
+   const trigger = (1/3) * vcc;
+   
+   document.getElementById('vccDisplay').textContent = vcc.toFixed(1) + ' V';
+   document.getElementById('pin6Display').textContent = pin6.toFixed(1) + ' V';
+   document.getElementById('pin2Display').textContent = pin2.toFixed(1) + ' V';
+   
+   document.getElementById('comp1Pos').textContent = pin6.toFixed(1) + ' V';
+   document.getElementById('comp1Neg').textContent = threshold.toFixed(1) + ' V';
+   document.getElementById('comp2Pos').textContent = trigger.toFixed(1) + ' V';
+   document.getElementById('comp2Neg').textContent = pin2.toFixed(1) + ' V';
+   
+   const comp1Out = pin6 > threshold;
+   const comp2Out = pin2 < trigger;
+   
+   const comp1El = document.getElementById('comp1Out');
+   const comp2El = document.getElementById('comp2Out');
+   
+   comp1El.textContent = comp1Out ? 'HIGH' : 'LOW';
+   comp1El.className = comp1Out ? 'signal-high' : 'signal-low';
+   
+   comp2El.textContent = comp2Out ? 'HIGH' : 'LOW';
+   comp2El.className = comp2Out ? 'signal-high' : 'signal-low';
+  }
+  
+  function toggleFF(input) {
+   if (input === 'set') {
+    ffState.set = !ffState.set;
+    document.getElementById('ffSet').textContent = ffState.set ? 'HIGH' : 'LOW';
+    document.getElementById('ffSet').className = 'signal-indicator ' + (ffState.set ? 'high' : 'low');
+   } else {
+    ffState.reset = !ffState.reset;
+    document.getElementById('ffReset').textContent = ffState.reset ? 'HIGH' : 'LOW';
+    document.getElementById('ffReset').className = 'signal-indicator ' + (ffState.reset ? 'high' : 'low');
+   }
+   
+   updateFFOutputs();
+  }
+  
+  function updateFFOutputs() {
+   if (ffState.set && ffState.reset) {
+    // Invalid state
+    document.getElementById('ffQ').textContent = 'INVALID';
+    document.getElementById('ffQbar').textContent = 'INVALID';
+    document.getElementById('ffQ').className = 'signal-indicator';
+    document.getElementById('ffQbar').className = 'signal-indicator';
+    document.getElementById('ffQ').style.background = '#ff9800';
+    document.getElementById('ffQbar').style.background = '#ff9800';
+   } else if (ffState.set && !ffState.reset) {
+    // Set
+    ffState.q = true;
+    ffState.qbar = false;
+    document.getElementById('ffQ').textContent = 'HIGH';
+    document.getElementById('ffQbar').textContent = 'LOW';
+    document.getElementById('ffQ').className = 'signal-indicator high';
+    document.getElementById('ffQbar').className = 'signal-indicator low';
+   } else if (!ffState.set && ffState.reset) {
+    // Reset
+    ffState.q = false;
+    ffState.qbar = true;
+    document.getElementById('ffQ').textContent = 'LOW';
+    document.getElementById('ffQbar').textContent = 'HIGH';
+    document.getElementById('ffQ').className = 'signal-indicator low';
+    document.getElementById('ffQbar').className = 'signal-indicator high';
+   }
+   // If both low, maintain current state (already set)
+  }
+  
+  function toggleOutput() {
+   outputHigh = !outputHigh;
+   const btn = document.getElementById('outputToggle');
+   btn.textContent = 'Output: ' + (outputHigh ? 'HIGH' : 'LOW');
+   btn.style.background = outputHigh ? '#4CAF50' : '#f44336';
+   
+   const transistor = document.getElementById('transistorState');
+   transistor.textContent = outputHigh ? 'OFF' : 'ON';
+   transistor.setAttribute('fill', outputHigh ? '#f44336' : '#4CAF50');
+   
+   if (outputHigh) {
+    // Transistor OFF, capacitor charges
+    startCharging();
+   } else {
+    // Transistor ON, capacitor discharges
+    startDischarging();
+   }
+  }
+  
+  function startCharging() {
+   if (capInterval) clearInterval(capInterval);
+   capCharging = true;
+   capInterval = setInterval(() => {
+    if (capLevel < 100) {
+     capLevel += 2;
+     updateCapacitor();
+    } else {
+     clearInterval(capInterval);
+    }
+   }, 50);
+  }
+  
+  function startDischarging() {
+   if (capInterval) clearInterval(capInterval);
+   capCharging = false;
+   capInterval = setInterval(() => {
+    if (capLevel > 0) {
+     capLevel -= 5;
+     updateCapacitor();
+    } else {
+     clearInterval(capInterval);
+    }
+   }, 50);
+  }
+  
+  function updateCapacitor() {
+   const capLevelEl = document.getElementById('capLevel');
+   const capStateEl = document.getElementById('capState');
+   capLevelEl.style.height = capLevel + '%';
+   capStateEl.textContent = capCharging ? `Charging (${Math.round(capLevel)}%)` : `Discharging (${Math.round(capLevel)}%)`;
+  }
+  
+  // Initialize
+  updateComparators();
+  updateFFOutputs();
+ </script>    
+<!-- InstanceEndEditable -->
+</body>
+<!-- InstanceEnd --></html>

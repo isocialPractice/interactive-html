@@ -1,0 +1,357 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+ <head>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- InstanceBeginEditable name="head" -->
+ <title>LED Current Calculator</title>
+ <style>
+  * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+  body {
+   font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
+   background: linear-gradient(135deg, #E6F2FF 0%, #F5F7FA 100%);
+   color: #1A1A1A;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   min-height: 100vh;
+   margin: 0;
+   padding: 24px;
+  }
+  .container {
+   background: #FFFFFF;
+   border-radius: 16px;
+   padding: 32px;
+   max-width: 700px;
+   width: 100%;
+   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+   border: 1px solid #E1E4E8;
+  }
+  h1 {
+   text-align: center;
+   color: #004080;
+   margin-bottom: 24px;
+   font-weight: 700;
+   font-size: 28px;
+  }
+  .circuit-visual {
+   position: relative;
+   height: 300px;
+   margin: 30px 0;
+  }
+  svg {
+   width: 100%;
+   height: 100%;
+  }
+  .led {
+   filter: drop-shadow(0 0 10px currentColor);
+   transition: opacity 0.3s;
+  }
+  .controls {
+   display: grid;
+   gap: 20px;
+   margin: 20px 0;
+  }
+  .control-group {
+   display: flex;
+   flex-direction: column;
+  }
+  label {
+   margin-bottom: 8px;
+   font-weight: 600;
+   color: #1A1A1A;
+   font-size: 14px;
+  }
+  input[type="number"], input[type="range"], select {
+   padding: 12px 16px;
+   border-radius: 8px;
+   border: 2px solid #E1E4E8;
+   background: #FFFFFF;
+   color: #1A1A1A;
+   font-size: 16px;
+   transition: all 0.2s ease;
+  }
+  input:focus, select:focus {
+   outline: none;
+   border-color: #0066CC;
+   box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+  }
+  input[type="range"] {
+   padding: 0;
+   height: 40px;
+  }
+  .value-display {
+   text-align: right;
+   color: #0066CC;
+   font-weight: 600;
+   margin-top: 8px;
+   font-size: 15px;
+  }
+  .result {
+   background: #F5F7FA;
+   border-radius: 12px;
+   padding: 24px;
+   margin-top: 24px;
+   border: 1px solid #E1E4E8;
+  }
+  .result h2 {
+   color: #004080;
+   margin: 0 0 16px 0;
+   font-weight: 600;
+   font-size: 18px;
+  }
+  .result-row {
+   display: flex;
+   justify-content: space-between;
+   padding: 10px 0;
+   border-bottom: 1px solid #4a4a4a;
+  }
+  .result-row:last-child {
+   border-bottom: none;
+  }
+  .result-label {
+   color: #6C757D;
+   font-size: 14px;
+  }
+  .result-value {
+   color: #1A1A1A;
+   font-weight: 600;
+  }
+  .warning {
+   color: #FFB800;
+  }
+  .error {
+   color: #E63946;
+  }
+  .success {
+   color: #00A86B;
+  }
+ </style>
+<!-- InstanceEndEditable -->
+ </head>
+ 
+<body>
+    <nav class="site-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">
+                <img src="favicon.svg" alt="Electronics Tools" class="nav-logo">
+                <span>Electronics Tools</span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+            <ul class="nav-menu">
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+                    <div class="dropdown-menu">
+                        <a href="555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+                        <a href="555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+                        <a href="555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+                        <a href="555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+                        <a href="electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+                        <a href="electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+                        <a href="electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+                        <a href="electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+                        <a href="electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+                    </div>
+                </li>
+                <li class="nav-item nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+                    <div class="dropdown-menu">
+                        <a href="electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+                        <a href="electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+                        <a href="electronics-electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+  <!-- InstanceBeginEditable name="page" -->
+ <div class="container">
+  <h1>💡 LED Current Calculator</h1>
+  
+  <div class="circuit-visual">
+   <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+    <!-- Battery -->
+    <g transform="translate(50, 150)">
+     <rect x="-30" y="-40" width="60" height="80" fill="none" stroke="#4CAF50" stroke-width="2" rx="5"/>
+     <text x="0" y="0" text-anchor="middle" fill="#4CAF50" font-size="16" font-weight="bold" id="batteryText">9V</text>
+     <line x1="-15" y1="-30" x2="15" y2="-30" stroke="#4CAF50" stroke-width="3"/>
+     <line x1="-10" y1="30" x2="10" y2="30" stroke="#4CAF50" stroke-width="3"/>
+     <text x="0" y="-35" text-anchor="middle" fill="#4CAF50" font-size="12">+</text>
+     <text x="0" y="45" text-anchor="middle" fill="#4CAF50" font-size="12">-</text>
+    </g>
+    
+    <!-- Wire from battery to resistor -->
+    <line x1="50" y1="110" x2="50" y2="50" stroke="#4CAF50" stroke-width="3"/>
+    <line x1="50" y1="50" x2="200" y2="50" stroke="#4CAF50" stroke-width="3"/>
+    <line x1="200" y1="50" x2="200" y2="80" stroke="#4CAF50" stroke-width="3"/>
+    
+    <!-- Resistor -->
+    <rect x="180" y="80" width="40" height="60" fill="#e8d4b0" stroke="#999" stroke-width="2" rx="5"/>
+    <text x="200" y="115" text-anchor="middle" fill="#000" font-size="12" font-weight="bold">R</text>
+    <text x="230" y="115" fill="#4CAF50" font-size="11" id="resistorText">330Ω</text>
+    
+    <!-- Wire from resistor to LED -->
+    <line x1="200" y1="140" x2="200" y2="170" stroke="#4CAF50" stroke-width="3"/>
+    
+    <!-- LED -->
+    <g class="led" id="ledElement">
+     <polygon points="190,170 210,170 200,190" fill="none" stroke="#FF5722" stroke-width="3"/>
+     <line x1="190" y1="190" x2="210" y2="190" stroke="#FF5722" stroke-width="3"/>
+     <circle cx="200" cy="180" r="20" fill="none" stroke="#FF5722" stroke-width="2"/>
+     <!-- Light rays -->
+     <line x1="180" y1="160" x2="170" y2="150" stroke="#FFD700" stroke-width="2" opacity="0" id="ray1"/>
+     <line x1="180" y1="170" x2="165" y2="165" stroke="#FFD700" stroke-width="2" opacity="0" id="ray2"/>
+     <line x1="220" y1="160" x2="230" y2="150" stroke="#FFD700" stroke-width="2" opacity="0" id="ray3"/>
+     <line x1="220" y1="170" x2="235" y2="165" stroke="#FFD700" stroke-width="2" opacity="0" id="ray4"/>
+    </g>
+    
+    <!-- Wire from LED to battery -->
+    <line x1="200" y1="200" x2="200" y2="250" stroke="#4CAF50" stroke-width="3"/>
+    <line x1="200" y1="250" x2="50" y2="250" stroke="#4CAF50" stroke-width="3"/>
+    <line x1="50" y1="250" x2="50" y2="190" stroke="#4CAF50" stroke-width="3"/>
+    
+    <!-- Current indicator -->
+    <text x="250" y="110" fill="#FFD700" font-size="14" id="currentIndicator">I = 20mA</text>
+   </svg>
+  </div>
+  
+  <div class="controls">
+   <div class="control-group">
+    <label>Supply Voltage</label>
+    <input type="range" id="voltageSlider" min="3" max="12" value="9" step="0.1" oninput="calculate()">
+    <div class="value-display" id="voltageDisplay">9.0 V</div>
+   </div>
+   
+   <div class="control-group">
+    <label>LED Color</label>
+    <select id="ledColor" onchange="calculate()">
+     <option value="2.0">Red (2.0V)</option>
+     <option value="2.1">Yellow (2.1V)</option>
+     <option value="3.3">Green (3.3V)</option>
+     <option value="3.3">Blue (3.3V)</option>
+     <option value="3.4">White (3.4V)</option>
+    </select>
+   </div>
+   
+   <div class="control-group">
+    <label>Desired LED Current (mA)</label>
+    <input type="number" id="ledCurrent" value="20" min="1" max="30" oninput="calculate()">
+   </div>
+   
+   <div class="control-group">
+    <label>Resistor Value (Ω)</label>
+    <input type="number" id="resistorValue" value="330" min="1" oninput="calculate()">
+   </div>
+  </div>
+  
+  <div class="result">
+   <h2>Results</h2>
+   <div class="result-row">
+    <span class="result-label">Recommended Resistor:</span>
+    <span class="result-value" id="recommendedR">330 Ω</span>
+   </div>
+   <div class="result-row">
+    <span class="result-label">Actual Current:</span>
+    <span class="result-value" id="actualCurrent">20.00 mA</span>
+   </div>
+   <div class="result-row">
+    <span class="result-label">Voltage Drop on Resistor:</span>
+    <span class="result-value" id="voltageDropR">6.60 V</span>
+   </div>
+   <div class="result-row">
+    <span class="result-label">Power Dissipation:</span>
+    <span class="result-value" id="powerDissipation">132 mW</span>
+   </div>
+   <div class="result-row">
+    <span class="result-label">Status:</span>
+    <span class="result-value" id="status">✓ Safe</span>
+   </div>
+  </div>
+ </div>
+ 
+ <script>
+  function calculate() {
+   const voltage = parseFloat(document.getElementById('voltageSlider').value);
+   const ledVoltage = parseFloat(document.getElementById('ledColor').value);
+   const desiredCurrent = parseFloat(document.getElementById('ledCurrent').value) / 1000; // Convert to A
+   const resistorValue = parseFloat(document.getElementById('resistorValue').value);
+   
+   document.getElementById('voltageDisplay').textContent = voltage.toFixed(1) + ' V';
+   document.getElementById('batteryText').textContent = voltage.toFixed(1) + 'V';
+   
+   // Calculate recommended resistor
+   const recommendedR = (voltage - ledVoltage) / desiredCurrent;
+   
+   // Calculate actual current with given resistor
+   const actualCurrent = (voltage - ledVoltage) / resistorValue;
+   const actualCurrentMA = actualCurrent * 1000;
+   
+   // Calculate voltage drop on resistor
+   const voltageDropR = actualCurrent * resistorValue;
+   
+   // Calculate power dissipation
+   const power = actualCurrent * actualCurrent * resistorValue;
+   
+   // Update display
+   document.getElementById('resistorText').textContent = resistorValue + 'Ω';
+   document.getElementById('recommendedR').textContent = Math.round(recommendedR) + ' Ω';
+   document.getElementById('actualCurrent').textContent = actualCurrentMA.toFixed(2) + ' mA';
+   document.getElementById('voltageDropR').textContent = voltageDropR.toFixed(2) + ' V';
+   document.getElementById('powerDissipation').textContent = (power * 1000).toFixed(0) + ' mW';
+   document.getElementById('currentIndicator').textContent = 'I = ' + actualCurrentMA.toFixed(1) + 'mA';
+   
+   // Status check
+   let status = '✓ Safe';
+   let statusClass = 'success';
+   
+   if (actualCurrentMA > 25) {
+    status = '⚠ High Current! LED may burn out';
+    statusClass = 'error';
+   } else if (actualCurrentMA > 22) {
+    status = '⚠ Current slightly high';
+    statusClass = 'warning';
+   } else if (actualCurrentMA < 5) {
+    status = '⚠ Current too low - LED will be dim';
+    statusClass = 'warning';
+   }
+   
+   const statusEl = document.getElementById('status');
+   statusEl.textContent = status;
+   statusEl.className = 'result-value ' + statusClass;
+   
+   // Animate LED based on current
+   const brightness = Math.min(actualCurrentMA / 20, 1.5);
+   const rays = ['ray1', 'ray2', 'ray3', 'ray4'];
+   rays.forEach(ray => {
+    document.getElementById(ray).style.opacity = brightness > 0.2 ? brightness * 0.8 : 0;
+   });
+   
+   document.getElementById('ledElement').style.opacity = 0.5 + (brightness * 0.5);
+  }
+  
+  // Initialize
+  calculate();
+ </script>    
+<!-- InstanceEndEditable -->
+</body>
+<!-- InstanceEnd --></html>
