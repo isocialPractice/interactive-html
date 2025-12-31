@@ -4,7 +4,7 @@ A collection of interactive electronics calculators, simulators, and educational
 
 ## 🚀 Quick Start
 
-**[Launch Interactive Electronics Tools](index.html)** - Browse all tools from our modern landing page with search and categorized navigation.
+**[Launch Interactive Electronics Tools](https://isocialpractice.github.io/interactive-html/index.html)** - Browse all tools from our modern landing page with search and categorized navigation.
 
 Or visit any tool directly from the list below.
 
