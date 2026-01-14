@@ -205,7 +205,7 @@ Each HTML file follows this pattern:
 <head>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.svg">
-  
+
   <!-- InstanceBeginEditable name="head" -->
   <title>Page Title</title>
   <style>/* Page-specific styles */</style>
@@ -213,7 +213,7 @@ Each HTML file follows this pattern:
 </head>
 <body>
   <nav class="site-nav"><!-- Global navigation --></nav>
-  
+
   <!-- InstanceBeginEditable name="page" -->
   <!-- Page content here -->
   <!-- InstanceEndEditable -->

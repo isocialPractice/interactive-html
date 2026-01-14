@@ -26,10 +26,10 @@
    ```bash
    # For a general tool:
    cp general/general-volume-measurement.html general/new-tool.html
-   
+
    # For a 555 timer tool:
    cp 555/555-astable-calculator.html 555/new-tool.html
-   
+
    # For an electronics tool:
    cp electronics/electronics-ohms-law-calculator.html electronics/new-tool.html
    ```

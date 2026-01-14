@@ -149,16 +149,16 @@ interactive-html/
     --color-primary-light: #E6F2FF  ◄── Backgrounds, highlights
     --color-secondary: #00A86B      ◄── Success indicators
     --color-accent: #FF6B35         ◄── Warning, special attention
-    
+
     /* Typography */
     --font-family: Inter, Segoe UI, system
     --font-size-base: 16px
     --font-weight-bold: 700
-    
+
     /* Spacing */
     --spacing-md: 16px
     --spacing-lg: 24px
-    
+
     /* Effects */
     --radius-md: 8px
     --shadow-lg: 0 8px 24px rgba(0,0,0,0.12)
@@ -175,7 +175,7 @@ interactive-html/
    ├─→ Navigation menu styles
    ├─→ Common component styles
    └─→ Responsive breakpoints
-   
+
 2. PAGE-SPECIFIC STYLES (in <head>)
    │
    ├─→ Override global styles as needed
