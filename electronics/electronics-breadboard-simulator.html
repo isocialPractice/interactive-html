@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6502 Breadboard Simulator - Ben Eater Tutorial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header .tutorial-ref {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .toolbar {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding-right: 20px;
+            border-right: 2px solid #d0d0d0;
+        }
+
+        .toolbar-section:last-child {
+            border-right: none;
+        }
+
+        .toolbar-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #0b7dda;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-warning {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #1a252f;
+        }
+
+        .btn-component {
+            background: white;
+            border: 2px solid #ddd;
+            color: #333;
+            padding: 10px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-component:hover {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-component .icon {
+            font-size: 20px;
+        }
+
+        .btn-component .label {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .workspace {
+            display: flex;
+            height: calc(100vh - 200px);
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #fafafa;
+            border-right: 2px solid #e0e0e0;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 8px;
+        }
+
+        .component-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .component-item {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 12px;
+            cursor: grab;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .component-item:hover {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+            transform: translateX(5px);
+        }
+
+        .component-item:active {
+            cursor: grabbing;
+        }
+
+        .component-icon {
+            font-size: 24px;
+        }
+
+        .component-info {
+            flex: 1;
+        }
+
+        .component-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .component-desc {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            background: #fff;
+        }
+
+        #breadboard-canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .properties-panel {
+            width: 300px;
+            background: #fafafa;
+            border-left: 2px solid #e0e0e0;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .properties-panel h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 8px;
+        }
+
+        .property-group {
+            margin-bottom: 20px;
+        }
+
+        .property-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #1976D2;
+        }
+
+        .info-box p {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .status-bar {
+            background: #263238;
+            color: white;
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            gap: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .connection-mode {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin: 10px 30px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .connection-mode.active {
+            display: block;
+        }
+
+        .connection-mode p {
+            font-size: 13px;
+            color: #1565c0;
+            font-weight: 500;
+        }
+
+        /* Component styles on canvas */
+        .placed-component {
+            position: absolute;
+            border: 2px solid #333;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: move;
+            transition: box-shadow 0.2s;
+            user-select: none;
+        }
+
+        .placed-component:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .placed-component.selected {
+            border-color: #2196F3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+            z-index: 20;
+        }
+
+        .chip-label {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .properties-panel {
+                width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .workspace {
+                flex-direction: column;
+            }
+
+            .sidebar,
+            .properties-panel {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🔌 6502 Breadboard Simulator</h1>
+                <div class="tutorial-ref">Based on Ben Eater's 6502 Computer Tutorial Series</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="toolbar-section">
+                <span class="toolbar-label">File:</span>
+                <button class="btn btn-primary" onclick="simulator.newProject()">New</button>
+                <button class="btn btn-secondary" onclick="simulator.saveProject()">Save</button>
+                <button class="btn btn-secondary" onclick="simulator.loadProject()">Load</button>
+                <button class="btn btn-secondary" onclick="simulator.exportImage()">Export</button>
+            </div>
+
+            <div class="toolbar-section">
+                <span class="toolbar-label">Edit:</span>
+                <button class="btn btn-warning" onclick="simulator.deleteSelected()">Delete</button>
+                <button class="btn btn-danger" onclick="simulator.clearCanvas()">Clear All</button>
+            </div>
+
+            <div class="toolbar-section">
+                <span class="toolbar-label">Tools:</span>
+                <button class="btn btn-secondary" onclick="simulator.toggleConnectionMode()">Wire Mode</button>
+                <button class="btn btn-secondary" onclick="simulator.toggleGrid()">Toggle Grid</button>
+                <button class="btn btn-primary" onclick="simulator.autoRoute()">Auto Route</button>
+            </div>
+
+            <div class="toolbar-section">
+                <span class="toolbar-label">View:</span>
+                <button class="btn btn-secondary" onclick="simulator.zoomIn()">🔍 +</button>
+                <button class="btn btn-secondary" onclick="simulator.zoomOut()">🔍 -</button>
+                <button class="btn btn-secondary" onclick="simulator.resetView()">Reset</button>
+            </div>
+        </div>
+
+        <div class="connection-mode" id="connectionMode">
+            <p>🔌 Wire Mode Active: Click on two points to create a connection</p>
+        </div>
+
+        <div style="background: #e3f2fd; border-left: 4px solid #2196F3; padding: 12px 30px; margin: 0; display: flex; gap: 30px; align-items: center; border-bottom: 1px solid #ddd;">
+            <strong style="color: #1976D2;">💡 Quick Tips:</strong>
+            <span style="font-size: 13px; color: #555;"><strong>Drag & Drop:</strong> Drag components onto the breadboard</span>
+            <span style="font-size: 13px; color: #555;"><strong>Wire Mode:</strong> Click two points to connect</span>
+            <span style="font-size: 13px; color: #555;"><strong>Delete:</strong> Select and press Delete key</span>
+            <span style="font-size: 13px; color: #555;"><strong>Move:</strong> Click and drag components</span>
+        </div>
+
+        <div class="workspace">
+            <div class="sidebar">
+                <h3>📦 Components</h3>
+                <div class="component-list">
+                    <div class="component-item" draggable="true" data-type="w65c02s">
+                        <div class="component-icon">🖥️</div>
+                        <div class="component-info">
+                            <div class="component-name">W65C02S</div>
+                            <div class="component-desc">Microprocessor</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="28c256">
+                        <div class="component-icon">💾</div>
+                        <div class="component-info">
+                            <div class="component-name">28C256</div>
+                            <div class="component-desc">EEPROM 32KB</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="w65c22">
+                        <div class="component-icon">🔌</div>
+                        <div class="component-info">
+                            <div class="component-name">W65C22</div>
+                            <div class="component-desc">VIA Interface</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="74hc00">
+                        <div class="component-icon">⚡</div>
+                        <div class="component-info">
+                            <div class="component-name">74HC00</div>
+                            <div class="component-desc">NAND Gate</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="ne555">
+                        <div class="component-icon">⏱️</div>
+                        <div class="component-info">
+                            <div class="component-name">NE555</div>
+                            <div class="component-desc">Timer IC</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="led">
+                        <div class="component-icon">💡</div>
+                        <div class="component-info">
+                            <div class="component-name">LED</div>
+                            <div class="component-desc">Light Emitting Diode</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="resistor">
+                        <div class="component-icon">📏</div>
+                        <div class="component-info">
+                            <div class="component-name">Resistor</div>
+                            <div class="component-desc">1kΩ Default</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="capacitor">
+                        <div class="component-icon">🔋</div>
+                        <div class="component-info">
+                            <div class="component-name">Capacitor</div>
+                            <div class="component-desc">100nF Default</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="button">
+                        <div class="component-icon">🔘</div>
+                        <div class="component-info">
+                            <div class="component-name">Push Button</div>
+                            <div class="component-desc">Momentary Switch</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="crystal">
+                        <div class="component-icon">💎</div>
+                        <div class="component-info">
+                            <div class="component-name">Crystal</div>
+                            <div class="component-desc">1MHz Oscillator</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="power">
+                        <div class="component-icon">🔌</div>
+                        <div class="component-info">
+                            <div class="component-name">Power (+5V)</div>
+                            <div class="component-desc">Power Rail</div>
+                        </div>
+                    </div>
+
+                    <div class="component-item" draggable="true" data-type="ground">
+                        <div class="component-icon">⏚</div>
+                        <div class="component-info">
+                            <div class="component-name">Ground (GND)</div>
+                            <div class="component-desc">Ground Rail</div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="breadboard-canvas" width="1200" height="800"></canvas>
+            </div>
+
+            <div class="properties-panel">
+                <h3>⚙️ Properties</h3>
+                <div id="properties-content">
+                    <p style="color: #999; font-size: 14px; text-align: center; margin-top: 50px;">
+                        Select a component to view properties
+                    </p>
+                </div>
+
+                <div class="info-box">
+                    <h4>📚 Reference: Ben Eater Tutorial</h4>
+                    <p><strong>Video 1:</strong> Basic 6502 hookup with clock and address/data monitoring</p>
+                    <p><strong>Video 2:</strong> Adding 28C256 EEPROM for program storage</p>
+                    <p><strong>Key Concepts:</strong></p>
+                    <ul style="font-size: 12px; margin-left: 20px; margin-top: 5px;">
+                        <li>Address bus (A0-A15)</li>
+                        <li>Data bus (D0-D7)</li>
+                        <li>PHI2 Clock signal</li>
+                        <li>R/W̅ control line</li>
+                        <li>RESB̅ reset button</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span>Components: <strong id="componentCount">0</strong></span>
+                <span>Connections: <strong id="connectionCount">0</strong></span>
+                <span>Selected: <strong id="selectedComponent">None</strong></span>
+            </div>
+            <div class="status-item">
+                <span>Zoom: <strong id="zoomLevel">100%</strong></span>
+                <span>Grid: <strong id="gridStatus">ON</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BreadboardSimulator {
+            constructor() {
+                this.canvas = document.getElementById('breadboard-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.components = [];
+                this.connections = [];
+                this.selectedComponent = null;
+                this.connectionMode = false;
+                this.connectionStart = null;
+                this.showGrid = true;
+                this.zoom = 1.0;
+                this.offset = { x: 0, y: 0 };
+                this.isDragging = false;
+                this.dragStart = { x: 0, y: 0 };
+                this.mousePos = { x: 0, y: 0 };
+
+                this.initCanvas();
+                this.initDragAndDrop();
+                this.initEventListeners();
+                this.draw();
+            }
+
+            initCanvas() {
+                // Set canvas size to fit container
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+            }
+
+            initDragAndDrop() {
+                const componentItems = document.querySelectorAll('.component-item');
+                
+                componentItems.forEach(item => {
+                    item.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('componentType', item.dataset.type);
+                    });
+                });
+
+                this.canvas.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                this.canvas.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const componentType = e.dataTransfer.getData('componentType');
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left - this.offset.x) / this.zoom;
+                    const y = (e.clientY - rect.top - this.offset.y) / this.zoom;
+                    this.addComponent(componentType, x, y);
+                });
+            }
+
+            initEventListeners() {
+                // Mouse events for dragging and selecting
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+
+                // Keyboard events
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Delete' && this.selectedComponent) {
+                        this.deleteSelected();
+                    }
+                });
+
+                // Window resize
+                window.addEventListener('resize', () => {
+                    this.initCanvas();
+                    this.draw();
+                });
+            }
+
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - this.offset.x) / this.zoom;
+                const y = (e.clientY - rect.top - this.offset.y) / this.zoom;
+
+                if (this.connectionMode) {
+                    this.handleConnectionClick(x, y);
+                    return;
+                }
+
+                // Check if clicking on a component
+                const clickedComponent = this.getComponentAt(x, y);
+                
+                if (clickedComponent) {
+                    this.selectedComponent = clickedComponent;
+                    this.isDragging = true;
+                    this.dragStart = { 
+                        x: x - clickedComponent.x, 
+                        y: y - clickedComponent.y 
+                    };
+                    this.updatePropertiesPanel();
+                } else {
+                    this.selectedComponent = null;
+                    this.updatePropertiesPanel();
+                }
+
+                this.draw();
+                this.updateStatusBar();
+            }
+
+            handleMouseMove(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - this.offset.x) / this.zoom;
+                const y = (e.clientY - rect.top - this.offset.y) / this.zoom;
+                
+                this.mousePos = { x, y };
+
+                if (this.isDragging && this.selectedComponent) {
+                    this.selectedComponent.x = x - this.dragStart.x;
+                    this.selectedComponent.y = y - this.dragStart.y;
+                    this.draw();
+                } else if (this.connectionMode && this.connectionStart) {
+                    // Redraw to show connection preview
+                    this.draw();
+                }
+            }
+
+            handleMouseUp(e) {
+                this.isDragging = false;
+            }
+
+            handleConnectionClick(x, y) {
+                if (!this.connectionStart) {
+                    this.connectionStart = { x, y };
+                } else {
+                    this.connections.push({
+                        start: this.connectionStart,
+                        end: { x, y },
+                        color: this.getRandomWireColor()
+                    });
+                    this.connectionStart = null;
+                    this.draw();
+                    this.updateStatusBar();
+                }
+            }
+
+            getComponentAt(x, y) {
+                // Check in reverse order (top to bottom)
+                for (let i = this.components.length - 1; i >= 0; i--) {
+                    const comp = this.components[i];
+                    if (x >= comp.x && x <= comp.x + comp.width &&
+                        y >= comp.y && y <= comp.y + comp.height) {
+                        return comp;
+                    }
+                }
+                return null;
+            }
+
+            addComponent(type, x, y) {
+                const component = {
+                    type,
+                    x,
+                    y,
+                    id: Date.now() + Math.random(),
+                    ...this.getComponentSpecs(type)
+                };
+
+                this.components.push(component);
+                this.draw();
+                this.updateStatusBar();
+            }
+
+            getComponentSpecs(type) {
+                const specs = {
+                    'w65c02s': {
+                        width: 120,
+                        height: 180,
+                        pins: 40,
+                        label: 'W65C02S',
+                        color: '#2c3e50'
+                    },
+                    '28c256': {
+                        width: 120,
+                        height: 140,
+                        pins: 28,
+                        label: '28C256',
+                        color: '#34495e'
+                    },
+                    'w65c22': {
+                        width: 120,
+                        height: 180,
+                        pins: 40,
+                        label: 'W65C22',
+                        color: '#2c3e50'
+                    },
+                    '74hc00': {
+                        width: 80,
+                        height: 70,
+                        pins: 14,
+                        label: '74HC00',
+                        color: '#7f8c8d'
+                    },
+                    'ne555': {
+                        width: 60,
+                        height: 60,
+                        pins: 8,
+                        label: 'NE555',
+                        color: '#95a5a6'
+                    },
+                    'led': {
+                        width: 30,
+                        height: 30,
+                        pins: 2,
+                        label: 'LED',
+                        color: '#c0392b',
+                        value: 'Red'
+                    },
+                    'resistor': {
+                        width: 60,
+                        height: 20,
+                        pins: 2,
+                        label: 'R',
+                        color: '#95a5a6',
+                        value: '1kΩ'
+                    },
+                    'capacitor': {
+                        width: 30,
+                        height: 40,
+                        pins: 2,
+                        label: 'C',
+                        color: '#3498db',
+                        value: '100nF'
+                    },
+                    'button': {
+                        width: 40,
+                        height: 40,
+                        pins: 2,
+                        label: 'SW',
+                        color: '#34495e'
+                    },
+                    'crystal': {
+                        width: 40,
+                        height: 50,
+                        pins: 2,
+                        label: 'XTAL',
+                        color: '#1abc9c',
+                        value: '1MHz'
+                    },
+                    'power': {
+                        width: 40,
+                        height: 40,
+                        pins: 1,
+                        label: '+5V',
+                        color: '#c0392b'
+                    },
+                    'ground': {
+                        width: 40,
+                        height: 40,
+                        pins: 1,
+                        label: 'GND',
+                        color: '#34495e'
+                    }
+                };
+
+                return specs[type] || specs['resistor'];
+            }
+
+            getRandomWireColor() {
+                const colors = ['#3498db', '#2ecc71', '#1abc9c', '#34495e', '#16a085', '#2980b9', '#27ae60'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            draw() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Save context and apply transformations
+                this.ctx.save();
+                this.ctx.translate(this.offset.x, this.offset.y);
+                this.ctx.scale(this.zoom, this.zoom);
+
+                // Draw breadboard background
+                this.drawBreadboard();
+
+                // Draw grid if enabled
+                if (this.showGrid) {
+                    this.drawGrid();
+                }
+
+                // Draw connections
+                this.drawConnections();
+
+                // Draw components
+                this.drawComponents();
+
+                // Draw connection preview if in connection mode
+                if (this.connectionMode && this.connectionStart) {
+                    this.drawConnectionPreview();
+                }
+                
+                // Restore context
+                this.ctx.restore();
+            }
+
+            drawBreadboard() {
+                // Background
+                this.ctx.fillStyle = '#fafafa';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw power rails
+                const railHeight = 30;
+                const railY1 = 50;
+                const railY2 = this.canvas.height - 80;
+
+                // Positive rail (red)
+                this.ctx.fillStyle = '#ffe5e5';
+                this.ctx.fillRect(20, railY1, this.canvas.width - 40, railHeight);
+                this.ctx.fillRect(20, railY2, this.canvas.width - 40, railHeight);
+
+                // Ground rail (blue)
+                this.ctx.fillStyle = '#e3f2fd';
+                this.ctx.fillRect(20, railY1 + railHeight + 10, this.canvas.width - 40, railHeight);
+                this.ctx.fillRect(20, railY2 + railHeight + 10, this.canvas.width - 40, railHeight);
+
+                // Draw labels
+                this.ctx.fillStyle = '#666';
+                this.ctx.font = 'bold 14px sans-serif';
+                this.ctx.fillText('+', 30, railY1 + 20);
+                this.ctx.fillText('-', 30, railY1 + railHeight + 30);
+                this.ctx.fillText('+', 30, railY2 + 20);
+                this.ctx.fillText('-', 30, railY2 + railHeight + 30);
+            }
+
+            drawGrid() {
+                const gridSize = 20;
+                this.ctx.strokeStyle = '#e0e0e0';
+                this.ctx.lineWidth = 0.5;
+
+                // Vertical lines
+                for (let x = 0; x < this.canvas.width; x += gridSize) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+
+                // Horizontal lines
+                for (let y = 0; y < this.canvas.height; y += gridSize) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(this.canvas.width, y);
+                    this.ctx.stroke();
+                }
+            }
+
+            drawConnections() {
+                this.connections.forEach(conn => {
+                    this.ctx.strokeStyle = conn.color;
+                    this.ctx.lineWidth = 3;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(conn.start.x, conn.start.y);
+                    this.ctx.lineTo(conn.end.x, conn.end.y);
+                    this.ctx.stroke();
+
+                    // Draw connection points
+                    this.ctx.fillStyle = conn.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(conn.start.x, conn.start.y, 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.beginPath();
+                    this.ctx.arc(conn.end.x, conn.end.y, 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+            }
+
+            drawConnectionPreview() {
+                if (this.connectionStart && this.mousePos) {
+                    this.ctx.strokeStyle = '#2196F3';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.connectionStart.x, this.connectionStart.y);
+                    this.ctx.lineTo(this.mousePos.x, this.mousePos.y);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                    
+                    // Draw start point
+                    this.ctx.fillStyle = '#2196F3';
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.connectionStart.x, this.connectionStart.y, 5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+
+            drawComponents() {
+                this.components.forEach(comp => {
+                    // Draw component body
+                    this.ctx.fillStyle = comp.color;
+                    this.ctx.fillRect(comp.x, comp.y, comp.width, comp.height);
+
+                    // Draw border (thicker if selected)
+                    this.ctx.strokeStyle = comp === this.selectedComponent ? '#2196F3' : '#000';
+                    this.ctx.lineWidth = comp === this.selectedComponent ? 3 : 1;
+                    this.ctx.strokeRect(comp.x, comp.y, comp.width, comp.height);
+
+                    // Draw label
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.font = 'bold 12px monospace';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(comp.label, comp.x + comp.width / 2, comp.y + comp.height / 2);
+
+                    // Draw pins for ICs
+                    if (comp.pins > 2) {
+                        this.drawICPins(comp);
+                    }
+
+                    // Draw value if exists
+                    if (comp.value) {
+                        this.ctx.fillStyle = '#333';
+                        this.ctx.font = '10px sans-serif';
+                        this.ctx.fillText(comp.value, comp.x + comp.width / 2, comp.y + comp.height + 15);
+                    }
+                });
+            }
+
+            drawICPins(comp) {
+                const pinSpacing = comp.height / (comp.pins / 2 + 1);
+                const pinSize = 6;
+
+                this.ctx.fillStyle = '#c0c0c0';
+
+                // Left side pins
+                for (let i = 0; i < comp.pins / 2; i++) {
+                    const y = comp.y + pinSpacing * (i + 1);
+                    this.ctx.fillRect(comp.x - pinSize, y - pinSize / 2, pinSize, pinSize);
+                }
+
+                // Right side pins
+                for (let i = 0; i < comp.pins / 2; i++) {
+                    const y = comp.y + pinSpacing * (i + 1);
+                    this.ctx.fillRect(comp.x + comp.width, y - pinSize / 2, pinSize, pinSize);
+                }
+
+                // Pin numbers
+                this.ctx.fillStyle = '#666';
+                this.ctx.font = '8px monospace';
+                this.ctx.textAlign = 'right';
+                
+                for (let i = 0; i < comp.pins / 2; i++) {
+                    const y = comp.y + pinSpacing * (i + 1);
+                    this.ctx.fillText(String(i + 1), comp.x - 10, y + 3);
+                }
+
+                this.ctx.textAlign = 'left';
+                for (let i = 0; i < comp.pins / 2; i++) {
+                    const y = comp.y + pinSpacing * (i + 1);
+                    this.ctx.fillText(String(comp.pins - i), comp.x + comp.width + 10, y + 3);
+                }
+            }
+
+            updatePropertiesPanel() {
+                const panel = document.getElementById('properties-content');
+                
+                if (!this.selectedComponent) {
+                    panel.innerHTML = '<p style="color: #999; font-size: 14px; text-align: center; margin-top: 50px;">Select a component to view properties</p>';
+                    return;
+                }
+
+                const comp = this.selectedComponent;
+                panel.innerHTML = `
+                    <div class="property-group">
+                        <label class="property-label">Component Type</label>
+                        <input type="text" class="property-input" value="${comp.label}" readonly>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Position X</label>
+                        <input type="number" class="property-input" value="${Math.round(comp.x)}" 
+                               onchange="simulator.updateComponentProperty('x', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Position Y</label>
+                        <input type="number" class="property-input" value="${Math.round(comp.y)}" 
+                               onchange="simulator.updateComponentProperty('y', this.value)">
+                    </div>
+                    ${comp.value ? `
+                    <div class="property-group">
+                        <label class="property-label">Value</label>
+                        <input type="text" class="property-input" value="${comp.value}" 
+                               onchange="simulator.updateComponentProperty('value', this.value)">
+                    </div>
+                    ` : ''}
+                    ${comp.pins ? `
+                    <div class="property-group">
+                        <label class="property-label">Pins</label>
+                        <input type="text" class="property-input" value="${comp.pins}" readonly>
+                    </div>
+                    ` : ''}
+                    <div class="property-group">
+                        <label class="property-label">Color</label>
+                        <input type="color" class="property-input" value="${comp.color}" 
+                               onchange="simulator.updateComponentProperty('color', this.value)">
+                    </div>
+                `;
+            }
+
+            updateComponentProperty(prop, value) {
+                if (this.selectedComponent) {
+                    if (prop === 'x' || prop === 'y') {
+                        this.selectedComponent[prop] = parseFloat(value);
+                    } else {
+                        this.selectedComponent[prop] = value;
+                    }
+                    this.draw();
+                }
+            }
+
+            updateStatusBar() {
+                document.getElementById('componentCount').textContent = this.components.length;
+                document.getElementById('connectionCount').textContent = this.connections.length;
+                document.getElementById('selectedComponent').textContent = 
+                    this.selectedComponent ? this.selectedComponent.label : 'None';
+            }
+
+            toggleConnectionMode() {
+                this.connectionMode = !this.connectionMode;
+                const modeIndicator = document.getElementById('connectionMode');
+                modeIndicator.classList.toggle('active', this.connectionMode);
+                this.canvas.style.cursor = this.connectionMode ? 'crosshair' : 'default';
+            }
+
+            toggleGrid() {
+                this.showGrid = !this.showGrid;
+                document.getElementById('gridStatus').textContent = this.showGrid ? 'ON' : 'OFF';
+                this.draw();
+            }
+
+            deleteSelected() {
+                if (this.selectedComponent) {
+                    const index = this.components.indexOf(this.selectedComponent);
+                    if (index > -1) {
+                        this.components.splice(index, 1);
+                        this.selectedComponent = null;
+                        this.draw();
+                        this.updatePropertiesPanel();
+                        this.updateStatusBar();
+                    }
+                }
+            }
+
+            clearCanvas() {
+                if (confirm('Are you sure you want to clear all components and connections?')) {
+                    this.components = [];
+                    this.connections = [];
+                    this.selectedComponent = null;
+                    this.draw();
+                    this.updatePropertiesPanel();
+                    this.updateStatusBar();
+                }
+            }
+
+            newProject() {
+                this.clearCanvas();
+            }
+
+            saveProject() {
+                const project = {
+                    components: this.components,
+                    connections: this.connections,
+                    version: '1.0'
+                };
+                const json = JSON.stringify(project, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '6502-breadboard-' + Date.now() + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            loadProject() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const project = JSON.parse(event.target.result);
+                            this.components = project.components;
+                            this.connections = project.connections;
+                            this.draw();
+                            this.updateStatusBar();
+                        } catch (err) {
+                            alert('Error loading project: ' + err.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            }
+
+            exportImage() {
+                const link = document.createElement('a');
+                link.download = '6502-breadboard-' + Date.now() + '.png';
+                link.href = this.canvas.toDataURL();
+                link.click();
+            }
+
+            zoomIn() {
+                this.zoom = Math.min(this.zoom + 0.1, 2.0);
+                document.getElementById('zoomLevel').textContent = Math.round(this.zoom * 100) + '%';
+                this.draw();
+            }
+
+            zoomOut() {
+                this.zoom = Math.max(this.zoom - 0.1, 0.5);
+                document.getElementById('zoomLevel').textContent = Math.round(this.zoom * 100) + '%';
+                this.draw();
+            }
+
+            resetView() {
+                this.zoom = 1.0;
+                this.offset = { x: 0, y: 0 };
+                document.getElementById('zoomLevel').textContent = '100%';
+                this.draw();
+            }
+
+            autoRoute() {
+                alert('Auto-routing feature coming soon! This will automatically suggest optimal wire routing based on 6502 schematics.');
+            }
+        }
+
+        // Initialize the simulator
+        const simulator = new BreadboardSimulator();
+    </script>
+</body>
+</html>

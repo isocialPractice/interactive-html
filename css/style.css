@@ -252,6 +252,9 @@ h2 {
  font-size: var(--font-size-xl);
  color: var(--color-primary-dark);
 }
+h2.category-title a {
+ text-decoration: none;
+}
 
 h3 {
  font-size: var(--font-size-lg);
