@@ -532,12 +532,14 @@
    <div class="toolbar-section">
     <span class="toolbar-label">Edit:</span>
     <button class="btn btn-warning" onclick="simulator.deleteSelected()">Delete</button>
+    <button class="btn btn-secondary" onclick="simulator.rotateSelected()">🔄 Rotate</button>
     <button class="btn btn-danger" onclick="simulator.clearCanvas()">Clear All</button>
    </div>
 
    <div class="toolbar-section">
     <span class="toolbar-label">Tools:</span>
-    <button class="btn btn-secondary" onclick="simulator.toggleConnectionMode()">Wire Mode</button>
+    <button class="btn btn-secondary" onclick="simulator.toggleConnectionMode()"
+    ()=">" id="wireMode">Wire Mode OFF</button>
     <button class="btn btn-secondary" onclick="simulator.toggleGrid()">Toggle Grid</button>
     <button class="btn btn-primary" onclick="simulator.autoRoute()">Auto Route</button>
    </div>
@@ -551,15 +553,16 @@
   </div>
 
      <div class="connection-mode" id="connectionMode">
-      <p>🔌 Wire Mode Active: Click on two points to create a connection</p>
+      <p id="wireModeText">🔌 Wire Mode Active: Click on two points to create a connection</p>
      </div>
 
-     <div style="background: #e3f2fd; border-left: 4px solid #2196F3; padding: 12px 30px; margin: 0; display: flex; gap: 30px; align-items: center; border-bottom: 1px solid #ddd;">
+     <div style="background: #e3f2fd; border-left: 4px solid #2196F3; padding: 12px 30px; margin: 0; display: flex; gap: 30px; align-items: center; border-bottom: 1px solid #ddd;" id="quickTips">
       <strong style="color: #1976D2;">💡 Quick Tips:</strong>
       <span style="font-size: 13px; color: #555;"><strong>Drag & Drop:</strong> Drag components onto the breadboard</span>
       <span style="font-size: 13px; color: #555;"><strong>Wire Mode:</strong> Click two points to connect</span>
       <span style="font-size: 13px; color: #555;"><strong>Delete:</strong> Select and press Delete key</span>
       <span style="font-size: 13px; color: #555;"><strong>Move:</strong> Click and drag components</span>
+      <span style="font-size: 13px; color: #555;"><strong>Rotate:</strong> Select component and click Rotate (R key)</span>
      </div>
 
      <div class="workspace">
@@ -590,11 +593,11 @@
          </div>
         </div>
 
-        <div class="component-item" draggable="true" data-type="74hc00">
+        <div class="component-item" draggable="true" data-type="7400-series">
          <div class="component-icon">⚡</div>
          <div class="component-info">
-          <div class="component-name">74HC00</div>
-          <div class="component-desc">NAND Gate</div>
+          <div class="component-name">7400-series</div>
+          <div class="component-desc">Logic Gate ICs</div>
          </div>
         </div>
 
@@ -670,6 +673,18 @@
 
       <div class="properties-panel">
        <h3>⚙️ Properties</h3>
+       
+       <div class="property-group" id="7400-series-selector" style="display: none;">
+        <label class="property-label">7400 Chip Type</label>
+        <select class="property-input" id="7400-chip-select" onchange="simulator.change7400ChipType(this.value)">
+         <option value="7400">7400 - NAND Gate</option>
+         <option value="7402">7402 - NOR Gate</option>
+         <option value="7404">7404 - Inverter NOT Gate</option>
+         <option value="7408">7408 - AND Gate</option>
+         <option value="7432">7432 - OR Gate</option>
+        </select>
+       </div>
+       
        <div id="properties-content">
         <p style="color: #999; font-size: 14px; text-align: center; margin-top: 50px;">
             Select a component to view properties
@@ -713,6 +728,8 @@
     this.components = [];
     this.connections = [];
     this.selectedComponent = null;
+    this.selectedWire = null;
+    this.selectedPin = null; // Track selected pin for IC components
     this.connectionMode = false;
     this.connectionStart = null;
     this.showGrid = true;
@@ -721,11 +738,380 @@
     this.isDragging = false;
     this.dragStart = { x: 0, y: 0 };
     this.mousePos = { x: 0, y: 0 };
+    this.ctrlPressed = false;
+    this.editingWire = null;
+    this.editingWirePoint = null; // 'start' or 'end'
+    this.isDraggingWire = false;
+    this.wireDragOffset = { x: 0, y: 0 };
+    
+    // 555 Timer simulation interval
+    this.simulationInterval = null;
+    this.simulationRunning = false;
+
+    // 555 Timer IC Pin Data
+    this.ne555PinData = {
+     essential: {
+      name: 'NE555 Timer IC',
+      description: 'Versatile timer IC for generating accurate time delays or oscillation',
+      applications: ['Astable multivibrator', 'Monostable (one-shot)', 'Bistable flip-flop', 'PWM generation'],
+      voltageRange: '4.5V to 16V (NE555), 2V to 15V (CMOS)',
+      maxCurrent: '200mA output',
+      timingFormula: 'T = 1.1 × R × C (monostable)'
+     },
+     pins: {
+      1: { name: 'GND', fullName: 'Ground', description: 'Ground reference (0V). Connect to negative supply rail.', type: 'power' },
+      2: { name: 'TRIG', fullName: 'Trigger', description: 'Trigger input. When voltage falls below 1/3 Vcc, output goes HIGH and timing cycle begins.', type: 'input' },
+      3: { name: 'OUT', fullName: 'Output', description: 'Output pin. Can source or sink up to 200mA. Swings between Vcc and GND.', type: 'output' },
+      4: { name: 'RESET', fullName: 'Reset', description: 'Active-low reset. When pulled LOW, resets the flip-flop and forces output LOW. Tie to Vcc if not used.', type: 'input' },
+      5: { name: 'CTRL', fullName: 'Control Voltage', description: 'Provides access to internal 2/3 Vcc divider. Can modulate timing. Typically bypassed to GND with 10nF capacitor.', type: 'control' },
+      6: { name: 'THR', fullName: 'Threshold', description: 'Threshold input. When voltage rises above 2/3 Vcc, output goes LOW and discharge transistor turns ON.', type: 'input' },
+      7: { name: 'DIS', fullName: 'Discharge', description: 'Open-collector output. Used to discharge external timing capacitor. Connected internally to output flip-flop.', type: 'output' },
+      8: { name: 'Vcc', fullName: 'Supply Voltage', description: 'Positive supply (4.5V-16V for bipolar, 2V-15V for CMOS). Bypass with 100nF capacitor to GND.', type: 'power' }
+     }
+    };
+
+    // W65C02S Microprocessor Pin Data (40-pin DIP)
+    this.w65c02sPinData = {
+     essential: {
+      name: 'W65C02S Microprocessor',
+      description: '8-bit microprocessor with 16-bit address bus, capable of addressing 64KB of memory. Static core design allows stopping the clock.',
+      applications: ['Retro computing', 'Embedded systems', 'Educational projects', 'Ben Eater 6502 computer'],
+      voltageRange: '1.8V to 5.5V (W65C02S)',
+      maxFrequency: '14 MHz',
+      architecture: '8-bit data bus, 16-bit address bus',
+      registers: 'A (Accumulator), X, Y (Index), SP (Stack Pointer), PC (Program Counter), P (Status)'
+     },
+     pins: {
+      1: { name: 'VPB', fullName: 'Vector Pull', description: 'Output LOW during interrupt vector fetch (addresses $FFFA-$FFFF). Useful for vector mapping.', type: 'output' },
+      2: { name: 'RDY', fullName: 'Ready', description: 'Bi-directional. When LOW, halts the processor at the end of the current cycle. Used for single-stepping or wait states.', type: 'control' },
+      3: { name: 'PHI1O', fullName: 'Phase 1 Out', description: 'Inverted PHI2 clock output. Active when PHI2 is LOW. Used for timing peripherals.', type: 'output' },
+      4: { name: 'IRQB', fullName: 'Interrupt Request', description: 'Active-LOW maskable interrupt input. When asserted and I flag is clear, vectors to $FFFE-$FFFF.', type: 'input' },
+      5: { name: 'MLB', fullName: 'Memory Lock', description: 'Output LOW during read-modify-write instructions. Indicates atomic operation in progress.', type: 'output' },
+      6: { name: 'NMIB', fullName: 'Non-Maskable Interrupt', description: 'Active-LOW edge-triggered interrupt. Cannot be disabled. Vectors to $FFFA-$FFFB.', type: 'input' },
+      7: { name: 'SYNC', fullName: 'Synchronize', description: 'Output HIGH during opcode fetch cycles. Useful for debugging and single-stepping.', type: 'output' },
+      8: { name: 'VDD', fullName: 'Power Supply', description: 'Positive supply voltage (1.8V to 5.5V). Bypass with 100nF capacitor to VSS.', type: 'power' },
+      9: { name: 'A0', fullName: 'Address Bus 0', description: 'Address bus bit 0 (LSB). Three-state output during bus hold.', type: 'address' },
+      10: { name: 'A1', fullName: 'Address Bus 1', description: 'Address bus bit 1. Three-state output during bus hold.', type: 'address' },
+      11: { name: 'A2', fullName: 'Address Bus 2', description: 'Address bus bit 2. Three-state output during bus hold.', type: 'address' },
+      12: { name: 'A3', fullName: 'Address Bus 3', description: 'Address bus bit 3. Three-state output during bus hold.', type: 'address' },
+      13: { name: 'A4', fullName: 'Address Bus 4', description: 'Address bus bit 4. Three-state output during bus hold.', type: 'address' },
+      14: { name: 'A5', fullName: 'Address Bus 5', description: 'Address bus bit 5. Three-state output during bus hold.', type: 'address' },
+      15: { name: 'A6', fullName: 'Address Bus 6', description: 'Address bus bit 6. Three-state output during bus hold.', type: 'address' },
+      16: { name: 'A7', fullName: 'Address Bus 7', description: 'Address bus bit 7. Three-state output during bus hold.', type: 'address' },
+      17: { name: 'A8', fullName: 'Address Bus 8', description: 'Address bus bit 8. Three-state output during bus hold.', type: 'address' },
+      18: { name: 'A9', fullName: 'Address Bus 9', description: 'Address bus bit 9. Three-state output during bus hold.', type: 'address' },
+      19: { name: 'A10', fullName: 'Address Bus 10', description: 'Address bus bit 10. Three-state output during bus hold.', type: 'address' },
+      20: { name: 'A11', fullName: 'Address Bus 11', description: 'Address bus bit 11. Three-state output during bus hold.', type: 'address' },
+      21: { name: 'VSS', fullName: 'Ground', description: 'Ground reference (0V). Connect to system ground.', type: 'power' },
+      22: { name: 'A12', fullName: 'Address Bus 12', description: 'Address bus bit 12. Three-state output during bus hold.', type: 'address' },
+      23: { name: 'A13', fullName: 'Address Bus 13', description: 'Address bus bit 13. Three-state output during bus hold.', type: 'address' },
+      24: { name: 'A14', fullName: 'Address Bus 14', description: 'Address bus bit 14. Three-state output during bus hold.', type: 'address' },
+      25: { name: 'A15', fullName: 'Address Bus 15', description: 'Address bus bit 15 (MSB). Three-state output during bus hold.', type: 'address' },
+      26: { name: 'D7', fullName: 'Data Bus 7', description: 'Data bus bit 7 (MSB). Bidirectional three-state.', type: 'data' },
+      27: { name: 'D6', fullName: 'Data Bus 6', description: 'Data bus bit 6. Bidirectional three-state.', type: 'data' },
+      28: { name: 'D5', fullName: 'Data Bus 5', description: 'Data bus bit 5. Bidirectional three-state.', type: 'data' },
+      29: { name: 'D4', fullName: 'Data Bus 4', description: 'Data bus bit 4. Bidirectional three-state.', type: 'data' },
+      30: { name: 'D3', fullName: 'Data Bus 3', description: 'Data bus bit 3. Bidirectional three-state.', type: 'data' },
+      31: { name: 'D2', fullName: 'Data Bus 2', description: 'Data bus bit 2. Bidirectional three-state.', type: 'data' },
+      32: { name: 'D1', fullName: 'Data Bus 1', description: 'Data bus bit 1. Bidirectional three-state.', type: 'data' },
+      33: { name: 'D0', fullName: 'Data Bus 0', description: 'Data bus bit 0 (LSB). Bidirectional three-state.', type: 'data' },
+      34: { name: 'RWB', fullName: 'Read/Write', description: 'HIGH = Read cycle, LOW = Write cycle. Directly controls memory/peripheral direction.', type: 'output' },
+      35: { name: 'NC', fullName: 'No Connection', description: 'No internal connection. Leave unconnected or tie to VDD.', type: 'nc' },
+      36: { name: 'BE', fullName: 'Bus Enable', description: 'When LOW, address/data/RWB buses go high-impedance. Used for DMA or bus sharing.', type: 'input' },
+      37: { name: 'PHI2', fullName: 'Phase 2 Clock', description: 'System clock input. Data is valid on the falling edge. Max 14MHz for W65C02S.', type: 'input' },
+      38: { name: 'SOB', fullName: 'Set Overflow', description: 'Active-LOW. Negative edge sets the V (overflow) flag in the status register.', type: 'input' },
+      39: { name: 'PHI2O', fullName: 'Phase 2 Out', description: 'Buffered PHI2 clock output. Used for timing external logic.', type: 'output' },
+      40: { name: 'RESB', fullName: 'Reset', description: 'Active-LOW reset. Hold LOW for at least 2 clock cycles. Vectors to $FFFC-$FFFD on release.', type: 'input' }
+     }
+    };
+
+    // W65C22 VIA (Versatile Interface Adapter) Pin Data (40-pin DIP)
+    this.w65c22PinData = {
+     essential: {
+      name: 'W65C22 VIA (Versatile Interface Adapter)',
+      description: '40-pin peripheral interface chip providing two 8-bit parallel I/O ports, two 16-bit timer/counters, and a serial shift register. Essential for 6502 system I/O.',
+      applications: ['Parallel I/O expansion', '6502 peripheral interface', 'Timer/counter applications', 'Ben Eater 6502 computer'],
+      voltageRange: '1.8V to 5.5V (W65C22S)',
+      maxFrequency: '14 MHz',
+      ioPorts: 'Port A (8-bit), Port B (8-bit)',
+      timers: 'Timer 1 (16-bit), Timer 2 (16-bit)',
+      features: 'Shift register, Handshake control, Interrupt control'
+     },
+     pins: {
+      1: { name: 'VSS', fullName: 'Ground', description: 'Ground reference (0V). Connect to system ground.', type: 'power' },
+      2: { name: 'PA0', fullName: 'Port A Bit 0', description: 'Port A data bit 0. Bidirectional I/O, directly controlled by DDRA register.', type: 'io' },
+      3: { name: 'PA1', fullName: 'Port A Bit 1', description: 'Port A data bit 1. Bidirectional I/O, directly controlled by DDRA register.', type: 'io' },
+      4: { name: 'PA2', fullName: 'Port A Bit 2', description: 'Port A data bit 2. Bidirectional I/O, directly controlled by DDRA register.', type: 'io' },
+      5: { name: 'PA3', fullName: 'Port A Bit 3', description: 'Port A data bit 3. Bidirectional I/O, directly controlled by DDRA register.', type: 'io' },
+      6: { name: 'PA4', fullName: 'Port A Bit 4', description: 'Port A data bit 4. Bidirectional I/O, directly controlled by DDRA register.', type: 'io' },
+      7: { name: 'PA5', fullName: 'Port A Bit 5', description: 'Port A data bit 5. Bidirectional I/O, directly controlled by DDRA register.', type: 'io' },
+      8: { name: 'PA6', fullName: 'Port A Bit 6', description: 'Port A data bit 6. Bidirectional I/O, directly controlled by DDRA register.', type: 'io' },
+      9: { name: 'PA7', fullName: 'Port A Bit 7', description: 'Port A data bit 7 (MSB). Bidirectional I/O, directly controlled by DDRA register.', type: 'io' },
+      10: { name: 'PB0', fullName: 'Port B Bit 0', description: 'Port B data bit 0. Bidirectional I/O, directly controlled by DDRB register.', type: 'io' },
+      11: { name: 'PB1', fullName: 'Port B Bit 1', description: 'Port B data bit 1. Bidirectional I/O, directly controlled by DDRB register.', type: 'io' },
+      12: { name: 'PB2', fullName: 'Port B Bit 2', description: 'Port B data bit 2. Bidirectional I/O, directly controlled by DDRB register.', type: 'io' },
+      13: { name: 'PB3', fullName: 'Port B Bit 3', description: 'Port B data bit 3. Bidirectional I/O, directly controlled by DDRB register.', type: 'io' },
+      14: { name: 'PB4', fullName: 'Port B Bit 4', description: 'Port B data bit 4. Bidirectional I/O, directly controlled by DDRB register.', type: 'io' },
+      15: { name: 'PB5', fullName: 'Port B Bit 5', description: 'Port B data bit 5. Bidirectional I/O, directly controlled by DDRB register.', type: 'io' },
+      16: { name: 'PB6', fullName: 'Port B Bit 6', description: 'Port B data bit 6. Also serves as Timer 2 count input (T2 pulse counting mode).', type: 'io' },
+      17: { name: 'PB7', fullName: 'Port B Bit 7', description: 'Port B data bit 7 (MSB). Also serves as Timer 1 output (square wave mode).', type: 'io' },
+      18: { name: 'CB1', fullName: 'Port B Control 1', description: 'Control line 1 for Port B. Input only. Used for handshake or interrupt input. Edge-triggered.', type: 'control' },
+      19: { name: 'CB2', fullName: 'Port B Control 2', description: 'Control line 2 for Port B. Bidirectional. Handshake output, serial data, or manual control.', type: 'control' },
+      20: { name: 'VDD', fullName: 'Power Supply', description: 'Positive supply voltage (1.8V to 5.5V). Bypass with 100nF capacitor to VSS.', type: 'power' },
+      21: { name: 'IRQB', fullName: 'Interrupt Request', description: 'Active-LOW open-drain interrupt output. Directly connects to CPU IRQB. Multiple sources.', type: 'output' },
+      22: { name: 'RWB', fullName: 'Read/Write', description: 'Read/Write select from CPU. HIGH = CPU reads VIA registers, LOW = CPU writes to VIA.', type: 'input' },
+      23: { name: 'CS2B', fullName: 'Chip Select 2', description: 'Active-LOW chip select. Both CS1=HIGH and CS2B=LOW required for VIA access.', type: 'input' },
+      24: { name: 'CS1', fullName: 'Chip Select 1', description: 'Active-HIGH chip select. Both CS1=HIGH and CS2B=LOW required for VIA access.', type: 'input' },
+      25: { name: 'PHI2', fullName: 'Phase 2 Clock', description: 'System clock input from CPU. Data transfers occur on PHI2 HIGH when chip is selected.', type: 'input' },
+      26: { name: 'D7', fullName: 'Data Bus 7', description: 'Data bus bit 7 (MSB). Bidirectional three-state.', type: 'data' },
+      27: { name: 'D6', fullName: 'Data Bus 6', description: 'Data bus bit 6. Bidirectional three-state.', type: 'data' },
+      28: { name: 'D5', fullName: 'Data Bus 5', description: 'Data bus bit 5. Bidirectional three-state.', type: 'data' },
+      29: { name: 'D4', fullName: 'Data Bus 4', description: 'Data bus bit 4. Bidirectional three-state.', type: 'data' },
+      30: { name: 'D3', fullName: 'Data Bus 3', description: 'Data bus bit 3. Bidirectional three-state.', type: 'data' },
+      31: { name: 'D2', fullName: 'Data Bus 2', description: 'Data bus bit 2. Bidirectional three-state.', type: 'data' },
+      32: { name: 'D1', fullName: 'Data Bus 1', description: 'Data bus bit 1. Bidirectional three-state.', type: 'data' },
+      33: { name: 'D0', fullName: 'Data Bus 0', description: 'Data bus bit 0 (LSB). Bidirectional three-state.', type: 'data' },
+      34: { name: 'RESB', fullName: 'Reset', description: 'Active-LOW reset input. Clears all registers and sets ports to input mode.', type: 'input' },
+      35: { name: 'RS3', fullName: 'Register Select 3', description: 'Register select bit 3 (MSB). Combined with RS0-RS2 to address 16 internal registers.', type: 'input' },
+      36: { name: 'RS2', fullName: 'Register Select 2', description: 'Register select bit 2. Combined with RS0-RS3 to address 16 internal registers.', type: 'input' },
+      37: { name: 'RS1', fullName: 'Register Select 1', description: 'Register select bit 1. Combined with RS0-RS3 to address 16 internal registers.', type: 'input' },
+      38: { name: 'RS0', fullName: 'Register Select 0', description: 'Register select bit 0 (LSB). Combined with RS1-RS3 to address 16 internal registers.', type: 'input' },
+      39: { name: 'CA2', fullName: 'Port A Control 2', description: 'Control line 2 for Port A. Bidirectional. Handshake output, serial clock, or manual control.', type: 'control' },
+      40: { name: 'CA1', fullName: 'Port A Control 1', description: 'Control line 1 for Port A. Input only. Used for handshake or interrupt input. Edge-triggered.', type: 'control' }
+     }
+    };
+
+    // AT28C256 EEPROM Pin Data (28-pin DIP)
+    this.at28c256PinData = {
+     essential: {
+      name: 'AT28C256 EEPROM (32K x 8)',
+      description: '256 Kbit (32K x 8) parallel EEPROM with fast read access. Features page write capability for efficient programming and data protection.',
+      applications: ['Program storage', '6502 computer ROM', 'Firmware storage', 'Ben Eater 6502 computer'],
+      voltageRange: '4.5V to 5.5V',
+      accessTime: '150ns (AT28C256-15)',
+      capacity: '32,768 bytes (32KB)',
+      organization: '32K x 8 bits',
+      writeTime: '10ms max (byte), 10ms max (page)',
+      endurance: '100,000 write cycles'
+     },
+     pins: {
+      1: { name: 'A14', fullName: 'Address 14', description: 'Address bus bit 14. Part of the 15-bit address bus (A0-A14) for 32KB addressing.', type: 'address' },
+      2: { name: 'A12', fullName: 'Address 12', description: 'Address bus bit 12. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      3: { name: 'A7', fullName: 'Address 7', description: 'Address bus bit 7. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      4: { name: 'A6', fullName: 'Address 6', description: 'Address bus bit 6. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      5: { name: 'A5', fullName: 'Address 5', description: 'Address bus bit 5. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      6: { name: 'A4', fullName: 'Address 4', description: 'Address bus bit 4. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      7: { name: 'A3', fullName: 'Address 3', description: 'Address bus bit 3. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      8: { name: 'A2', fullName: 'Address 2', description: 'Address bus bit 2. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      9: { name: 'A1', fullName: 'Address 1', description: 'Address bus bit 1. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      10: { name: 'A0', fullName: 'Address 0', description: 'Address bus bit 0 (LSB). Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      11: { name: 'I/O0', fullName: 'Data I/O 0', description: 'Data bus bit 0 (LSB). Bidirectional data line for read/write operations.', type: 'data' },
+      12: { name: 'I/O1', fullName: 'Data I/O 1', description: 'Data bus bit 1. Bidirectional data line for read/write operations.', type: 'data' },
+      13: { name: 'I/O2', fullName: 'Data I/O 2', description: 'Data bus bit 2. Bidirectional data line for read/write operations.', type: 'data' },
+      14: { name: 'GND', fullName: 'Ground', description: 'Ground reference (0V). Connect to system ground.', type: 'power' },
+      15: { name: 'I/O3', fullName: 'Data I/O 3', description: 'Data bus bit 3. Bidirectional data line for read/write operations.', type: 'data' },
+      16: { name: 'I/O4', fullName: 'Data I/O 4', description: 'Data bus bit 4. Bidirectional data line for read/write operations.', type: 'data' },
+      17: { name: 'I/O5', fullName: 'Data I/O 5', description: 'Data bus bit 5. Bidirectional data line for read/write operations.', type: 'data' },
+      18: { name: 'I/O6', fullName: 'Data I/O 6', description: 'Data bus bit 6. Bidirectional data line for read/write operations.', type: 'data' },
+      19: { name: 'I/O7', fullName: 'Data I/O 7', description: 'Data bus bit 7 (MSB). Bidirectional data line for read/write operations.', type: 'data' },
+      20: { name: 'CE', fullName: 'Chip Enable', description: 'Active-LOW chip enable. Must be LOW for read or write operations. Controls power-down mode when HIGH.', type: 'control' },
+      21: { name: 'A10', fullName: 'Address 10', description: 'Address bus bit 10. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      22: { name: 'OE', fullName: 'Output Enable', description: 'Active-LOW output enable. Must be LOW to read data. Controls data bus output drivers.', type: 'control' },
+      23: { name: 'A11', fullName: 'Address 11', description: 'Address bus bit 11. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      24: { name: 'A9', fullName: 'Address 9', description: 'Address bus bit 9. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      25: { name: 'A8', fullName: 'Address 8', description: 'Address bus bit 8. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      26: { name: 'A13', fullName: 'Address 13', description: 'Address bus bit 13. Part of the 15-bit address bus for 32KB addressing.', type: 'address' },
+      27: { name: 'WE', fullName: 'Write Enable', description: 'Active-LOW write enable. Pulse LOW with CE LOW to write data. 100ns min pulse width.', type: 'control' },
+      28: { name: 'VCC', fullName: 'Power Supply', description: 'Positive supply voltage (4.5V to 5.5V). Bypass with 100nF capacitor to GND.', type: 'power' }
+     }
+    };
+
+    // SN7400 Quad 2-Input NAND Gate Pin Data (14-pin DIP)
+    this.sn7400PinData = {
+     essential: {
+      name: 'SN7400 Quad 2-Input NAND Gate',
+      description: 'Contains four independent 2-input NAND gates. Fundamental building block for digital logic - any logic function can be built from NAND gates.',
+      applications: ['Digital logic circuits', 'Address decoding', 'Clock gating', 'Ben Eater 6502 computer'],
+      voltageRange: '4.75V to 5.25V',
+      propagationDelay: '22ns typical',
+      fanOut: '10 standard TTL loads',
+      gateCount: '4 gates',
+      inputsPerGate: '2 inputs',
+      truthTable: 'Y = NOT(A AND B)'
+     },
+     pins: {
+      1: { name: '1A', fullName: 'Gate 1 Input A', description: 'First input to NAND gate 1. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      2: { name: '1B', fullName: 'Gate 1 Input B', description: 'Second input to NAND gate 1. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      3: { name: '1Y', fullName: 'Gate 1 Output', description: 'Output of NAND gate 1. Y = NOT(1A AND 1B). LOW only when both inputs are HIGH.', type: 'output' },
+      4: { name: '2A', fullName: 'Gate 2 Input A', description: 'First input to NAND gate 2. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      5: { name: '2B', fullName: 'Gate 2 Input B', description: 'Second input to NAND gate 2. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      6: { name: '2Y', fullName: 'Gate 2 Output', description: 'Output of NAND gate 2. Y = NOT(2A AND 2B). LOW only when both inputs are HIGH.', type: 'output' },
+      7: { name: 'GND', fullName: 'Ground', description: 'Ground reference (0V). Connect to system ground. Essential for proper operation.', type: 'power' },
+      8: { name: '3Y', fullName: 'Gate 3 Output', description: 'Output of NAND gate 3. Y = NOT(3A AND 3B). LOW only when both inputs are HIGH.', type: 'output' },
+      9: { name: '3A', fullName: 'Gate 3 Input A', description: 'First input to NAND gate 3. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      10: { name: '3B', fullName: 'Gate 3 Input B', description: 'Second input to NAND gate 3. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      11: { name: '4Y', fullName: 'Gate 4 Output', description: 'Output of NAND gate 4. Y = NOT(4A AND 4B). LOW only when both inputs are HIGH.', type: 'output' },
+      12: { name: '4A', fullName: 'Gate 4 Input A', description: 'First input to NAND gate 4. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      13: { name: '4B', fullName: 'Gate 4 Input B', description: 'Second input to NAND gate 4. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      14: { name: 'VCC', fullName: 'Power Supply', description: 'Positive supply voltage (4.75V to 5.25V). Bypass with 100nF capacitor to GND.', type: 'power' }
+     }
+    };
+
+    // SN7404 Hex Inverter (NOT Gate) Pin Data (14-pin DIP)
+    this.sn7404PinData = {
+     essential: {
+      name: 'SN7404 Hex Inverter (NOT Gate)',
+      description: 'Contains six independent inverter (NOT) gates. Each gate outputs the logical complement of its input - HIGH becomes LOW and LOW becomes HIGH.',
+      applications: ['Signal inversion', 'Logic level conversion', 'Clock inversion', 'Ben Eater 6502 computer'],
+      voltageRange: '4.75V to 5.25V',
+      propagationDelay: '22ns typical',
+      fanOut: '10 standard TTL loads',
+      gateCount: '6 gates',
+      inputsPerGate: '1 input',
+      truthTable: 'Y = NOT(A)'
+     },
+     pins: {
+      1: { name: '1A', fullName: 'Gate 1 Input', description: 'Input to inverter gate 1. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      2: { name: '1Y', fullName: 'Gate 1 Output', description: 'Output of inverter gate 1. Y = NOT(1A). Outputs opposite logic level of input.', type: 'output' },
+      3: { name: '2A', fullName: 'Gate 2 Input', description: 'Input to inverter gate 2. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      4: { name: '2Y', fullName: 'Gate 2 Output', description: 'Output of inverter gate 2. Y = NOT(2A). Outputs opposite logic level of input.', type: 'output' },
+      5: { name: '3A', fullName: 'Gate 3 Input', description: 'Input to inverter gate 3. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      6: { name: '3Y', fullName: 'Gate 3 Output', description: 'Output of inverter gate 3. Y = NOT(3A). Outputs opposite logic level of input.', type: 'output' },
+      7: { name: 'GND', fullName: 'Ground', description: 'Ground reference (0V). Connect to system ground. Essential for proper operation.', type: 'power' },
+      8: { name: '4Y', fullName: 'Gate 4 Output', description: 'Output of inverter gate 4. Y = NOT(4A). Outputs opposite logic level of input.', type: 'output' },
+      9: { name: '4A', fullName: 'Gate 4 Input', description: 'Input to inverter gate 4. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      10: { name: '5Y', fullName: 'Gate 5 Output', description: 'Output of inverter gate 5. Y = NOT(5A). Outputs opposite logic level of input.', type: 'output' },
+      11: { name: '5A', fullName: 'Gate 5 Input', description: 'Input to inverter gate 5. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      12: { name: '6Y', fullName: 'Gate 6 Output', description: 'Output of inverter gate 6. Y = NOT(6A). Outputs opposite logic level of input.', type: 'output' },
+      13: { name: '6A', fullName: 'Gate 6 Input', description: 'Input to inverter gate 6. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      14: { name: 'VCC', fullName: 'Power Supply', description: 'Positive supply voltage (4.75V to 5.25V). Bypass with 100nF capacitor to GND.', type: 'power' }
+     }
+    };
+
+    // SN7402 Quad 2-Input NOR Gate Pin Data (14-pin DIP)
+    this.sn7402PinData = {
+     essential: {
+      name: 'SN7402 Quad 2-Input NOR Gate',
+      description: 'Contains four independent 2-input NOR gates. Output is HIGH only when BOTH inputs are LOW. NOR is a universal gate - any logic function can be built from NOR gates.',
+      applications: ['Digital logic circuits', 'Set-Reset latches', 'Address decoding', 'Ben Eater 6502 computer'],
+      voltageRange: '4.75V to 5.25V',
+      propagationDelay: '22ns typical',
+      fanOut: '10 standard TTL loads',
+      gateCount: '4 gates',
+      inputsPerGate: '2 inputs',
+      truthTable: 'Y = NOT(A OR B)'
+     },
+     pins: {
+      1: { name: '1Y', fullName: 'Gate 1 Output', description: 'Output of NOR gate 1. Y = NOT(1A OR 1B). HIGH only when both inputs are LOW.', type: 'output' },
+      2: { name: '1A', fullName: 'Gate 1 Input A', description: 'First input to NOR gate 1. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      3: { name: '1B', fullName: 'Gate 1 Input B', description: 'Second input to NOR gate 1. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      4: { name: '2Y', fullName: 'Gate 2 Output', description: 'Output of NOR gate 2. Y = NOT(2A OR 2B). HIGH only when both inputs are LOW.', type: 'output' },
+      5: { name: '2A', fullName: 'Gate 2 Input A', description: 'First input to NOR gate 2. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      6: { name: '2B', fullName: 'Gate 2 Input B', description: 'Second input to NOR gate 2. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      7: { name: 'GND', fullName: 'Ground', description: 'Ground reference (0V). Connect to system ground. Essential for proper operation.', type: 'power' },
+      8: { name: '3A', fullName: 'Gate 3 Input A', description: 'First input to NOR gate 3. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      9: { name: '3B', fullName: 'Gate 3 Input B', description: 'Second input to NOR gate 3. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      10: { name: '3Y', fullName: 'Gate 3 Output', description: 'Output of NOR gate 3. Y = NOT(3A OR 3B). HIGH only when both inputs are LOW.', type: 'output' },
+      11: { name: '4A', fullName: 'Gate 4 Input A', description: 'First input to NOR gate 4. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      12: { name: '4B', fullName: 'Gate 4 Input B', description: 'Second input to NOR gate 4. Connect to logic signal or tie HIGH/LOW if unused.', type: 'input' },
+      13: { name: '4Y', fullName: 'Gate 4 Output', description: 'Output of NOR gate 4. Y = NOT(4A OR 4B). HIGH only when both inputs are LOW.', type: 'output' },
+      14: { name: 'VCC', fullName: 'Power Supply', description: 'Positive supply voltage (4.75V to 5.25V). Bypass with 100nF capacitor to GND.', type: 'power' }
+     }
+    };
+
+    // SN7408 Quad 2-Input AND Gate Pin Data (14-pin DIP)
+    this.sn7408PinData = {
+     essential: {
+      name: 'SN7408 Quad 2-Input AND Gate',
+      description: 'Contains four independent 2-input AND gates. Output is HIGH only when BOTH inputs are HIGH. Essential for enabling signals and implementing logical AND operations.',
+      applications: ['Digital logic circuits', 'Signal gating', 'Address decoding', 'Enable/disable control', 'Ben Eater 6502 computer'],
+      voltageRange: '4.75V to 5.25V',
+      propagationDelay: '15ns typical',
+      fanOut: '10 standard TTL loads',
+      gateCount: '4 gates',
+      inputsPerGate: '2 inputs',
+      truthTable: 'Y = A AND B'
+     },
+     pins: {
+      1: { name: '1A', fullName: 'Gate 1 Input A', description: 'First input to AND gate 1. Must be HIGH along with 1B for output to be HIGH.', type: 'input' },
+      2: { name: '1B', fullName: 'Gate 1 Input B', description: 'Second input to AND gate 1. Must be HIGH along with 1A for output to be HIGH.', type: 'input' },
+      3: { name: '1Y', fullName: 'Gate 1 Output', description: 'Output of AND gate 1. Y = 1A AND 1B. HIGH only when both inputs are HIGH.', type: 'output' },
+      4: { name: '2A', fullName: 'Gate 2 Input A', description: 'First input to AND gate 2. Must be HIGH along with 2B for output to be HIGH.', type: 'input' },
+      5: { name: '2B', fullName: 'Gate 2 Input B', description: 'Second input to AND gate 2. Must be HIGH along with 2A for output to be HIGH.', type: 'input' },
+      6: { name: '2Y', fullName: 'Gate 2 Output', description: 'Output of AND gate 2. Y = 2A AND 2B. HIGH only when both inputs are HIGH.', type: 'output' },
+      7: { name: 'GND', fullName: 'Ground', description: 'Ground reference (0V). Connect to system ground. Essential for proper operation.', type: 'power' },
+      8: { name: '3Y', fullName: 'Gate 3 Output', description: 'Output of AND gate 3. Y = 3A AND 3B. HIGH only when both inputs are HIGH.', type: 'output' },
+      9: { name: '3A', fullName: 'Gate 3 Input A', description: 'First input to AND gate 3. Must be HIGH along with 3B for output to be HIGH.', type: 'input' },
+      10: { name: '3B', fullName: 'Gate 3 Input B', description: 'Second input to AND gate 3. Must be HIGH along with 3A for output to be HIGH.', type: 'input' },
+      11: { name: '4Y', fullName: 'Gate 4 Output', description: 'Output of AND gate 4. Y = 4A AND 4B. HIGH only when both inputs are HIGH.', type: 'output' },
+      12: { name: '4A', fullName: 'Gate 4 Input A', description: 'First input to AND gate 4. Must be HIGH along with 4B for output to be HIGH.', type: 'input' },
+      13: { name: '4B', fullName: 'Gate 4 Input B', description: 'Second input to AND gate 4. Must be HIGH along with 4A for output to be HIGH.', type: 'input' },
+      14: { name: 'VCC', fullName: 'Power Supply', description: 'Positive supply voltage (4.75V to 5.25V). Bypass with 100nF capacitor to GND.', type: 'power' }
+     }
+    };
+
+    // SN7432 Quad 2-Input OR Gate Pin Data (14-pin DIP)
+    this.sn7432PinData = {
+     essential: {
+      name: 'SN7432 Quad 2-Input OR Gate',
+      description: 'Contains four independent 2-input OR gates. Output is HIGH when at least ONE input is HIGH. Essential for combining signals and implementing logical OR operations.',
+      applications: ['Digital logic circuits', 'Signal combining', 'Multiplexing', 'Priority encoding', 'Ben Eater 6502 computer'],
+      voltageRange: '4.75V to 5.25V',
+      propagationDelay: '15ns typical',
+      fanOut: '10 standard TTL loads',
+      gateCount: '4 gates',
+      inputsPerGate: '2 inputs',
+      truthTable: 'Y = A OR B'
+     },
+     pins: {
+      1: { name: '1A', fullName: 'Gate 1 Input A', description: 'First input to OR gate 1. If HIGH, output will be HIGH regardless of 1B.', type: 'input' },
+      2: { name: '1B', fullName: 'Gate 1 Input B', description: 'Second input to OR gate 1. If HIGH, output will be HIGH regardless of 1A.', type: 'input' },
+      3: { name: '1Y', fullName: 'Gate 1 Output', description: 'Output of OR gate 1. Y = 1A OR 1B. HIGH when either or both inputs are HIGH.', type: 'output' },
+      4: { name: '2A', fullName: 'Gate 2 Input A', description: 'First input to OR gate 2. If HIGH, output will be HIGH regardless of 2B.', type: 'input' },
+      5: { name: '2B', fullName: 'Gate 2 Input B', description: 'Second input to OR gate 2. If HIGH, output will be HIGH regardless of 2A.', type: 'input' },
+      6: { name: '2Y', fullName: 'Gate 2 Output', description: 'Output of OR gate 2. Y = 2A OR 2B. HIGH when either or both inputs are HIGH.', type: 'output' },
+      7: { name: 'GND', fullName: 'Ground', description: 'Ground reference (0V). Connect to system ground. Essential for proper operation.', type: 'power' },
+      8: { name: '3Y', fullName: 'Gate 3 Output', description: 'Output of OR gate 3. Y = 3A OR 3B. HIGH when either or both inputs are HIGH.', type: 'output' },
+      9: { name: '3A', fullName: 'Gate 3 Input A', description: 'First input to OR gate 3. If HIGH, output will be HIGH regardless of 3B.', type: 'input' },
+      10: { name: '3B', fullName: 'Gate 3 Input B', description: 'Second input to OR gate 3. If HIGH, output will be HIGH regardless of 3A.', type: 'input' },
+      11: { name: '4Y', fullName: 'Gate 4 Output', description: 'Output of OR gate 4. Y = 4A OR 4B. HIGH when either or both inputs are HIGH.', type: 'output' },
+      12: { name: '4A', fullName: 'Gate 4 Input A', description: 'First input to OR gate 4. If HIGH, output will be HIGH regardless of 4B.', type: 'input' },
+      13: { name: '4B', fullName: 'Gate 4 Input B', description: 'Second input to OR gate 4. If HIGH, output will be HIGH regardless of 4A.', type: 'input' },
+      14: { name: 'VCC', fullName: 'Power Supply', description: 'Positive supply voltage (4.75V to 5.25V). Bypass with 100nF capacitor to GND.', type: 'power' }
+     }
+    };
 
     this.initCanvas();
     this.initDragAndDrop();
     this.initEventListeners();
+    this.startSimulationLoop();
     this.draw();
+   }
+   
+   startSimulationLoop() {
+    // Start a simulation loop that runs every 500ms for 555 astable oscillation
+    if (this.simulationInterval) {
+     clearInterval(this.simulationInterval);
+    }
+    this.simulationInterval = setInterval(() => {
+     this.runSimulationStep();
+    }, 500);
+   }
+   
+   runSimulationStep() {
+    // Toggle any 555s in astable mode
+    let needsRedraw = false;
+    for (const comp of this.components) {
+     if (comp.type === 'ne555' && comp.astableMode && comp.hasPower) {
+      comp.outputState = !comp.outputState;
+      needsRedraw = true;
+     }
+    }
+    if (needsRedraw) {
+     this.updateLEDStates();
+     this.draw();
+     this.updatePropertiesPanel();
+    }
    }
 
    initCanvas() {
@@ -763,11 +1149,35 @@
     this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
     this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
     this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+    this.canvas.addEventListener('mouseleave', (e) => this.handleMouseLeave(e));
+
+    // Global mouse up to catch releases outside canvas
+    document.addEventListener('mouseup', (e) => {
+     if (this.isDragging) {
+      this.handleMouseUp(e);
+     }
+    });
 
     // Keyboard events
     document.addEventListener('keydown', (e) => {
-     if (e.key === 'Delete' && this.selectedComponent) {
+     if (e.key === 'Delete' && (this.selectedComponent || this.selectedWire)) {
       this.deleteSelected();
+     }
+     if ((e.key === 'r' || e.key === 'R') && this.selectedComponent && !e.ctrlKey && !e.metaKey) {
+      this.rotateSelected();
+     }
+     if (e.key === 'Control' || e.key === 'Meta') {
+      this.ctrlPressed = true;
+     }
+    });
+
+    document.addEventListener('keyup', (e) => {
+     if (e.key === 'Control' || e.key === 'Meta') {
+      this.ctrlPressed = false;
+      // Reset wire editing mode when Ctrl is released
+      this.editingWire = null;
+      this.editingWirePoint = null;
+      this.draw();
      }
     });
 
@@ -783,6 +1193,18 @@
     const x = (e.clientX - rect.left - this.offset.x) / this.zoom;
     const y = (e.clientY - rect.top - this.offset.y) / this.zoom;
 
+    if (this.connectionMode && this.ctrlPressed) {
+     // Wire editing mode: check if clicking near a wire endpoint
+     const wirePoint = this.getWirePointAt(x, y);
+     if (wirePoint) {
+      this.editingWire = wirePoint.connection;
+      this.editingWirePoint = wirePoint.point;
+      this.isDragging = true;
+      return;
+     }
+     // If ctrl is pressed but no wire endpoint found, fall through to normal connection mode
+    }
+
     if (this.connectionMode) {
         this.handleConnectionClick(x, y);
         return;
@@ -792,7 +1214,181 @@
     const clickedComponent = this.getComponentAt(x, y);
 
     if (clickedComponent) {
+     // Special handling for button: toggle on center click, drag on border click
+     if (clickedComponent.type === 'button') {
+      const borderSize = 8; // 8px border for dragging
+      const isBorderClick =
+       x < clickedComponent.x + borderSize ||
+       x > clickedComponent.x + clickedComponent.width - borderSize ||
+       y < clickedComponent.y + borderSize ||
+       y > clickedComponent.y + clickedComponent.height - borderSize;
+
+      if (isBorderClick) {
+       // Drag button
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+       this.isDragging = true;
+       this.dragStart = {
+        x: x - clickedComponent.x,
+        y: y - clickedComponent.y
+       };
+      } else {
+       // Toggle button state
+       clickedComponent.isPressed = !clickedComponent.isPressed;
+       this.updateLEDStates();
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+      }
+      this.updatePropertiesPanel();
+      this.draw();
+      this.updateStatusBar();
+      return;
+     }
+
+     // Special handling for 555: detect pin vs body click
+     if (clickedComponent.type === 'ne555') {
+      const clickZone = this.get555ClickZone(clickedComponent, x, y);
+      if (typeof clickZone === 'number') {
+       // Clicked on a specific pin - show pin info only if not dragging
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+       this.selectedPin = clickZone;
+       this.updatePropertiesPanel();
+       this.draw();
+       this.updateStatusBar();
+       return;
+      }
+      // Clicked on body or border - allow dragging
+      this.selectedComponent = clickedComponent;
+      this.selectedWire = null;
+      this.selectedPin = null;
+      this.isDragging = true;
+      this.dragStart = {
+       x: x - clickedComponent.x,
+       y: y - clickedComponent.y
+      };
+      this.updatePropertiesPanel();
+      this.draw();
+      this.updateStatusBar();
+      return;
+     }
+
+     // Special handling for W65C02S (6502): detect pin vs body click
+     if (clickedComponent.type === 'w65c02s') {
+      const clickZone = this.get6502ClickZone(clickedComponent, x, y);
+      if (typeof clickZone === 'number') {
+       // Clicked on a specific pin - show pin info only
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+       this.selectedPin = clickZone;
+       this.updatePropertiesPanel();
+       this.draw();
+       this.updateStatusBar();
+       return;
+      }
+      // Clicked on body or border - allow dragging
+      this.selectedComponent = clickedComponent;
+      this.selectedWire = null;
+      this.selectedPin = null;
+      this.isDragging = true;
+      this.dragStart = {
+       x: x - clickedComponent.x,
+       y: y - clickedComponent.y
+      };
+      this.updatePropertiesPanel();
+      this.draw();
+      this.updateStatusBar();
+      return;
+     }
+
+     // Special handling for W65C22 (6522 VIA): detect pin vs body click
+     if (clickedComponent.type === 'w65c22') {
+      const clickZone = this.get6522ClickZone(clickedComponent, x, y);
+      if (typeof clickZone === 'number') {
+       // Clicked on a specific pin - show pin info only
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+       this.selectedPin = clickZone;
+       this.updatePropertiesPanel();
+       this.draw();
+       this.updateStatusBar();
+       return;
+      }
+      // Clicked on body or border - allow dragging
+      this.selectedComponent = clickedComponent;
+      this.selectedWire = null;
+      this.selectedPin = null;
+      this.isDragging = true;
+      this.dragStart = {
+       x: x - clickedComponent.x,
+       y: y - clickedComponent.y
+      };
+      this.updatePropertiesPanel();
+      this.draw();
+      this.updateStatusBar();
+      return;
+     }
+
+     // Special handling for AT28C256 (EEPROM): detect pin vs body click
+     if (clickedComponent.type === '28c256') {
+      const clickZone = this.get28c256ClickZone(clickedComponent, x, y);
+      if (typeof clickZone === 'number') {
+       // Clicked on a specific pin - show pin info only
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+       this.selectedPin = clickZone;
+       this.updatePropertiesPanel();
+       this.draw();
+       this.updateStatusBar();
+       return;
+      }
+      // Clicked on body or border - allow dragging
+      this.selectedComponent = clickedComponent;
+      this.selectedWire = null;
+      this.selectedPin = null;
+      this.isDragging = true;
+      this.dragStart = {
+       x: x - clickedComponent.x,
+       y: y - clickedComponent.y
+      };
+      this.updatePropertiesPanel();
+      this.draw();
+      this.updateStatusBar();
+      return;
+     }
+
+     // Special handling for 7400-series (Logic Gates): detect pin vs body click
+     if (clickedComponent.type === '7400-series') {
+      const clickZone = this.get7400ClickZone(clickedComponent, x, y);
+      if (typeof clickZone === 'number') {
+       // Clicked on a specific pin - show pin info only
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+       this.selectedPin = clickZone;
+       this.updatePropertiesPanel();
+       this.draw();
+       this.updateStatusBar();
+       return;
+      }
+      // Clicked on body or border - allow dragging
+      this.selectedComponent = clickedComponent;
+      this.selectedWire = null;
+      this.selectedPin = null;
+      this.isDragging = true;
+      this.dragStart = {
+       x: x - clickedComponent.x,
+       y: y - clickedComponent.y
+      };
+      this.updatePropertiesPanel();
+      this.draw();
+      this.updateStatusBar();
+      return;
+     }
+     
+     // Default behavior for all other components
      this.selectedComponent = clickedComponent;
+     this.selectedWire = null;
+     this.selectedPin = null;
      this.isDragging = true;
      this.dragStart = {
       x: x - clickedComponent.x,
@@ -800,8 +1396,25 @@
      };
      this.updatePropertiesPanel();
     } else {
-     this.selectedComponent = null;
-     this.updatePropertiesPanel();
+     // Check if clicking on a wire (when NOT in connection mode)
+     const clickedWire = this.getWireAt(x, y);
+     if (clickedWire) {
+      // If clicking on already selected wire, start dragging it
+      if (this.selectedWire === clickedWire) {
+       this.isDraggingWire = true;
+       this.wireDragOffset = { x, y };
+      } else {
+       this.selectedWire = clickedWire;
+       this.selectedComponent = null;
+       this.selectedPin = null;
+      }
+      this.updatePropertiesPanel();
+     } else {
+      this.selectedComponent = null;
+      this.selectedWire = null;
+      this.selectedPin = null;
+      this.updatePropertiesPanel();
+     }
     }
 
     this.draw();
@@ -814,8 +1427,38 @@
     const y = (e.clientY - rect.top - this.offset.y) / this.zoom;
 
     this.mousePos = { x, y };
+    
+    // Update cursor when hovering over selected wire (only when NOT in connection mode)
+    if (!this.connectionMode) {
+     if (this.selectedWire && !this.isDraggingWire) {
+      const hoveredWire = this.getWireAt(x, y);
+      if (hoveredWire === this.selectedWire) {
+       this.canvas.style.cursor = 'move';
+      } else {
+       this.canvas.style.cursor = 'default';
+      }
+     } else if (!this.isDraggingWire && !this.isDragging) {
+      this.canvas.style.cursor = 'default';
+     }
+    }
 
-    if (this.isDragging && this.selectedComponent) {
+    if (this.isDragging && this.editingWire && this.editingWirePoint) {
+     // Move wire endpoint
+     const snapped = this.snapToGrid(x, y);
+     const centerX = snapped.x + 10; // Center in grid cell
+     const centerY = snapped.y + 10;
+     this.editingWire[this.editingWirePoint] = { x: centerX, y: centerY };
+     this.draw();
+    } else if (this.isDraggingWire && this.selectedWire) {
+     // Move entire wire and connected wires
+     const dx = x - this.wireDragOffset.x;
+     const dy = y - this.wireDragOffset.y;
+     
+     this.moveWireWithConnected(this.selectedWire, dx, dy);
+     
+     this.wireDragOffset = { x, y };
+     this.draw();
+    } else if (this.isDragging && this.selectedComponent) {
      this.selectedComponent.x = x - this.dragStart.x;
      this.selectedComponent.y = y - this.dragStart.y;
      this.draw();
@@ -825,22 +1468,185 @@
     }
    }
 
-   handleMouseUp(e) {
+   handleMouseLeave(e) {
+    // Release drag if mouse leaves canvas
+    if (this.isDragging && this.selectedComponent) {
+     const snapped = this.snapToGrid(this.selectedComponent.x, this.selectedComponent.y);
+     this.selectedComponent.x = snapped.x;
+     this.selectedComponent.y = snapped.y;
+     this.updatePropertiesPanel();
+     this.draw();
+    }
+    if (this.isDraggingWire && this.selectedWire) {
+     const gridSize = 20;
+     const snappedStart = this.snapToGrid(this.selectedWire.start.x - 10, this.selectedWire.start.y - 10);
+     const snappedEnd = this.snapToGrid(this.selectedWire.end.x - 10, this.selectedWire.end.y - 10);
+     
+     this.selectedWire.start.x = snappedStart.x + 10;
+     this.selectedWire.start.y = snappedStart.y + 10;
+     this.selectedWire.end.x = snappedEnd.x + 10;
+     this.selectedWire.end.y = snappedEnd.y + 10;
+     
+     this.updateLEDStates();
+     this.updatePropertiesPanel();
+     this.draw();
+    }
     this.isDragging = false;
+    this.isDraggingWire = false;
+    this.dragStart = { x: 0, y: 0 };
+   }
+   handleMouseUp(e) {
+    if (this.isDragging && this.editingWire && this.editingWirePoint) {
+     // Finish wire editing
+     this.draw();
+     if (!this.ctrlPressed) {
+      this.editingWire = null;
+      this.editingWirePoint = null;
+     }
+    } else if (this.isDraggingWire && this.selectedWire) {
+     // Snap wire endpoints to grid
+     const gridSize = 20;
+     const snappedStart = this.snapToGrid(this.selectedWire.start.x - 10, this.selectedWire.start.y - 10);
+     const snappedEnd = this.snapToGrid(this.selectedWire.end.x - 10, this.selectedWire.end.y - 10);
+     
+     this.selectedWire.start.x = snappedStart.x + 10;
+     this.selectedWire.start.y = snappedStart.y + 10;
+     this.selectedWire.end.x = snappedEnd.x + 10;
+     this.selectedWire.end.y = snappedEnd.y + 10;
+     
+     this.updateLEDStates();
+     this.draw();
+     this.updatePropertiesPanel();
+    } else if (this.isDragging && this.selectedComponent) {
+     const snapped = this.snapToGrid(this.selectedComponent.x, this.selectedComponent.y);
+     this.selectedComponent.x = snapped.x;
+     this.selectedComponent.y = snapped.y;
+     this.draw();
+    }
+    this.isDragging = false;
+    this.isDraggingWire = false;
    }
 
    handleConnectionClick(x, y) {
+    // Determine which grid cell the cursor is in and snap to its center
+    const gridSize = 20;
+    const cellX = Math.floor(x / gridSize) * gridSize;
+    const cellY = Math.floor(y / gridSize) * gridSize;
+    // Snap to center of the grid cell
+    const centerX = cellX + gridSize / 2;
+    const centerY = cellY + gridSize / 2;
+    
     if (!this.connectionStart) {
-     this.connectionStart = { x, y };
+     this.connectionStart = { x: centerX, y: centerY };
     } else {
      this.connections.push({
       start: this.connectionStart,
-      end: { x, y },
+      end: { x: centerX, y: centerY },
       color: this.getRandomWireColor()
      });
      this.connectionStart = null;
+     this.updateLEDStates();
      this.draw();
      this.updateStatusBar();
+    }
+   }
+
+   getWirePointAt(x, y) {
+    // Check if clicking near a wire endpoint (within 10 pixels)
+    const threshold = 10;
+    for (let conn of this.connections) {
+     const distToStart = Math.sqrt(
+      Math.pow(x - conn.start.x, 2) + Math.pow(y - conn.start.y, 2)
+     );
+     if (distToStart < threshold) {
+      return { connection: conn, point: 'start' };
+     }
+     
+     const distToEnd = Math.sqrt(
+      Math.pow(x - conn.end.x, 2) + Math.pow(y - conn.end.y, 2)
+     );
+     if (distToEnd < threshold) {
+      return { connection: conn, point: 'end' };
+     }
+    }
+    return null;
+   }
+
+   getWireAt(x, y) {
+    // Check if clicking on a wire line (within 8 pixels of the line)
+    const threshold = 8;
+    
+    for (let conn of this.connections) {
+     // Calculate distance from point to line segment
+     const dx = conn.end.x - conn.start.x;
+     const dy = conn.end.y - conn.start.y;
+     const length = Math.sqrt(dx * dx + dy * dy);
+     
+     if (length === 0) continue; // Degenerate line
+     
+     // Calculate projection of point onto line
+     const t = Math.max(0, Math.min(1, 
+      ((x - conn.start.x) * dx + (y - conn.start.y) * dy) / (length * length)
+     ));
+     
+     // Find closest point on line segment
+     const closestX = conn.start.x + t * dx;
+     const closestY = conn.start.y + t * dy;
+     
+     // Calculate distance to closest point
+     const distance = Math.sqrt(
+      Math.pow(x - closestX, 2) + Math.pow(y - closestY, 2)
+     );
+     
+     if (distance < threshold) {
+      return conn;
+     }
+    }
+    
+    return null;
+   }
+
+   moveWireWithConnected(wire, dx, dy) {
+    // Move the wire's endpoints
+    const oldStart = { x: wire.start.x, y: wire.start.y };
+    const oldEnd = { x: wire.end.x, y: wire.end.y };
+    
+    wire.start.x += dx;
+    wire.start.y += dy;
+    wire.end.x += dx;
+    wire.end.y += dy;
+    
+    // Find and move connected wires
+    const threshold = 5; // Pixels to consider as "connected"
+    
+    for (let conn of this.connections) {
+     if (conn === wire) continue;
+     
+     // Check if this wire's start was connected to the moved wire's start
+     if (Math.abs(conn.start.x - oldStart.x) < threshold && 
+         Math.abs(conn.start.y - oldStart.y) < threshold) {
+      conn.start.x = wire.start.x;
+      conn.start.y = wire.start.y;
+     }
+     // Check if this wire's start was connected to the moved wire's end
+     else if (Math.abs(conn.start.x - oldEnd.x) < threshold && 
+              Math.abs(conn.start.y - oldEnd.y) < threshold) {
+      conn.start.x = wire.end.x;
+      conn.start.y = wire.end.y;
+     }
+     
+     // Check if this wire's end was connected to the moved wire's start
+     if (Math.abs(conn.end.x - oldStart.x) < threshold && 
+         Math.abs(conn.end.y - oldStart.y) < threshold) {
+      conn.end.x = wire.start.x;
+      conn.end.y = wire.start.y;
+     }
+     // Check if this wire's end was connected to the moved wire's end
+     else if (Math.abs(conn.end.x - oldEnd.x) < threshold && 
+              Math.abs(conn.end.y - oldEnd.y) < threshold) {
+      conn.end.x = wire.end.x;
+      conn.end.y = wire.end.y;
+     }
     }
    }
 
@@ -856,106 +1662,289 @@
     return null;
    }
 
+   // Check if click is on a 555 pin (returns pin number) or IC body (returns 'body')
+   get555ClickZone(comp, x, y) {
+    if (comp.type !== 'ne555') return null;
+    
+    const gridSize = 20;
+    const pinsPerSide = comp.pins / 2; // 4 pins per side for 555
+    const pinAreaWidth = gridSize;
+    
+    // Check left side pins (pins 1-4, bottom to top in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x - gridSize;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return i + 1; // Pins 1-4 on left side
+     }
+    }
+    
+    // Check right side pins (pins 8-5, bottom to top in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x + comp.width;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return 8 - i; // Pins 8-5 on right side (reversed)
+     }
+    }
+    
+    // Check if click is on IC body (inner border area)
+    const borderSize = 6;
+    if (x >= comp.x + borderSize && x <= comp.x + comp.width - borderSize &&
+        y >= comp.y + borderSize && y <= comp.y + comp.height - borderSize) {
+     return 'body';
+    }
+    
+    return null;
+   }
+
+   // Check if click is on a W65C02S (6502) pin (returns pin number) or IC body (returns 'body')
+   get6502ClickZone(comp, x, y) {
+    if (comp.type !== 'w65c02s') return null;
+    
+    const gridSize = 20;
+    const pinsPerSide = comp.pins / 2; // 20 pins per side for 40-pin DIP
+    
+    // Check left side pins (pins 1-20, top to bottom in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x - gridSize;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return i + 1; // Pins 1-20 on left side
+     }
+    }
+    
+    // Check right side pins (pins 40-21, top to bottom in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x + comp.width;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return 40 - i; // Pins 40-21 on right side (reversed)
+     }
+    }
+    
+    // Check if click is on IC body (inner border area)
+    const borderSize = 6;
+    if (x >= comp.x + borderSize && x <= comp.x + comp.width - borderSize &&
+        y >= comp.y + borderSize && y <= comp.y + comp.height - borderSize) {
+     return 'body';
+    }
+    
+    return null;
+   }
+
+   // Check if click is on a W65C22 (6522 VIA) pin (returns pin number) or IC body (returns 'body')
+   get6522ClickZone(comp, x, y) {
+    if (comp.type !== 'w65c22') return null;
+    
+    const gridSize = 20;
+    const pinsPerSide = comp.pins / 2; // 20 pins per side for 40-pin DIP
+    
+    // Check left side pins (pins 1-20, top to bottom in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x - gridSize;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return i + 1; // Pins 1-20 on left side
+     }
+    }
+    
+    // Check right side pins (pins 40-21, top to bottom in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x + comp.width;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return 40 - i; // Pins 40-21 on right side (reversed)
+     }
+    }
+    
+    // Check if click is on IC body (inner border area)
+    const borderSize = 6;
+    if (x >= comp.x + borderSize && x <= comp.x + comp.width - borderSize &&
+        y >= comp.y + borderSize && y <= comp.y + comp.height - borderSize) {
+     return 'body';
+    }
+    
+    return null;
+   }
+
+   // Check if click is on an AT28C256 (EEPROM) pin (returns pin number) or IC body (returns 'body')
+   get28c256ClickZone(comp, x, y) {
+    if (comp.type !== '28c256') return null;
+    
+    const gridSize = 20;
+    const pinsPerSide = comp.pins / 2; // 14 pins per side for 28-pin DIP
+    
+    // Check left side pins (pins 1-14, top to bottom in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x - gridSize;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return i + 1; // Pins 1-14 on left side
+     }
+    }
+    
+    // Check right side pins (pins 28-15, top to bottom in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x + comp.width;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return 28 - i; // Pins 28-15 on right side (reversed)
+     }
+    }
+    
+    // Check if click is on IC body (inner border area)
+    const borderSize = 6;
+    if (x >= comp.x + borderSize && x <= comp.x + comp.width - borderSize &&
+        y >= comp.y + borderSize && y <= comp.y + comp.height - borderSize) {
+     return 'body';
+    }
+    
+    return null;
+   }
+
+   // Check if click is on a 7400-series (Logic Gate) pin (returns pin number) or IC body (returns 'body')
+   get7400ClickZone(comp, x, y) {
+    if (comp.type !== '7400-series') return null;
+    
+    const gridSize = 20;
+    const pinsPerSide = comp.pins / 2; // 7 pins per side for 14-pin DIP
+    
+    // Check left side pins (pins 1-7, top to bottom in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x - gridSize;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return i + 1; // Pins 1-7 on left side
+     }
+    }
+    
+    // Check right side pins (pins 14-8, top to bottom in standard DIP orientation)
+    for (let i = 0; i < pinsPerSide; i++) {
+     const pinY = comp.y + (i * gridSize);
+     const pinX = comp.x + comp.width;
+     if (x >= pinX && x <= pinX + gridSize && y >= pinY && y <= pinY + gridSize) {
+      return 14 - i; // Pins 14-8 on right side (reversed)
+     }
+    }
+    
+    // Check if click is on IC body (inner border area)
+    const borderSize = 6;
+    if (x >= comp.x + borderSize && x <= comp.x + comp.width - borderSize &&
+        y >= comp.y + borderSize && y <= comp.y + comp.height - borderSize) {
+     return 'body';
+    }
+    
+    return null;
+   }
+
    addComponent(type, x, y) {
+    const snapped = this.snapToGrid(x, y);
     const component = {
      type,
-     x,
-     y,
+     x: snapped.x,
+     y: snapped.y,
      id: Date.now() + Math.random(),
+     rotation: 0,
      ...this.getComponentSpecs(type)
     };
 
     this.components.push(component);
+    this.updateLEDStates();
     this.draw();
     this.updateStatusBar();
    }
 
    getComponentSpecs(type) {
+    const gridSize = 20;
     const specs = {
      'w65c02s': {
-      width: 120,
-      height: 180,
+      width: gridSize * 6,
+      height: gridSize * 20,
       pins: 40,
       label: 'W65C02S',
       color: '#2c3e50'
      },
      '28c256': {
-      width: 120,
-      height: 140,
+      width: gridSize * 6,
+      height: gridSize * 14,
       pins: 28,
       label: '28C256',
       color: '#34495e'
      },
      'w65c22': {
-      width: 120,
-      height: 180,
+      width: gridSize * 6,
+      height: gridSize * 20,
       pins: 40,
       label: 'W65C22',
       color: '#2c3e50'
      },
-     '74hc00': {
-      width: 80,
-      height: 70,
+     '7400-series': {
+      width: gridSize * 4,
+      height: gridSize * 7,
       pins: 14,
-      label: '74HC00',
+      label: '7400',
+      chipType: '7400',
       color: '#7f8c8d'
      },
      'ne555': {
-      width: 60,
-      height: 60,
+      width: gridSize * 3,
+      height: gridSize * 4,
       pins: 8,
       label: 'NE555',
       color: '#95a5a6'
      },
      'led': {
-      width: 30,
-      height: 30,
+      width: gridSize * 1,
+      height: gridSize * 1,
       pins: 2,
       label: 'LED',
       color: '#c0392b',
-      value: 'Red'
+      value: 'Red',
+      isPowered: false
      },
      'resistor': {
-      width: 60,
-      height: 20,
+      width: gridSize * 2,
+      height: gridSize * 1,
       pins: 2,
       label: 'R',
       color: '#95a5a6',
       value: '1kΩ'
      },
      'capacitor': {
-      width: 30,
-      height: 40,
+      width: gridSize * 1,
+      height: gridSize * 2,
       pins: 2,
       label: 'C',
       color: '#3498db',
       value: '100nF'
      },
      'button': {
-      width: 40,
-      height: 40,
-      pins: 2,
+      width: gridSize * 2,
+      height: gridSize * 2,
+      pins: 4,
       label: 'SW',
-      color: '#34495e'
+      color: '#34495e',
+      isPressed: false
      },
      'crystal': {
-      width: 40,
-      height: 50,
-      pins: 2,
+      width: gridSize * 2,
+      height: gridSize * 2,
+      pins: 4,
       label: 'XTAL',
       color: '#1abc9c',
       value: '1MHz'
      },
      'power': {
-      width: 40,
-      height: 40,
+      width: gridSize * 1,
+      height: gridSize * 1,
       pins: 1,
       label: '+5V',
       color: '#c0392b'
      },
      'ground': {
-      width: 40,
-      height: 40,
+      width: gridSize * 1,
+      height: gridSize * 1,
       pins: 1,
       label: 'GND',
       color: '#34495e'
@@ -968,6 +1957,14 @@
    getRandomWireColor() {
     const colors = ['#3498db', '#2ecc71', '#1abc9c', '#34495e', '#16a085', '#2980b9', '#27ae60'];
     return colors[Math.floor(Math.random() * colors.length)];
+   }
+
+   snapToGrid(x, y) {
+    const gridSize = 20;
+    return {
+     x: Math.round(x / gridSize) * gridSize,
+     y: Math.round(y / gridSize) * gridSize
+    };
    }
 
    draw() {
@@ -1055,6 +2052,18 @@
 
    drawConnections() {
     this.connections.forEach(conn => {
+     const isSelected = conn === this.selectedWire;
+     
+     // Draw selection highlight for selected wire
+     if (isSelected) {
+      this.ctx.strokeStyle = '#FFD700';
+      this.ctx.lineWidth = 7;
+      this.ctx.beginPath();
+      this.ctx.moveTo(conn.start.x, conn.start.y);
+      this.ctx.lineTo(conn.end.x, conn.end.y);
+      this.ctx.stroke();
+     }
+     
      this.ctx.strokeStyle = conn.color;
      this.ctx.lineWidth = 3;
      this.ctx.beginPath();
@@ -1062,13 +2071,14 @@
      this.ctx.lineTo(conn.end.x, conn.end.y);
      this.ctx.stroke();
 
-     // Draw connection points
-     this.ctx.fillStyle = conn.color;
+     // Draw connection points (larger if selected)
+     this.ctx.fillStyle = isSelected ? '#FFD700' : conn.color;
+     const pointRadius = isSelected ? 6 : 4;
      this.ctx.beginPath();
-     this.ctx.arc(conn.start.x, conn.start.y, 4, 0, Math.PI * 2);
+     this.ctx.arc(conn.start.x, conn.start.y, pointRadius, 0, Math.PI * 2);
      this.ctx.fill();
      this.ctx.beginPath();
-     this.ctx.arc(conn.end.x, conn.end.y, 4, 0, Math.PI * 2);
+     this.ctx.arc(conn.end.x, conn.end.y, pointRadius, 0, Math.PI * 2);
      this.ctx.fill();
     });
    }
@@ -1090,13 +2100,160 @@
      this.ctx.arc(this.connectionStart.x, this.connectionStart.y, 5, 0, Math.PI * 2);
      this.ctx.fill();
     }
+    
+    // Highlight wire endpoints when Ctrl is pressed in wire mode
+    if (this.connectionMode && this.ctrlPressed && !this.isDragging) {
+     this.connections.forEach(conn => {
+      // Highlight all wire endpoints
+      this.ctx.strokeStyle = '#FFD700';
+      this.ctx.lineWidth = 2;
+      this.ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+      
+      this.ctx.beginPath();
+      this.ctx.arc(conn.start.x, conn.start.y, 8, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.stroke();
+      
+      this.ctx.beginPath();
+      this.ctx.arc(conn.end.x, conn.end.y, 8, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.stroke();
+     });
+    }
    }
 
    drawComponents() {
     this.components.forEach(comp => {
+     // Draw LED glow effect if powered
+     if (comp.type === 'led' && comp.isPowered) {
+      const glowRadius = 40;
+      const centerX = comp.x + comp.width / 2;
+      const centerY = comp.y + comp.height / 2;
+      
+      // Draw multiple layers for stronger glow
+      for (let i = 0; i < 3; i++) {
+       const radius = glowRadius - (i * 10);
+       const gradient = this.ctx.createRadialGradient(
+        centerX, centerY, 0,
+        centerX, centerY, radius
+       );
+       
+       const glowColor = this.getLEDLitColor(comp.color);
+       gradient.addColorStop(0, glowColor + 'cc');
+       gradient.addColorStop(0.4, glowColor + '66');
+       gradient.addColorStop(0.7, glowColor + '22');
+       gradient.addColorStop(1, glowColor + '00');
+       
+       this.ctx.fillStyle = gradient;
+       this.ctx.fillRect(
+        comp.x - radius,
+        comp.y - radius,
+        comp.width + radius * 2,
+        comp.height + radius * 2
+       );
+      }
+     }
+     
+     // Draw 555 output glow when output is HIGH
+     if (comp.type === 'ne555' && comp.outputState) {
+      const gridSize = 20;
+      // Pin 3 (OUT) is at position index 1 on left side (from top: 4, 3, 2, 1)
+      const outputPinX = comp.x - gridSize / 2;
+      const outputPinY = comp.y + gridSize + gridSize / 2; // Second row
+      
+      const glowRadius = 25;
+      const gradient = this.ctx.createRadialGradient(
+       outputPinX, outputPinY, 0,
+       outputPinX, outputPinY, glowRadius
+      );
+      gradient.addColorStop(0, '#4CAF50cc');
+      gradient.addColorStop(0.5, '#4CAF5066');
+      gradient.addColorStop(1, '#4CAF5000');
+      
+      this.ctx.fillStyle = gradient;
+      this.ctx.beginPath();
+      this.ctx.arc(outputPinX, outputPinY, glowRadius, 0, Math.PI * 2);
+      this.ctx.fill();
+     }
+     
      // Draw component body
-     this.ctx.fillStyle = comp.color;
+     let bodyColor = comp.color;
+     if (comp.type === 'led' && comp.isPowered) {
+      bodyColor = this.getLEDLitColor(comp.color);
+     } else if (comp.type === 'button' && comp.isPressed) {
+      bodyColor = '#27ae60'; // Green when pressed
+     } else if (comp.type === 'ne555' && comp.hasPower) {
+      bodyColor = '#2c3e50'; // Darker when powered
+     }
+     this.ctx.fillStyle = bodyColor;
      this.ctx.fillRect(comp.x, comp.y, comp.width, comp.height);
+
+     // For buttons, draw an inner area to indicate the toggle zone
+     if (comp.type === 'button') {
+      const borderSize = 8;
+      this.ctx.fillStyle = comp.isPressed ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
+      this.ctx.fillRect(
+       comp.x + borderSize,
+       comp.y + borderSize,
+       comp.width - borderSize * 2,
+       comp.height - borderSize * 2
+      );
+     }
+     
+     // Draw 555 output indicator on the IC
+     if (comp.type === 'ne555') {
+      const gridSize = 20;
+      // Draw small LED-like indicator for output state
+      const indicatorX = comp.x + comp.width / 2;
+      const indicatorY = comp.y + 8;
+      const indicatorRadius = 4;
+      
+      this.ctx.beginPath();
+      this.ctx.arc(indicatorX, indicatorY, indicatorRadius, 0, Math.PI * 2);
+      this.ctx.fillStyle = comp.outputState ? '#4CAF50' : '#333';
+      this.ctx.fill();
+      this.ctx.strokeStyle = '#000';
+      this.ctx.lineWidth = 1;
+      this.ctx.stroke();
+      
+      // Draw notch at top to indicate pin 1 orientation
+      this.ctx.beginPath();
+      this.ctx.arc(comp.x + comp.width / 2, comp.y, 6, 0, Math.PI, false);
+      this.ctx.fillStyle = '#666';
+      this.ctx.fill();
+     }
+
+     // Draw notch/dimple for W65C02S (6502) chip
+     if (comp.type === 'w65c02s') {
+      this.ctx.beginPath();
+      this.ctx.arc(comp.x + comp.width / 2, comp.y, 8, 0, Math.PI, false);
+      this.ctx.fillStyle = '#1a2a3a';
+      this.ctx.fill();
+     }
+
+     // Draw notch/dimple for W65C22 (6522 VIA) chip
+     if (comp.type === 'w65c22') {
+      this.ctx.beginPath();
+      this.ctx.arc(comp.x + comp.width / 2, comp.y, 8, 0, Math.PI, false);
+      this.ctx.fillStyle = '#1a2a3a';
+      this.ctx.fill();
+     }
+
+     // Draw notch/dimple for 28C256 (EEPROM) chip
+     if (comp.type === '28c256') {
+      this.ctx.beginPath();
+      this.ctx.arc(comp.x + comp.width / 2, comp.y, 7, 0, Math.PI, false);
+      this.ctx.fillStyle = '#222e3a';
+      this.ctx.fill();
+     }
+
+     // Draw notch/dimple for 7400-series logic chips
+     if (comp.type === '7400-series') {
+      this.ctx.beginPath();
+      this.ctx.arc(comp.x + comp.width / 2, comp.y, 6, 0, Math.PI, false);
+      this.ctx.fillStyle = '#5a6a7a';
+      this.ctx.fill();
+     }
 
      // Draw border (thicker if selected)
      this.ctx.strokeStyle = comp === this.selectedComponent ? '#2196F3' : '#000';
@@ -1110,9 +2267,15 @@
      this.ctx.textBaseline = 'middle';
      this.ctx.fillText(comp.label, comp.x + comp.width / 2, comp.y + comp.height / 2);
 
-     // Draw pins for ICs
-     if (comp.pins > 2) {
-      this.drawICPins(comp);
+     // Draw pins
+     if (comp.pins && comp.pins > 2) {
+      if (comp.type === 'button' || comp.type === 'crystal') {
+       this.drawSimpleComponentPins(comp);
+      } else {
+       this.drawICPins(comp);
+      }
+     } else if (comp.pins === 2) {
+      this.drawTwoPinComponent(comp);
      }
 
      // Draw value if exists
@@ -1125,49 +2288,1690 @@
    }
 
    drawICPins(comp) {
-    const pinSpacing = comp.height / (comp.pins / 2 + 1);
-    const pinSize = 6;
-
+    const gridSize = 20;
+    const pinRenderSize = 16; // 20px grid - 2px on each side
+    const pinMargin = 2; // 2px margin on each side
+    const rotation = comp.rotation || 0;
+    
     this.ctx.fillStyle = '#c0c0c0';
 
-    // Left side pins
-    for (let i = 0; i < comp.pins / 2; i++) {
-     const y = comp.y + pinSpacing * (i + 1);
-     this.ctx.fillRect(comp.x - pinSize, y - pinSize / 2, pinSize, pinSize);
+    // Determine pin layout based on rotation
+    // Original layout: pins on left and right sides
+    // After rotation, pins follow the component orientation
+    if (rotation === 0 || rotation === 180) {
+     // Horizontal IC - pins on left and right
+     const pinsPerSide = comp.pins / 2;
+     
+     // Left side pins
+     for (let i = 0; i < pinsPerSide; i++) {
+      const y = comp.y + (i * gridSize);
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       y + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
+
+     // Right side pins
+     for (let i = 0; i < pinsPerSide; i++) {
+      const y = comp.y + (i * gridSize);
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       y + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
+    } else {
+     // Vertical IC (90 or 270 degrees) - pins on top and bottom
+     const pinsPerSide = comp.pins / 2;
+     
+     // Top side pins
+     for (let i = 0; i < pinsPerSide; i++) {
+      const x = comp.x + (i * gridSize);
+      this.ctx.fillRect(
+       x + pinMargin,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
+
+     // Bottom side pins
+     for (let i = 0; i < pinsPerSide; i++) {
+      const x = comp.x + (i * gridSize);
+      this.ctx.fillRect(
+       x + pinMargin,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
     }
+   }
 
-    // Right side pins
-    for (let i = 0; i < comp.pins / 2; i++) {
-     const y = comp.y + pinSpacing * (i + 1);
-     this.ctx.fillRect(comp.x + comp.width, y - pinSize / 2, pinSize, pinSize);
+   drawTwoPinComponent(comp) {
+    const gridSize = 20;
+    const pinRenderSize = 16; // 20px grid - 2px on each side
+    const pinMargin = 2; // 2px margin on each side
+    const rotation = comp.rotation || 0;
+    const isVertical = (rotation === 90 || rotation === 270);
+    
+    this.ctx.fillStyle = '#c0c0c0';
+    this.ctx.strokeStyle = '#888';
+    this.ctx.lineWidth = 2;
+
+    if (comp.type === 'resistor') {
+     if (!isVertical) {
+      // Horizontal resistor - pins on left and right
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + (comp.height - pinRenderSize) / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + (comp.height - pinRenderSize) / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+     } else {
+      // Vertical resistor - pins on top and bottom
+      this.ctx.fillRect(
+       comp.x + (comp.width - pinRenderSize) / 2,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      this.ctx.fillRect(
+       comp.x + (comp.width - pinRenderSize) / 2,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
+    } else if (comp.type === 'led') {
+     if (!isVertical) {
+      // Horizontal LED - pins on left (anode) and right (cathode)
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + (comp.height - pinRenderSize) / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + (comp.height - pinRenderSize) / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+      
+      // Draw + and - indicators for horizontal
+      this.ctx.fillStyle = '#333';
+      this.ctx.font = 'bold 10px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('+', comp.x - gridSize / 2, comp.y - 3);
+      this.ctx.fillText('-', comp.x + comp.width + gridSize / 2, comp.y - 3);
+     } else {
+      // Vertical LED - pins on top (anode) and bottom (cathode)
+      this.ctx.fillRect(
+       comp.x + (comp.width - pinRenderSize) / 2,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      this.ctx.fillRect(
+       comp.x + (comp.width - pinRenderSize) / 2,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      
+      // Draw + and - indicators for vertical
+      this.ctx.fillStyle = '#333';
+      this.ctx.font = 'bold 10px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('+', comp.x + comp.width / 2, comp.y - gridSize - 3);
+      this.ctx.fillText('-', comp.x + comp.width / 2, comp.y + comp.height + gridSize + 13);
+     }
+    } else if (comp.type === 'capacitor') {
+     if (!isVertical) {
+      // Horizontal capacitor - pins on left and right
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + (comp.height - pinRenderSize) / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + (comp.height - pinRenderSize) / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+     } else {
+      // Vertical capacitor - pins on top and bottom
+      this.ctx.fillRect(
+       comp.x + (comp.width - pinRenderSize) / 2,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      this.ctx.fillRect(
+       comp.x + (comp.width - pinRenderSize) / 2,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
     }
+   }
 
-    // Pin numbers
-    this.ctx.fillStyle = '#666';
-    this.ctx.font = '8px monospace';
-    this.ctx.textAlign = 'right';
+   getLEDLitColor(baseColor) {
+    // Make LED color brighter when lit - return RGB values for gradient compatibility
+    const colors = {
+     '#c0392b': '#ff5555', // Red -> Bright Red
+     '#27ae60': '#55ff55', // Green -> Bright Green
+     '#2980b9': '#5555ff', // Blue -> Bright Blue
+     '#f39c12': '#ffdd33', // Orange -> Bright Orange
+     '#8e44ad': '#cc55ff', // Purple -> Bright Purple
+     '#16a085': '#55ffbb', // Teal -> Bright Teal
+     '#d35400': '#ff7733'  // Dark Orange -> Bright Orange
+    };
+    return colors[baseColor] || baseColor;
+   }
 
-    for (let i = 0; i < comp.pins / 2; i++) {
-     const y = comp.y + pinSpacing * (i + 1);
-     this.ctx.fillText(String(i + 1), comp.x - 10, y + 3);
+   getComponentPinPositions(comp) {
+    const gridSize = 20;
+    const positions = [];
+    const rotation = comp.rotation || 0;
+    const isVertical = (rotation === 90 || rotation === 270);
+    
+    if (comp.type === 'led') {
+     if (!isVertical) {
+      // Horizontal LED - pins on left and right
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'anode'
+      });
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'cathode'
+      });
+     } else {
+      // Vertical LED - pins on top and bottom
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y - gridSize / 2,
+       type: 'anode'
+      });
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'cathode'
+      });
+     }
+    } else if (comp.type === 'resistor') {
+     if (!isVertical) {
+      // Horizontal resistor - pins on left and right
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'terminal'
+      });
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'terminal'
+      });
+     } else {
+      // Vertical resistor - pins on top and bottom
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y - gridSize / 2,
+       type: 'terminal'
+      });
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'terminal'
+      });
+     }
+    } else if (comp.type === 'power') {
+     positions.push({
+      x: comp.x + comp.width / 2,
+      y: comp.y + comp.height / 2,
+      type: 'power'
+     });
+    } else if (comp.type === 'ground') {
+     positions.push({
+      x: comp.x + comp.width / 2,
+      y: comp.y + comp.height / 2,
+      type: 'ground'
+     });
+    } else if (comp.type === 'button') {
+     // Button has 4 pins - layout depends on rotation
+     if (!isVertical) {
+      // Left-top pin
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + gridSize / 2,
+       type: 'button-left'
+      });
+      // Left-bottom pin
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + gridSize + gridSize / 2,
+       type: 'button-left'
+      });
+      // Right-top pin
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + gridSize / 2,
+       type: 'button-right'
+      });
+      // Right-bottom pin
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + gridSize + gridSize / 2,
+       type: 'button-right'
+      });
+     } else {
+      // Rotated - pins on top and bottom
+      positions.push({
+       x: comp.x + gridSize / 2,
+       y: comp.y - gridSize / 2,
+       type: 'button-top'
+      });
+      positions.push({
+       x: comp.x + gridSize + gridSize / 2,
+       y: comp.y - gridSize / 2,
+       type: 'button-top'
+      });
+      positions.push({
+       x: comp.x + gridSize / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'button-bottom'
+      });
+      positions.push({
+       x: comp.x + gridSize + gridSize / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'button-bottom'
+      });
+     }
+    } else if (comp.type === 'ne555') {
+     // NE555 has 8 pins - 4 on each side
+     const pinsPerSide = 4;
+     
+     if (!isVertical) {
+      // Normal horizontal orientation
+      // Left side pins (from top: 4, 3, 2, 1)
+      for (let i = 0; i < pinsPerSide; i++) {
+       const pinNum = 4 - i;
+       positions.push({
+        x: comp.x - gridSize / 2,
+        y: comp.y + (i * gridSize) + gridSize / 2,
+        type: `555-pin-${pinNum}`,
+        pinNumber: pinNum
+       });
+      }
+      
+      // Right side pins (from top: 8, 7, 6, 5)
+      for (let i = 0; i < pinsPerSide; i++) {
+       const pinNum = 8 - i;
+       positions.push({
+        x: comp.x + comp.width + gridSize / 2,
+        y: comp.y + (i * gridSize) + gridSize / 2,
+        type: `555-pin-${pinNum}`,
+        pinNumber: pinNum
+       });
+      }
+     } else {
+      // Vertical orientation - pins on top and bottom
+      // Top side pins
+      for (let i = 0; i < pinsPerSide; i++) {
+       const pinNum = rotation === 90 ? (8 - i) : (1 + i);
+       positions.push({
+        x: comp.x + (i * gridSize) + gridSize / 2,
+        y: comp.y - gridSize / 2,
+        type: `555-pin-${pinNum}`,
+        pinNumber: pinNum
+       });
+      }
+      
+      // Bottom side pins
+      for (let i = 0; i < pinsPerSide; i++) {
+       const pinNum = rotation === 90 ? (4 - i) : (5 + i);
+       positions.push({
+        x: comp.x + (i * gridSize) + gridSize / 2,
+        y: comp.y + comp.height + gridSize / 2,
+        type: `555-pin-${pinNum}`,
+        pinNumber: pinNum
+       });
+      }
+     }
+    } else if (comp.type === 'capacitor') {
+     if (!isVertical) {
+      // Horizontal capacitor - pins on left and right
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'terminal'
+      });
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'terminal'
+      });
+     } else {
+      // Vertical capacitor - pins on top and bottom
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y - gridSize / 2,
+       type: 'terminal'
+      });
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'terminal'
+      });
+     }
     }
+    
+    return positions;
+   }
+   
+   // Get a specific 555 pin position by pin number
+   get555PinPosition(comp, pinNumber) {
+    if (comp.type !== 'ne555') return null;
+    const pins = this.getComponentPinPositions(comp);
+    return pins.find(p => p.pinNumber === pinNumber);
+   }
 
-    this.ctx.textAlign = 'left';
-    for (let i = 0; i < comp.pins / 2; i++) {
-     const y = comp.y + pinSpacing * (i + 1);
-     this.ctx.fillText(String(comp.pins - i), comp.x + comp.width + 10, y + 3);
+   isPointNear(p1, p2, threshold = 15) {
+    const dx = p1.x - p2.x;
+    const dy = p1.y - p2.y;
+    return Math.sqrt(dx * dx + dy * dy) < threshold;
+   }
+
+   traceConnection(startPoint, targetType, visited = new Set()) {
+    // Trace connections from a point to find if it reaches a power or ground component
+    // Returns true if connection found, false otherwise
+    
+    const pointKey = `${Math.round(startPoint.x)},${Math.round(startPoint.y)}`;
+    if (visited.has(pointKey)) return false;
+    visited.add(pointKey);
+    
+    // Check if we've reached a power or ground component directly
+    for (const comp of this.components) {
+     if (comp.type === targetType) {
+      const pins = this.getComponentPinPositions(comp);
+      for (const pin of pins) {
+       if (this.isPointNear(startPoint, pin)) {
+        return true;
+       }
+      }
+     }
+     
+     // Check if we've reached a 555 output pin (pin 3) that is HIGH - acts as power source
+     if (comp.type === 'ne555' && comp.outputState && targetType === 'power') {
+      const outputPin = this.get555PinPosition(comp, 3); // Pin 3 is output
+      if (outputPin && this.isPointNear(startPoint, outputPin)) {
+       return true;
+      }
+     }
+    }
+    
+    // Follow all wire connections from this point
+    for (const conn of this.connections) {
+     let nextPoint = null;
+     
+     if (this.isPointNear(startPoint, conn.start)) {
+      nextPoint = conn.end;
+     } else if (this.isPointNear(startPoint, conn.end)) {
+      nextPoint = conn.start;
+     }
+     
+     if (nextPoint) {
+      // Check if we've reached the target
+      if (this.traceConnection(nextPoint, targetType, visited)) {
+       return true;
+      }
+      
+      // Check if this point connects to any pass-through component (like resistor or button)
+      for (const comp of this.components) {
+       if (comp.type === 'resistor') {
+        const pins = this.getComponentPinPositions(comp);
+        for (let i = 0; i < pins.length; i++) {
+         if (this.isPointNear(nextPoint, pins[i])) {
+          // Found connection to one pin of resistor, check the other pin
+          for (let j = 0; j < pins.length; j++) {
+           if (i !== j) {
+            if (this.traceConnection(pins[j], targetType, visited)) {
+             return true;
+            }
+           }
+          }
+         }
+        }
+       } else if (comp.type === 'button') {
+        // Button only allows current through when pressed
+        if (comp.isPressed) {
+         const pins = this.getComponentPinPositions(comp);
+         // Find which pin we're connected to
+         for (let i = 0; i < pins.length; i++) {
+          if (this.isPointNear(nextPoint, pins[i])) {
+           // When pressed, all 4 pins are connected (tactile button behavior)
+           // Check all OTHER pins for continuation of circuit
+           for (let j = 0; j < pins.length; j++) {
+            if (i !== j) {
+             if (this.traceConnection(pins[j], targetType, visited)) {
+              return true;
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+    
+    return false;
+   }
+
+   updateLEDStates() {
+    // First update 555 states, then check LEDs
+    this.update555States();
+    
+    // Check all LED components and update their powered state
+    for (const comp of this.components) {
+     if (comp.type === 'led') {
+      const pins = this.getComponentPinPositions(comp);
+      const anode = pins.find(p => p.type === 'anode');
+      const cathode = pins.find(p => p.type === 'cathode');
+      
+      if (anode && cathode) {
+       const hasPositive = this.traceConnection(anode, 'power');
+       const hasGround = this.traceConnection(cathode, 'ground');
+       comp.isPowered = hasPositive && hasGround;
+       
+       // Smoke and mirrors for 555 astable mode:
+       // If there's a 555 in astable mode and the LED is connected to it somehow, follow the 555 output
+       if (!comp.isPowered) {
+        for (const ne555 of this.components) {
+         if (ne555.type === 'ne555' && ne555.astableMode && ne555.hasPower) {
+          // Check if LED is connected to any 555 pin
+          const ne555Pins = this.getComponentPinPositions(ne555);
+          for (const pin of ne555Pins) {
+           if (this.arePinsConnected(anode, pin) || this.arePinsConnected(cathode, pin)) {
+            // LED is connected to the 555 - follow the 555 output state
+            comp.isPowered = ne555.outputState;
+            break;
+           }
+          }
+         }
+        }
+       }
+      } else {
+       comp.isPowered = false;
+      }
+     }
+    }
+   }
+   
+   // Update all 555 timer states based on their pin connections
+   update555States() {
+    for (const comp of this.components) {
+     if (comp.type === 'ne555') {
+      // Initialize state if not present
+      if (comp.outputState === undefined) {
+       comp.outputState = false;
+      }
+      if (comp.astableMode === undefined) {
+       comp.astableMode = false;
+      }
+      
+      // Get pin positions
+      const pin1 = this.get555PinPosition(comp, 1); // GND
+      const pin2 = this.get555PinPosition(comp, 2); // TRIGGER
+      const pin3 = this.get555PinPosition(comp, 3); // OUTPUT
+      const pin4 = this.get555PinPosition(comp, 4); // RESET
+      const pin6 = this.get555PinPosition(comp, 6); // THRESHOLD
+      const pin7 = this.get555PinPosition(comp, 7); // DISCHARGE
+      const pin8 = this.get555PinPosition(comp, 8); // Vcc
+      
+      // Check if 555 has power (Vcc connected to power, GND connected to ground)
+      const hasVcc = this.traceConnectionWithout555Output(pin8, 'power');
+      const hasGnd = this.traceConnectionWithout555Output(pin1, 'ground');
+      
+      // Smoke and mirrors: Also check if ANY pin has ground connection (lenient detection)
+      let hasAnyGnd = hasGnd;
+      if (!hasGnd) {
+       const allPins = this.getComponentPinPositions(comp);
+       for (const pin of allPins) {
+        if (this.traceConnectionWithout555Output(pin, 'ground')) {
+         hasAnyGnd = true;
+         break;
+        }
+       }
+      }
+      
+      comp.hasPower = hasVcc && hasAnyGnd;
+      
+      if (!comp.hasPower) {
+       comp.outputState = false;
+       comp.astableMode = false;
+       continue;
+      }
+      
+      // Check RESET pin (active LOW) - in real circuits, grounding RESET forces output LOW
+      // For smoke and mirrors, we'll be lenient - only check if RESET is directly connected to a ground component
+      // (not through other pins used for power detection)
+      const resetToVcc = this.arePinsConnected(pin4, pin8);
+      // Skip reset check for smoke and mirrors - assume circuit is intended to work
+      // const resetLow = !resetToVcc && this.traceConnectionWithout555Output(pin4, 'ground');
+      // if (resetLow) {
+      //  comp.outputState = false;
+      //  comp.astableMode = false;
+      //  continue;
+      // }
+      
+      // Check for ASTABLE MODE: Pins 2 (TRIGGER) and 6 (THRESHOLD) connected together
+      const pin2And6Connected = this.arePinsConnected(pin2, pin6);
+      
+      // Also check if there's a capacitor in the circuit (connected to pin 2/6 area and ground)
+      const hasTimingCircuit = this.hasCapacitorToGround(pin2);
+      
+      // Alternative: Check if there's ANY capacitor connected to the 555 for simpler detection
+      const hasAnyTimingCapacitor = this.hasCapacitorConnectedTo555(comp);
+      
+      if ((pin2And6Connected && hasTimingCircuit) || hasAnyTimingCapacitor) {
+       // ASTABLE MODE - oscillator
+       comp.astableMode = true;
+       // Output will be toggled by the simulation loop
+      } else {
+       comp.astableMode = false;
+       
+       // BISTABLE/MONOSTABLE MODE
+       // Check TRIGGER pin (active LOW) - if grounded, output goes HIGH
+       const triggerLow = this.traceConnectionWithout555Output(pin2, 'ground');
+       if (triggerLow) {
+        comp.outputState = true;
+       }
+      }
+     }
+    }
+   }
+   
+   // Check if two pins are connected via wires
+   arePinsConnected(pin1, pin2, visited = new Set()) {
+    if (!pin1 || !pin2) return false;
+    
+    const key = `${Math.round(pin1.x)},${Math.round(pin1.y)}`;
+    if (visited.has(key)) return false;
+    visited.add(key);
+    
+    // Check if pins are directly near each other
+    if (this.isPointNear(pin1, pin2, 20)) {
+     return true;
+    }
+    
+    // Follow wires from pin1 and see if we reach pin2
+    for (const conn of this.connections) {
+     let nextPoint = null;
+     
+     if (this.isPointNear(pin1, conn.start, 15)) {
+      nextPoint = conn.end;
+     } else if (this.isPointNear(pin1, conn.end, 15)) {
+      nextPoint = conn.start;
+     }
+     
+     if (nextPoint) {
+      if (this.isPointNear(nextPoint, pin2, 15)) {
+       return true;
+      }
+      // Recursively check
+      if (this.arePinsConnected(nextPoint, pin2, visited)) {
+       return true;
+      }
+     }
+    }
+    
+    return false;
+   }
+   
+   // Check if there's a capacitor connected to this pin area that goes to ground
+   hasCapacitorToGround(pin) {
+    if (!pin) return false;
+    
+    for (const comp of this.components) {
+     if (comp.type === 'capacitor') {
+      const capPins = this.getComponentPinPositions(comp);
+      // Check if capacitor is connected near this pin
+      for (const capPin of capPins) {
+       if (this.arePinsConnected(pin, capPin)) {
+        // Check if other end of capacitor goes to ground
+        for (const otherCapPin of capPins) {
+         if (otherCapPin !== capPin) {
+          if (this.traceConnectionWithout555Output(otherCapPin, 'ground')) {
+           return true;
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+    return false;
+   }
+   
+   // Simplified check: is there any capacitor connected to any pin of this 555?
+   hasCapacitorConnectedTo555(ne555Comp) {
+    if (ne555Comp.type !== 'ne555') return false;
+    
+    for (const comp of this.components) {
+     if (comp.type === 'capacitor') {
+      const capPins = this.getComponentPinPositions(comp);
+      const ne555Pins = this.getComponentPinPositions(ne555Comp);
+      
+      // Check if any capacitor pin is connected to any 555 pin
+      for (const capPin of capPins) {
+       for (const ne555Pin of ne555Pins) {
+        if (this.arePinsConnected(capPin, ne555Pin)) {
+         return true;
+        }
+       }
+      }
+     }
+    }
+    return false;
+   }
+   
+   // Trace connection but don't count 555 output as power source (to avoid circular logic)
+   traceConnectionWithout555Output(startPoint, targetType, visited = new Set()) {
+    const pointKey = `${Math.round(startPoint.x)},${Math.round(startPoint.y)}`;
+    if (visited.has(pointKey)) return false;
+    visited.add(pointKey);
+    
+    // Check if we've reached a power or ground component directly
+    for (const comp of this.components) {
+     if (comp.type === targetType) {
+      const pins = this.getComponentPinPositions(comp);
+      for (const pin of pins) {
+       if (this.isPointNear(startPoint, pin)) {
+        return true;
+       }
+      }
+     }
+    }
+    
+    // Follow all wire connections from this point
+    for (const conn of this.connections) {
+     let nextPoint = null;
+     
+     if (this.isPointNear(startPoint, conn.start)) {
+      nextPoint = conn.end;
+     } else if (this.isPointNear(startPoint, conn.end)) {
+      nextPoint = conn.start;
+     }
+     
+     if (nextPoint) {
+      if (this.traceConnectionWithout555Output(nextPoint, targetType, visited)) {
+       return true;
+      }
+      
+      // Check pass-through components (resistor, button)
+      for (const comp of this.components) {
+       if (comp.type === 'resistor') {
+        const pins = this.getComponentPinPositions(comp);
+        for (let i = 0; i < pins.length; i++) {
+         if (this.isPointNear(nextPoint, pins[i])) {
+          for (let j = 0; j < pins.length; j++) {
+           if (i !== j) {
+            if (this.traceConnectionWithout555Output(pins[j], targetType, visited)) {
+             return true;
+            }
+           }
+          }
+         }
+        }
+       } else if (comp.type === 'button' && comp.isPressed) {
+        const pins = this.getComponentPinPositions(comp);
+        for (let i = 0; i < pins.length; i++) {
+         if (this.isPointNear(nextPoint, pins[i])) {
+          for (let j = 0; j < pins.length; j++) {
+           if (i !== j) {
+            if (this.traceConnectionWithout555Output(pins[j], targetType, visited)) {
+             return true;
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+    
+    return false;
+   }
+
+   drawSimpleComponentPins(comp) {
+    const gridSize = 20;
+    const pinRenderSize = 16; // 20px grid - 2px on each side
+    const pinMargin = 2; // 2px margin on each side
+    
+    this.ctx.fillStyle = '#c0c0c0';
+
+    if (comp.type === 'crystal' && comp.pins === 4) {
+     // Crystal with 4 pins - 2 on each side, aligned to grid
+     // Top-left pin (left side, top position)
+     this.ctx.fillRect(
+      comp.x - gridSize + pinMargin,
+      comp.y + pinMargin,
+      pinRenderSize,
+      pinRenderSize
+     );
+     // Bottom-left pin (left side, bottom position)
+     this.ctx.fillRect(
+      comp.x - gridSize + pinMargin,
+      comp.y + gridSize + pinMargin,
+      pinRenderSize,
+      pinRenderSize
+     );
+     // Top-right pin (right side, top position)
+     this.ctx.fillRect(
+      comp.x + comp.width + pinMargin,
+      comp.y + pinMargin,
+      pinRenderSize,
+      pinRenderSize
+     );
+     // Bottom-right pin (right side, bottom position)
+     this.ctx.fillRect(
+      comp.x + comp.width + pinMargin,
+      comp.y + gridSize + pinMargin,
+      pinRenderSize,
+      pinRenderSize
+     );
+    } else if (comp.type === 'button' && comp.pins === 4) {
+     // Button with 4 pins - 2 on each side, aligned to grid
+     // Top-left pin (left side, top position)
+     this.ctx.fillRect(
+      comp.x - gridSize + pinMargin,
+      comp.y + pinMargin,
+      pinRenderSize,
+      pinRenderSize
+     );
+     // Bottom-left pin (left side, bottom position)
+     this.ctx.fillRect(
+      comp.x - gridSize + pinMargin,
+      comp.y + gridSize + pinMargin,
+      pinRenderSize,
+      pinRenderSize
+     );
+     // Top-right pin (right side, top position)
+     this.ctx.fillRect(
+      comp.x + comp.width + pinMargin,
+      comp.y + pinMargin,
+      pinRenderSize,
+      pinRenderSize
+     );
+     // Bottom-right pin (right side, bottom position)
+     this.ctx.fillRect(
+      comp.x + comp.width + pinMargin,
+      comp.y + gridSize + pinMargin,
+      pinRenderSize,
+      pinRenderSize
+     );
     }
    }
 
    updatePropertiesPanel() {
     const panel = document.getElementById('properties-content');
+    const selector = document.getElementById('7400-series-selector');
+    const chipSelect = document.getElementById('7400-chip-select');
+    
+    // Show/hide 7400 series selector based on selected component
+    if (this.selectedComponent && this.selectedComponent.type === '7400-series') {
+     selector.style.display = 'block';
+     chipSelect.value = this.selectedComponent.chipType || '7400';
+    } else {
+     selector.style.display = 'none';
+    }
+
+    // Handle 7400-series (Logic Gate) special display
+    if (this.selectedComponent && this.selectedComponent.type === '7400-series') {
+     const comp = this.selectedComponent;
+     const chipType = comp.chipType || '7400';
+     
+     // Select appropriate pin data based on chip type
+     let pinData, chipName, chipColor, gateLayout, truthTableHtml, tipText;
+     
+     if (chipType === '7404') {
+      pinData = this.sn7404PinData;
+      chipName = 'SN7404 Hex Inverter';
+      chipColor = 'linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%)';
+      gateLayout = `
+       <div style="margin-bottom: 8px;"><strong style="color: #6c5ce7;">🔹 Gate 1:</strong> 1A (pin 1) → 1Y (pin 2)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #6c5ce7;">🔹 Gate 2:</strong> 2A (pin 3) → 2Y (pin 4)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #6c5ce7;">🔹 Gate 3:</strong> 3A (pin 5) → 3Y (pin 6)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #6c5ce7;">🔹 Gate 4:</strong> 4A (pin 9) → 4Y (pin 8)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #6c5ce7;">🔹 Gate 5:</strong> 5A (pin 11) → 5Y (pin 10)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #6c5ce7;">🔹 Gate 6:</strong> 6A (pin 13) → 6Y (pin 12)</div>
+       <div><strong style="color: #856404;">⚡ Power:</strong> VCC (pin 14), GND (pin 7)</div>
+      `;
+      truthTableHtml = `
+       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; text-align: center;">
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">A</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Y</div>
+        <div>0</div><div style="color: #28a745; font-weight: bold;">1</div>
+        <div>1</div><div style="color: #dc3545; font-weight: bold;">0</div>
+       </div>
+      `;
+      tipText = 'Inverters are essential for creating active-LOW control signals and complementing logic!';
+     } else if (chipType === '7408') {
+      pinData = this.sn7408PinData;
+      chipName = 'SN7408 Quad AND Gate';
+      chipColor = 'linear-gradient(135deg, #0984e3 0%, #74b9ff 100%)';
+      gateLayout = `
+       <div style="margin-bottom: 8px;"><strong style="color: #0984e3;">🔹 Gate 1:</strong> 1A (pin 1), 1B (pin 2) → 1Y (pin 3)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #0984e3;">🔹 Gate 2:</strong> 2A (pin 4), 2B (pin 5) → 2Y (pin 6)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #0984e3;">🔹 Gate 3:</strong> 3A (pin 9), 3B (pin 10) → 3Y (pin 8)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #0984e3;">🔹 Gate 4:</strong> 4A (pin 12), 4B (pin 13) → 4Y (pin 11)</div>
+       <div><strong style="color: #856404;">⚡ Power:</strong> VCC (pin 14), GND (pin 7)</div>
+      `;
+      truthTableHtml = `
+       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center;">
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">A</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">B</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Y</div>
+        <div>0</div><div>0</div><div style="color: #dc3545; font-weight: bold;">0</div>
+        <div>0</div><div>1</div><div style="color: #dc3545; font-weight: bold;">0</div>
+        <div>1</div><div>0</div><div style="color: #dc3545; font-weight: bold;">0</div>
+        <div>1</div><div>1</div><div style="color: #28a745; font-weight: bold;">1</div>
+       </div>
+      `;
+      tipText = 'AND gates are perfect for enabling signals and creating conditions that require multiple inputs!';
+     } else if (chipType === '7432') {
+      pinData = this.sn7432PinData;
+      chipName = 'SN7432 Quad OR Gate';
+      chipColor = 'linear-gradient(135deg, #00b894 0%, #55efc4 100%)';
+      gateLayout = `
+       <div style="margin-bottom: 8px;"><strong style="color: #00b894;">🔹 Gate 1:</strong> 1A (pin 1), 1B (pin 2) → 1Y (pin 3)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #00b894;">🔹 Gate 2:</strong> 2A (pin 4), 2B (pin 5) → 2Y (pin 6)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #00b894;">🔹 Gate 3:</strong> 3A (pin 9), 3B (pin 10) → 3Y (pin 8)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #00b894;">🔹 Gate 4:</strong> 4A (pin 12), 4B (pin 13) → 4Y (pin 11)</div>
+       <div><strong style="color: #856404;">⚡ Power:</strong> VCC (pin 14), GND (pin 7)</div>
+      `;
+      truthTableHtml = `
+       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center;">
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">A</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">B</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Y</div>
+        <div>0</div><div>0</div><div style="color: #dc3545; font-weight: bold;">0</div>
+        <div>0</div><div>1</div><div style="color: #28a745; font-weight: bold;">1</div>
+        <div>1</div><div>0</div><div style="color: #28a745; font-weight: bold;">1</div>
+        <div>1</div><div>1</div><div style="color: #28a745; font-weight: bold;">1</div>
+       </div>
+      `;
+      tipText = 'OR gates are ideal for combining multiple signal sources and creating wired-OR configurations!';
+     } else if (chipType === '7402') {
+      pinData = this.sn7402PinData;
+      chipName = 'SN7402 Quad NOR Gate';
+      chipColor = 'linear-gradient(135deg, #e17055 0%, #fab1a0 100%)';
+      gateLayout = `
+       <div style="margin-bottom: 8px;"><strong style="color: #e17055;">🔹 Gate 1:</strong> 1A (pin 2), 1B (pin 3) → 1Y (pin 1)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #e17055;">🔹 Gate 2:</strong> 2A (pin 5), 2B (pin 6) → 2Y (pin 4)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #e17055;">🔹 Gate 3:</strong> 3A (pin 8), 3B (pin 9) → 3Y (pin 10)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #e17055;">🔹 Gate 4:</strong> 4A (pin 11), 4B (pin 12) → 4Y (pin 13)</div>
+       <div><strong style="color: #856404;">⚡ Power:</strong> VCC (pin 14), GND (pin 7)</div>
+      `;
+      truthTableHtml = `
+       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center;">
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">A</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">B</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Y</div>
+        <div>0</div><div>0</div><div style="color: #28a745; font-weight: bold;">1</div>
+        <div>0</div><div>1</div><div style="color: #dc3545; font-weight: bold;">0</div>
+        <div>1</div><div>0</div><div style="color: #dc3545; font-weight: bold;">0</div>
+        <div>1</div><div>1</div><div style="color: #dc3545; font-weight: bold;">0</div>
+       </div>
+      `;
+      tipText = 'NOR is a universal gate - any logic function can be built using only NOR gates!';
+     } else {
+      // Default to 7400 NAND gate
+      pinData = this.sn7400PinData;
+      chipName = 'SN7400 Quad NAND Gate';
+      chipColor = 'linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%)';
+      gateLayout = `
+       <div style="margin-bottom: 8px;"><strong style="color: #0c5460;">🔹 Gate 1:</strong> 1A (pin 1), 1B (pin 2) → 1Y (pin 3)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #0c5460;">🔹 Gate 2:</strong> 2A (pin 4), 2B (pin 5) → 2Y (pin 6)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #0c5460;">🔹 Gate 3:</strong> 3A (pin 9), 3B (pin 10) → 3Y (pin 8)</div>
+       <div style="margin-bottom: 8px;"><strong style="color: #0c5460;">🔹 Gate 4:</strong> 4A (pin 12), 4B (pin 13) → 4Y (pin 11)</div>
+       <div><strong style="color: #856404;">⚡ Power:</strong> VCC (pin 14), GND (pin 7)</div>
+      `;
+      truthTableHtml = `
+       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center;">
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">A</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">B</div>
+        <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Y</div>
+        <div>0</div><div>0</div><div style="color: #28a745; font-weight: bold;">1</div>
+        <div>0</div><div>1</div><div style="color: #28a745; font-weight: bold;">1</div>
+        <div>1</div><div>0</div><div style="color: #28a745; font-weight: bold;">1</div>
+        <div>1</div><div>1</div><div style="color: #dc3545; font-weight: bold;">0</div>
+       </div>
+      `;
+      tipText = 'NAND is a universal gate - any logic function can be built using only NAND gates!';
+     }
+     
+     if (this.selectedPin !== null && pinData.pins[this.selectedPin]) {
+      // Show specific pin information
+      const pin = pinData.pins[this.selectedPin];
+      const pinTypeColors = {
+       power: { bg: '#fff3cd', border: '#ffc107', text: '#856404' },
+       input: { bg: '#d1ecf1', border: '#17a2b8', text: '#0c5460' },
+       output: { bg: '#d4edda', border: '#28a745', text: '#155724' }
+      };
+      const colors = pinTypeColors[pin.type] || pinTypeColors.input;
+      
+      panel.innerHTML = `
+       <div style="background: ${chipColor}; color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 12px; opacity: 0.9;">${chipName}</div>
+        <div style="font-size: 20px; font-weight: bold;">Pin ${this.selectedPin}: ${pin.name}</div>
+        <div style="font-size: 14px; opacity: 0.9;">${pin.fullName}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Type</label>
+        <div style="padding: 8px 12px; background: ${colors.bg}; border: 2px solid ${colors.border}; border-radius: 5px; color: ${colors.text}; font-weight: 600; text-transform: uppercase; font-size: 12px;">
+         ${pin.type}
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Description</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px; font-size: 13px; line-height: 1.6; color: #333;">
+         ${pin.description}
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">${chipType === '7404' ? 'NOT' : 'NAND'} Truth Table</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px; font-family: monospace; font-size: 12px;">
+         ${truthTableHtml}
+        </div>
+       </div>
+       <div style="background: #e8e8e8; border-left: 4px solid #7f8c8d; padding: 12px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #333; font-weight: 600; margin-bottom: 8px;">💡 Quick Reference</div>
+        <div style="font-size: 11px; color: #555; line-height: 1.5;">
+         Click the <strong>IC body</strong> for essential ${chipType} info<br>
+         Click other <strong>pins</strong> to view their details<br>
+         Drag the <strong>outer edge</strong> to move the component
+        </div>
+       </div>
+      `;
+     } else {
+      // Show essential information (body selected)
+      const info = pinData.essential;
+      
+      // Generate key pins based on chip type
+      let keyPinsHtml;
+      if (chipType === '7404') {
+       keyPinsHtml = `
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 14; simulator.updatePropertiesPanel();"><strong>14</strong> - VCC</div>
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 7; simulator.updatePropertiesPanel();"><strong>7</strong> - GND</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 1; simulator.updatePropertiesPanel();"><strong>1</strong> - 1A</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 2; simulator.updatePropertiesPanel();"><strong>2</strong> - 1Y</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 3; simulator.updatePropertiesPanel();"><strong>3</strong> - 2A</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 4; simulator.updatePropertiesPanel();"><strong>4</strong> - 2Y</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 5; simulator.updatePropertiesPanel();"><strong>5</strong> - 3A</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 6; simulator.updatePropertiesPanel();"><strong>6</strong> - 3Y</div>
+       `;
+      } else if (chipType === '7408') {
+       keyPinsHtml = `
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 14; simulator.updatePropertiesPanel();"><strong>14</strong> - VCC</div>
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 7; simulator.updatePropertiesPanel();"><strong>7</strong> - GND</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 1; simulator.updatePropertiesPanel();"><strong>1</strong> - 1A</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 2; simulator.updatePropertiesPanel();"><strong>2</strong> - 1B</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 3; simulator.updatePropertiesPanel();"><strong>3</strong> - 1Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 6; simulator.updatePropertiesPanel();"><strong>6</strong> - 2Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 8; simulator.updatePropertiesPanel();"><strong>8</strong> - 3Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 11; simulator.updatePropertiesPanel();"><strong>11</strong> - 4Y</div>
+       `;
+      } else if (chipType === '7432') {
+       keyPinsHtml = `
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 14; simulator.updatePropertiesPanel();"><strong>14</strong> - VCC</div>
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 7; simulator.updatePropertiesPanel();"><strong>7</strong> - GND</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 1; simulator.updatePropertiesPanel();"><strong>1</strong> - 1A</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 2; simulator.updatePropertiesPanel();"><strong>2</strong> - 1B</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 3; simulator.updatePropertiesPanel();"><strong>3</strong> - 1Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 6; simulator.updatePropertiesPanel();"><strong>6</strong> - 2Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 8; simulator.updatePropertiesPanel();"><strong>8</strong> - 3Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 11; simulator.updatePropertiesPanel();"><strong>11</strong> - 4Y</div>
+       `;
+      } else if (chipType === '7402') {
+       keyPinsHtml = `
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 14; simulator.updatePropertiesPanel();"><strong>14</strong> - VCC</div>
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 7; simulator.updatePropertiesPanel();"><strong>7</strong> - GND</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 1; simulator.updatePropertiesPanel();"><strong>1</strong> - 1Y</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 2; simulator.updatePropertiesPanel();"><strong>2</strong> - 1A</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 4; simulator.updatePropertiesPanel();"><strong>4</strong> - 2Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 10; simulator.updatePropertiesPanel();"><strong>10</strong> - 3Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 13; simulator.updatePropertiesPanel();"><strong>13</strong> - 4Y</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 3; simulator.updatePropertiesPanel();"><strong>3</strong> - 1B</div>
+       `;
+      } else {
+       keyPinsHtml = `
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 14; simulator.updatePropertiesPanel();"><strong>14</strong> - VCC</div>
+        <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 7; simulator.updatePropertiesPanel();"><strong>7</strong> - GND</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 1; simulator.updatePropertiesPanel();"><strong>1</strong> - 1A</div>
+        <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 2; simulator.updatePropertiesPanel();"><strong>2</strong> - 1B</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 3; simulator.updatePropertiesPanel();"><strong>3</strong> - 1Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 6; simulator.updatePropertiesPanel();"><strong>6</strong> - 2Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 8; simulator.updatePropertiesPanel();"><strong>8</strong> - 3Y</div>
+        <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 11; simulator.updatePropertiesPanel();"><strong>11</strong> - 4Y</div>
+       `;
+      }
+      
+      panel.innerHTML = `
+       <div style="background: ${chipColor}; color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 20px; font-weight: bold;">⚡ ${info.name}</div>
+        <div style="font-size: 13px; opacity: 0.9; margin-top: 5px;">${info.description}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Applications</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px;">
+         <ul style="margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.6;">
+          ${info.applications.map(app => `<li>${app}</li>`).join('')}
+         </ul>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Specifications</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px;">
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Supply Voltage</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.voltageRange}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Propagation Delay</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.propagationDelay}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Fan Out</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.fanOut}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Gate Count</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.gateCount}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+          <span style="color: #666; font-size: 12px;">Logic Function</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.truthTable}</span>
+         </div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Gate Layout</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px; font-size: 11px; line-height: 1.6;">
+         ${gateLayout}
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Key Pins (Click for details)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+         ${keyPinsHtml}
+        </div>
+       </div>
+       <div style="background: #e8e8e8; border-left: 4px solid #7f8c8d; padding: 10px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #333; line-height: 1.5;">
+         <strong>💡 Tip:</strong> ${tipText}
+        </div>
+       </div>
+      `;
+     }
+     return;
+    }
+
+    // Handle AT28C256 (EEPROM) special display
+    if (this.selectedComponent && this.selectedComponent.type === '28c256') {
+     const comp = this.selectedComponent;
+     
+     if (this.selectedPin !== null && this.at28c256PinData.pins[this.selectedPin]) {
+      // Show specific pin information
+      const pin = this.at28c256PinData.pins[this.selectedPin];
+      const pinTypeColors = {
+       power: { bg: '#fff3cd', border: '#ffc107', text: '#856404' },
+       control: { bg: '#e2d5f1', border: '#6f42c1', text: '#4a2c7d' },
+       address: { bg: '#cce5ff', border: '#004085', text: '#004085' },
+       data: { bg: '#d4edda', border: '#155724', text: '#155724' }
+      };
+      const colors = pinTypeColors[pin.type] || pinTypeColors.control;
+      
+      panel.innerHTML = `
+       <div style="background: linear-gradient(135deg, #4a4a4a 0%, #6b6b6b 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 12px; opacity: 0.9;">AT28C256 EEPROM</div>
+        <div style="font-size: 20px; font-weight: bold;">Pin ${this.selectedPin}: ${pin.name}</div>
+        <div style="font-size: 14px; opacity: 0.9;">${pin.fullName}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Type</label>
+        <div style="padding: 8px 12px; background: ${colors.bg}; border: 2px solid ${colors.border}; border-radius: 5px; color: ${colors.text}; font-weight: 600; text-transform: uppercase; font-size: 12px;">
+         ${pin.type}
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Description</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px; font-size: 13px; line-height: 1.6; color: #333;">
+         ${pin.description}
+        </div>
+       </div>
+       <div style="background: #e8e8e8; border-left: 4px solid #666; padding: 12px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #333; font-weight: 600; margin-bottom: 8px;">💡 Quick Reference</div>
+        <div style="font-size: 11px; color: #555; line-height: 1.5;">
+         Click the <strong>IC body</strong> for essential EEPROM info<br>
+         Click other <strong>pins</strong> to view their details<br>
+         Drag the <strong>outer edge</strong> to move the component
+        </div>
+       </div>
+      `;
+     } else {
+      // Show essential AT28C256 information (body selected)
+      const info = this.at28c256PinData.essential;
+      
+      panel.innerHTML = `
+       <div style="background: linear-gradient(135deg, #4a4a4a 0%, #6b6b6b 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 20px; font-weight: bold;">💾 ${info.name}</div>
+        <div style="font-size: 13px; opacity: 0.9; margin-top: 5px;">${info.description}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Applications</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px;">
+         <ul style="margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.6;">
+          ${info.applications.map(app => `<li>${app}</li>`).join('')}
+         </ul>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Specifications</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px;">
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Supply Voltage</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.voltageRange}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Capacity</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.capacity}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Organization</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.organization}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Access Time</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.accessTime}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Write Time</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.writeTime}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+          <span style="color: #666; font-size: 12px;">Endurance</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.endurance}</span>
+         </div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Groups</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px; font-size: 11px; line-height: 1.6;">
+         <div style="margin-bottom: 8px;"><strong style="color: #004085;">📍 Address (A0-A14):</strong> Pins 1-2, 3-10, 21, 23-26</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #155724;">📊 Data (I/O0-I/O7):</strong> Pins 11-13, 15-19</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #856404;">⚡ Power:</strong> Pin 14 (GND), Pin 28 (VCC)</div>
+         <div><strong style="color: #4a2c7d;">🔧 Control:</strong> CE (20), OE (22), WE (27)</div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Key Pins (Click for details)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+         <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 14; simulator.updatePropertiesPanel();"><strong>14</strong> - GND</div>
+         <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 28; simulator.updatePropertiesPanel();"><strong>28</strong> - VCC</div>
+         <div style="background: #e2d5f1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 20; simulator.updatePropertiesPanel();"><strong>20</strong> - CE</div>
+         <div style="background: #e2d5f1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 22; simulator.updatePropertiesPanel();"><strong>22</strong> - OE</div>
+         <div style="background: #e2d5f1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 27; simulator.updatePropertiesPanel();"><strong>27</strong> - WE</div>
+         <div style="background: #cce5ff; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 10; simulator.updatePropertiesPanel();"><strong>10</strong> - A0</div>
+         <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 11; simulator.updatePropertiesPanel();"><strong>11</strong> - I/O0</div>
+         <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 19; simulator.updatePropertiesPanel();"><strong>19</strong> - I/O7</div>
+        </div>
+       </div>
+       <div style="background: #e8e8e8; border-left: 4px solid #666; padding: 10px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #333; line-height: 1.5;">
+         <strong>💡 Tip:</strong> Click on any pin to see detailed info. Essential for Ben Eater's 6502 program storage!
+        </div>
+       </div>
+      `;
+     }
+     return;
+    }
+
+    // Handle W65C22 (6522 VIA) special display
+    if (this.selectedComponent && this.selectedComponent.type === 'w65c22') {
+     const comp = this.selectedComponent;
+     
+     if (this.selectedPin !== null && this.w65c22PinData.pins[this.selectedPin]) {
+      // Show specific pin information
+      const pin = this.w65c22PinData.pins[this.selectedPin];
+      const pinTypeColors = {
+       power: { bg: '#fff3cd', border: '#ffc107', text: '#856404' },
+       input: { bg: '#d1ecf1', border: '#17a2b8', text: '#0c5460' },
+       output: { bg: '#d4edda', border: '#28a745', text: '#155724' },
+       control: { bg: '#e2d5f1', border: '#6f42c1', text: '#4a2c7d' },
+       io: { bg: '#cce5ff', border: '#004085', text: '#004085' },
+       data: { bg: '#d4edda', border: '#155724', text: '#155724' }
+      };
+      const colors = pinTypeColors[pin.type] || pinTypeColors.input;
+      
+      panel.innerHTML = `
+       <div style="background: linear-gradient(135deg, #2d5016 0%, #4a7c23 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 12px; opacity: 0.9;">W65C22 VIA</div>
+        <div style="font-size: 20px; font-weight: bold;">Pin ${this.selectedPin}: ${pin.name}</div>
+        <div style="font-size: 14px; opacity: 0.9;">${pin.fullName}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Type</label>
+        <div style="padding: 8px 12px; background: ${colors.bg}; border: 2px solid ${colors.border}; border-radius: 5px; color: ${colors.text}; font-weight: 600; text-transform: uppercase; font-size: 12px;">
+         ${pin.type === 'io' ? 'I/O (Bidirectional)' : pin.type}
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Description</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px; font-size: 13px; line-height: 1.6; color: #333;">
+         ${pin.description}
+        </div>
+       </div>
+       <div style="background: #e8f4ed; border-left: 4px solid #28a745; padding: 12px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #155724; font-weight: 600; margin-bottom: 8px;">💡 Quick Reference</div>
+        <div style="font-size: 11px; color: #555; line-height: 1.5;">
+         Click the <strong>IC body</strong> for essential VIA info<br>
+         Click other <strong>pins</strong> to view their details<br>
+         Drag the <strong>outer edge</strong> to move the component
+        </div>
+       </div>
+      `;
+     } else {
+      // Show essential 6522 VIA information (body selected)
+      const info = this.w65c22PinData.essential;
+      
+      panel.innerHTML = `
+       <div style="background: linear-gradient(135deg, #2d5016 0%, #4a7c23 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 20px; font-weight: bold;">🔌 ${info.name}</div>
+        <div style="font-size: 13px; opacity: 0.9; margin-top: 5px;">${info.description}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Applications</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px;">
+         <ul style="margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.6;">
+          ${info.applications.map(app => `<li>${app}</li>`).join('')}
+         </ul>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Specifications</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px;">
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Supply Voltage</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.voltageRange}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Max Frequency</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.maxFrequency}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">I/O Ports</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.ioPorts}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Timers</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.timers}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+          <span style="color: #666; font-size: 12px;">Features</span>
+          <span style="font-weight: 600; font-size: 11px;">${info.features}</span>
+         </div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Groups</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px; font-size: 11px; line-height: 1.6;">
+         <div style="margin-bottom: 8px;"><strong style="color: #004085;">📍 Port A (PA0-PA7):</strong> Pins 2-9</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #004085;">📍 Port B (PB0-PB7):</strong> Pins 10-17</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #155724;">📊 Data Bus (D0-D7):</strong> Pins 26-33</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #856404;">⚡ Power:</strong> Pin 1 (VSS), Pin 20 (VDD)</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #4a2c7d;">🔧 Control:</strong> CA1/CA2 (39-40), CB1/CB2 (18-19)</div>
+         <div><strong style="color: #0c5460;">📍 Register Select:</strong> RS0-RS3 (35-38)</div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Key Pins (Click for details)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+         <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 1; simulator.updatePropertiesPanel();"><strong>1</strong> - VSS</div>
+         <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 20; simulator.updatePropertiesPanel();"><strong>20</strong> - VDD</div>
+         <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 34; simulator.updatePropertiesPanel();"><strong>34</strong> - RESB</div>
+         <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 25; simulator.updatePropertiesPanel();"><strong>25</strong> - PHI2</div>
+         <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 21; simulator.updatePropertiesPanel();"><strong>21</strong> - IRQB</div>
+         <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 22; simulator.updatePropertiesPanel();"><strong>22</strong> - RWB</div>
+         <div style="background: #e2d5f1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 40; simulator.updatePropertiesPanel();"><strong>40</strong> - CA1</div>
+         <div style="background: #e2d5f1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 18; simulator.updatePropertiesPanel();"><strong>18</strong> - CB1</div>
+        </div>
+       </div>
+       <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #155724; line-height: 1.5;">
+         <strong>💡 Tip:</strong> Click on any pin to see detailed info. Essential for Ben Eater's 6502 project I/O!
+        </div>
+       </div>
+      `;
+     }
+     return;
+    }
+
+    // Handle W65C02S (6502) Microprocessor special display
+    if (this.selectedComponent && this.selectedComponent.type === 'w65c02s') {
+     const comp = this.selectedComponent;
+     
+     if (this.selectedPin !== null && this.w65c02sPinData.pins[this.selectedPin]) {
+      // Show specific pin information
+      const pin = this.w65c02sPinData.pins[this.selectedPin];
+      const pinTypeColors = {
+       power: { bg: '#fff3cd', border: '#ffc107', text: '#856404' },
+       input: { bg: '#d1ecf1', border: '#17a2b8', text: '#0c5460' },
+       output: { bg: '#d4edda', border: '#28a745', text: '#155724' },
+       control: { bg: '#e2d5f1', border: '#6f42c1', text: '#4a2c7d' },
+       address: { bg: '#cce5ff', border: '#004085', text: '#004085' },
+       data: { bg: '#d4edda', border: '#155724', text: '#155724' },
+       nc: { bg: '#e2e3e5', border: '#6c757d', text: '#383d41' }
+      };
+      const colors = pinTypeColors[pin.type] || pinTypeColors.input;
+      
+      panel.innerHTML = `
+       <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 12px; opacity: 0.9;">W65C02S Microprocessor</div>
+        <div style="font-size: 20px; font-weight: bold;">Pin ${this.selectedPin}: ${pin.name}</div>
+        <div style="font-size: 14px; opacity: 0.9;">${pin.fullName}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Type</label>
+        <div style="padding: 8px 12px; background: ${colors.bg}; border: 2px solid ${colors.border}; border-radius: 5px; color: ${colors.text}; font-weight: 600; text-transform: uppercase; font-size: 12px;">
+         ${pin.type}
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Description</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px; font-size: 13px; line-height: 1.6; color: #333;">
+         ${pin.description}
+        </div>
+       </div>
+       <div style="background: #e8f4fd; border-left: 4px solid #2196F3; padding: 12px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #1565c0; font-weight: 600; margin-bottom: 8px;">💡 Quick Reference</div>
+        <div style="font-size: 11px; color: #555; line-height: 1.5;">
+         Click the <strong>IC body</strong> for essential 6502 info<br>
+         Click other <strong>pins</strong> to view their details<br>
+         Drag the <strong>outer edge</strong> to move the component
+        </div>
+       </div>
+      `;
+     } else {
+      // Show essential 6502 information (body selected)
+      const info = this.w65c02sPinData.essential;
+      
+      panel.innerHTML = `
+       <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 20px; font-weight: bold;">🖥️ ${info.name}</div>
+        <div style="font-size: 13px; opacity: 0.9; margin-top: 5px;">${info.description}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Applications</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px;">
+         <ul style="margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.6;">
+          ${info.applications.map(app => `<li>${app}</li>`).join('')}
+         </ul>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Specifications</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px;">
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Supply Voltage</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.voltageRange}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Max Frequency</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.maxFrequency}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Architecture</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.architecture}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+          <span style="color: #666; font-size: 12px;">Registers</span>
+          <span style="font-weight: 600; font-size: 11px;">${info.registers}</span>
+         </div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Groups</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px; font-size: 11px; line-height: 1.6;">
+         <div style="margin-bottom: 8px;"><strong style="color: #004085;">📍 Address Bus (A0-A15):</strong> Pins 9-20, 22-25</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #155724;">📊 Data Bus (D0-D7):</strong> Pins 26-33</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #856404;">⚡ Power:</strong> Pin 8 (VDD), Pin 21 (VSS)</div>
+         <div style="margin-bottom: 8px;"><strong style="color: #0c5460;">🔧 Control:</strong> RESB (40), PHI2 (37), RWB (34)</div>
+         <div><strong style="color: #4a2c7d;">🔔 Interrupts:</strong> IRQB (4), NMIB (6)</div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Key Pins (Click for details)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+         <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 8; simulator.updatePropertiesPanel();"><strong>8</strong> - VDD</div>
+         <div style="background: #fff3cd; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 21; simulator.updatePropertiesPanel();"><strong>21</strong> - VSS</div>
+         <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 40; simulator.updatePropertiesPanel();"><strong>40</strong> - RESB</div>
+         <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 37; simulator.updatePropertiesPanel();"><strong>37</strong> - PHI2</div>
+         <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 34; simulator.updatePropertiesPanel();"><strong>34</strong> - RWB</div>
+         <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 4; simulator.updatePropertiesPanel();"><strong>4</strong> - IRQB</div>
+         <div style="background: #d1ecf1; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 6; simulator.updatePropertiesPanel();"><strong>6</strong> - NMIB</div>
+         <div style="background: #d4edda; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = 7; simulator.updatePropertiesPanel();"><strong>7</strong> - SYNC</div>
+        </div>
+       </div>
+       <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #856404; line-height: 1.5;">
+         <strong>💡 Tip:</strong> Click on any pin to see detailed info. Essential for Ben Eater's 6502 project!
+        </div>
+       </div>
+      `;
+     }
+     return;
+    }
+
+    // Handle 555 Timer IC special display
+    if (this.selectedComponent && this.selectedComponent.type === 'ne555') {
+     const comp = this.selectedComponent;
+     
+     if (this.selectedPin !== null && this.ne555PinData.pins[this.selectedPin]) {
+      // Show specific pin information
+      const pin = this.ne555PinData.pins[this.selectedPin];
+      const pinTypeColors = {
+       power: { bg: '#fff3cd', border: '#ffc107', text: '#856404' },
+       input: { bg: '#d1ecf1', border: '#17a2b8', text: '#0c5460' },
+       output: { bg: '#d4edda', border: '#28a745', text: '#155724' },
+       control: { bg: '#e2d5f1', border: '#6f42c1', text: '#4a2c7d' }
+      };
+      const colors = pinTypeColors[pin.type] || pinTypeColors.input;
+      
+      panel.innerHTML = `
+       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 12px; opacity: 0.9;">NE555 Timer IC</div>
+        <div style="font-size: 20px; font-weight: bold;">Pin ${this.selectedPin}: ${pin.name}</div>
+        <div style="font-size: 14px; opacity: 0.9;">${pin.fullName}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Type</label>
+        <div style="padding: 8px 12px; background: ${colors.bg}; border: 2px solid ${colors.border}; border-radius: 5px; color: ${colors.text}; font-weight: 600; text-transform: uppercase; font-size: 12px;">
+         ${pin.type}
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Description</label>
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 5px; font-size: 13px; line-height: 1.6; color: #333;">
+         ${pin.description}
+        </div>
+       </div>
+       <div style="background: #e8f4fd; border-left: 4px solid #2196F3; padding: 12px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #1565c0; font-weight: 600; margin-bottom: 8px;">💡 Quick Reference</div>
+        <div style="font-size: 11px; color: #555; line-height: 1.5;">
+         Click the <strong>IC body</strong> for essential 555 info<br>
+         Click other <strong>pins</strong> to view their details<br>
+         Drag the <strong>outer edge</strong> to move the component
+        </div>
+       </div>
+      `;
+     } else {
+      // Show essential 555 information (body selected)
+      const info = this.ne555PinData.essential;
+      const statusColor = comp.hasPower ? (comp.outputState ? '#28a745' : '#dc3545') : '#6c757d';
+      const statusBg = comp.hasPower ? (comp.outputState ? '#d4edda' : '#f8d7da') : '#e2e3e5';
+      const statusText = comp.hasPower ? (comp.outputState ? 'OUTPUT HIGH' : 'OUTPUT LOW') : 'NO POWER';
+      const statusIcon = comp.hasPower ? (comp.outputState ? '🟢' : '🔴') : '⚫';
+      
+      // Mode indicator
+      const modeText = comp.astableMode ? '🔄 ASTABLE (Oscillating)' : '🔘 BISTABLE (Latched)';
+      const modeBg = comp.astableMode ? '#fff3cd' : '#e2e3e5';
+      const modeColor = comp.astableMode ? '#856404' : '#383d41';
+      
+      panel.innerHTML = `
+       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
+        <div style="font-size: 20px; font-weight: bold;">⏱️ ${info.name}</div>
+        <div style="font-size: 13px; opacity: 0.9; margin-top: 5px;">${info.description}</div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Operating Mode</label>
+        <div style="padding: 10px; background: ${modeBg}; border-radius: 5px; color: ${modeColor}; font-weight: 600; font-size: 14px;">
+         ${modeText}
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Circuit Status</label>
+        <div style="padding: 12px; background: ${statusBg}; border-radius: 5px; border: 2px solid ${statusColor};">
+         <div style="font-size: 16px; font-weight: 700; color: ${statusColor}; margin-bottom: 5px;">
+          ${statusIcon} ${statusText}
+         </div>
+         <div style="font-size: 11px; color: #666; line-height: 1.4;">
+          ${comp.hasPower ? 
+           (comp.astableMode ?
+            'Output oscillating automatically - LED will blink' :
+            (comp.outputState ? 
+             'Pin 3 (OUT) is HIGH - Can power connected components' : 
+             'Pin 3 (OUT) is LOW - Waiting for trigger')) : 
+           'Connect Vcc (pin 8) to power and GND (pin 1) to ground'}
+         </div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">${comp.astableMode ? 'Astable Mode Operation' : 'Bistable Mode Operation'}</label>
+        <div style="background: #e8f4fd; border-radius: 5px; padding: 12px; font-size: 12px; line-height: 1.6;">
+         ${comp.astableMode ?
+          `<div style="margin-bottom: 8px;"><strong>⚡ AUTO-OSCILLATION:</strong> Output toggles automatically</div>
+           <div><strong>🔌 TIMING:</strong> Set by R/C values (simulated at ~1Hz)</div>` :
+          `<div style="margin-bottom: 8px;"><strong>🔘 TRIGGER (Pin 2):</strong> Ground to set output HIGH</div>
+           <div><strong>🔄 RESET (Pin 4):</strong> Ground to force output LOW</div>`
+         }
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Specifications</label>
+        <div style="background: #f8f9fa; border-radius: 5px; padding: 12px;">
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Supply Voltage</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.voltageRange}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
+          <span style="color: #666; font-size: 12px;">Max Output</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.maxCurrent}</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+          <span style="color: #666; font-size: 12px;">Timing</span>
+          <span style="font-weight: 600; font-size: 12px;">${info.timingFormula}</span>
+         </div>
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Pin Reference</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 11px;">
+         ${Object.entries(this.ne555PinData.pins).map(([num, pin]) => `
+          <div style="background: #f5f5f5; padding: 6px 8px; border-radius: 4px; cursor: pointer;" onclick="simulator.selectedPin = ${num}; simulator.updatePropertiesPanel();">
+           <strong>${num}</strong> - ${pin.name}
+          </div>
+         `).join('')}
+        </div>
+       </div>
+       <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 15px; border-radius: 4px;">
+        <div style="font-size: 12px; color: #856404; line-height: 1.5;">
+         <strong>💡 Tip:</strong> Click on any pin to see detailed info about that specific pin.
+        </div>
+       </div>
+      `;
+     }
+     return;
+    }
+
+    if (this.selectedWire) {
+     const wire = this.selectedWire;
+     const length = Math.sqrt(
+      Math.pow(wire.end.x - wire.start.x, 2) + 
+      Math.pow(wire.end.y - wire.start.y, 2)
+     );
+     
+     panel.innerHTML = `
+      <div class="property-group">
+          <label class="property-label">Component Type</label>
+          <input type="text" class="property-input" value="Wire Connection" readonly>
+      </div>
+      <div class="property-group">
+          <label class="property-label">Start Position</label>
+          <input type="text" class="property-input" value="(${Math.round(wire.start.x)}, ${Math.round(wire.start.y)})" readonly>
+      </div>
+      <div class="property-group">
+          <label class="property-label">End Position</label>
+          <input type="text" class="property-input" value="(${Math.round(wire.end.x)}, ${Math.round(wire.end.y)})" readonly>
+      </div>
+      <div class="property-group">
+          <label class="property-label">Length</label>
+          <input type="text" class="property-input" value="${Math.round(length)} pixels" readonly>
+      </div>
+      <div class="property-group">
+          <label class="property-label">Color</label>
+          <input type="color" class="property-input" value="${wire.color}"
+                 onchange="simulator.updateWireProperty('color', this.value)">
+      </div>
+      <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 15px; border-radius: 4px;">
+       <div style="font-size: 12px; color: #856404; line-height: 1.5;">
+        <strong>💡 Tips:</strong><br>
+        • Press <strong>Delete</strong> to remove this wire<br>
+        • <strong>Click and drag</strong> to move the wire<br>
+        • Connected wires will move together
+       </div>
+      </div>
+     `;
+     return;
+    }
 
     if (!this.selectedComponent) {
-     panel.innerHTML = '<p style="color: #999; font-size: 14px; text-align: center; margin-top: 50px;">Select a component to view properties</p>';
+     panel.innerHTML = '<p style="color: #999; font-size: 14px; text-align: center; margin-top: 50px;">Select a component or wire to view properties</p>';
+     this.updateQuickTips(null);
      return;
     }
 
     const comp = this.selectedComponent;
+    this.updateQuickTips(comp);
     panel.innerHTML = `
      <div class="property-group">
          <label class="property-label">Component Type</label>
@@ -1183,11 +3987,56 @@
          <input type="number" class="property-input" value="${Math.round(comp.y)}"
                 onchange="simulator.updateComponentProperty('y', this.value)">
      </div>
+     <div class="property-group">
+         <label class="property-label">Rotation</label>
+         <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" class="property-input" value="${comp.rotation || 0}°" readonly style="flex: 1;">
+          <button class="btn btn-secondary" onclick="simulator.rotateSelected()" style="padding: 6px 12px;">🔄 Rotate</button>
+         </div>
+     </div>
      ${comp.value ? `
      <div class="property-group">
          <label class="property-label">Value</label>
          <input type="text" class="property-input" value="${comp.value}"
                 onchange="simulator.updateComponentProperty('value', this.value)">
+     </div>
+     ` : ''}
+     ${comp.type === 'led' ? `
+     <div class="property-group">
+         <label class="property-label">Circuit Status</label>
+         <div style="padding: 10px; background: ${comp.isPowered ? '#d4edda' : '#f8d7da'}; border-radius: 5px; border: 2px solid ${comp.isPowered ? '#28a745' : '#dc3545'};">
+          <div style="font-size: 14px; font-weight: 600; color: ${comp.isPowered ? '#155724' : '#721c24'}; margin-bottom: 5px;">
+           ${comp.isPowered ? '💡 LED is ON' : '⚫ LED is OFF'}
+          </div>
+          <div style="font-size: 11px; color: #666; line-height: 1.4;">
+           ${comp.isPowered ? 'Properly connected to power (+) and ground (-)' : 'Connect anode (+) to power and cathode (-) to ground'}
+          </div>
+         </div>
+     </div>
+     ` : ''}
+     ${comp.type === 'button' ? `
+     <div class="property-group">
+         <label class="property-label">Switch Status</label>
+         <div style="padding: 10px; background: ${comp.isPressed ? '#d4edda' : '#f8d7da'}; border-radius: 5px; border: 2px solid ${comp.isPressed ? '#28a745' : '#dc3545'};">
+          <div style="font-size: 14px; font-weight: 600; color: ${comp.isPressed ? '#155724' : '#721c24'}; margin-bottom: 5px;">
+           ${comp.isPressed ? '🟢 Switch is CLOSED (ON)' : '🔴 Switch is OPEN (OFF)'}
+          </div>
+          <div style="font-size: 11px; color: #666; line-height: 1.4;">
+           ${comp.isPressed ? 'Current can flow through the switch' : 'Click the switch to close the circuit'}
+          </div>
+         </div>
+     </div>
+     ` : ''}
+     ${comp.type === '7400-series' ? `
+     <div class="property-group">
+         <label class="property-label">Chip Information</label>
+         <div style="padding: 12px; background: #f8f9fa; border-radius: 5px; font-size: 13px; line-height: 1.6;">
+          ${comp.chipType === '7400' ? `<strong>7400 - Quad 2-Input NAND Gate</strong><br>Four independent NAND gates. Output LOW only when both inputs are HIGH.` : ''}
+          ${comp.chipType === '7402' ? `<strong>7402 - Quad 2-Input NOR Gate</strong><br>Four independent NOR gates. Output HIGH only when both inputs are LOW.` : ''}
+          ${comp.chipType === '7404' ? `<strong>7404 - Hex Inverter (NOT Gate)</strong><br>Six independent inverters. Output is always the opposite of input.` : ''}
+          ${comp.chipType === '7408' ? `<strong>7408 - Quad 2-Input AND Gate</strong><br>Four independent AND gates. Output HIGH only when both inputs are HIGH.` : ''}
+          ${comp.chipType === '7432' ? `<strong>7432 - Quad 2-Input OR Gate</strong><br>Four independent OR gates. Output HIGH when any input is HIGH.` : ''}
+         </div>
      </div>
      ` : ''}
      ${comp.pins ? `
@@ -1204,10 +4053,130 @@
     `;
    }
 
+   updateQuickTips(component) {
+    const tipsContainer = document.getElementById('quickTips');
+    if (!tipsContainer) return;
+    
+    const tips = {
+     'w65c02s': [
+      { label: '40 Pins', text: 'Click pins to see detailed info' },
+      { label: 'Drag', text: 'Click body/border to move' },
+      { label: 'Power', text: 'Pin 1 (VSS) = GND, Pin 21 (VDD) = +5V' },
+      { label: 'Clock', text: 'Pin 37 (PHI2) needs clock signal' }
+     ],
+     '28c256': [
+      { label: 'EEPROM', text: '32KB program storage' },
+      { label: 'Address', text: 'A0-A14 = 15 address lines' },
+      { label: 'Data', text: 'D0-D7 = 8-bit data bus' },
+      { label: 'Control', text: 'CE̅, OE̅, WE̅ for chip control' }
+     ],
+     'w65c22': [
+      { label: 'VIA', text: 'Versatile Interface Adapter' },
+      { label: 'I/O', text: 'Two 8-bit ports (PA, PB)' },
+      { label: 'Timers', text: '2 programmable timers' },
+      { label: 'Shift', text: 'Serial shift register' }
+     ],
+     'ne555': [
+      { label: 'Timer IC', text: 'Pin 1=GND, Pin 8=VCC (+5V)' },
+      { label: 'Output', text: 'Pin 3 provides timer output' },
+      { label: 'Trigger', text: 'Pin 2 < ⅓VCC starts cycle' },
+      { label: 'Reset', text: 'Pin 4 LOW disables output' }
+     ],
+     '7400-series': [
+      { label: 'Logic IC', text: 'Select chip type from dropdown above' },
+      { label: '7400', text: 'NAND - Output LOW when both inputs HIGH' },
+      { label: '7402', text: 'NOR - Output HIGH only when both inputs LOW' },
+      { label: '7404', text: 'NOT - Six inverters, output opposite of input' },
+      { label: '7408', text: 'AND - Output HIGH only when both inputs HIGH' },
+      { label: '7432', text: 'OR - Output HIGH when any input is HIGH' },
+      { label: 'Power', text: 'Pin 7=GND, Pin 14=VCC (all types)' }
+     ],
+     'led': [
+      { label: 'Polarity', text: 'Top pin (+) to power, bottom (-) to ground' },
+      { label: 'Resistor', text: 'Always use resistor (220Ω-1kΩ)' },
+      { label: 'Auto-detect', text: 'Lights when properly connected' },
+      { label: 'Current', text: 'Typical: 10-20mA forward current' }
+     ],
+     'resistor': [
+      { label: 'No Polarity', text: 'Can be connected either direction' },
+      { label: 'LED Protection', text: 'Use with LEDs to limit current' },
+      { label: 'Pull-up/down', text: 'Common values: 1kΩ, 10kΩ' },
+      { label: 'Power', text: 'P = I²R, check wattage rating' }
+     ],
+     'capacitor': [
+      { label: 'Filtering', text: 'Smooths power supply noise' },
+      { label: 'Decoupling', text: 'Place near IC power pins (0.1µF)' },
+      { label: 'Timing', text: 'Used with 555 timer (RC circuits)' },
+      { label: 'Common', text: '0.1µF, 1µF, 10µF values' }
+     ],
+     'button': [
+      { label: 'Toggle', text: 'Click center to toggle state' },
+      { label: 'Drag', text: 'Click border to move' },
+      { label: 'Pull-up', text: 'Usually needs pull-up resistor' },
+      { label: 'Debounce', text: 'May need capacitor for debouncing' }
+     ],
+     'crystal': [
+      { label: 'Clock', text: 'Provides stable clock frequency' },
+      { label: '6502', text: 'Common: 1MHz, 2MHz, 4MHz' },
+      { label: 'Capacitors', text: 'Needs two 22pF caps to ground' },
+      { label: 'Pins', text: 'Connect to PHI2 and PHI2O pins' }
+     ],
+     'power': [
+      { label: '+5V Rail', text: 'Powers all ICs and components' },
+      { label: 'Connect', text: 'Wire to VCC/VDD pins' },
+      { label: 'Decoupling', text: 'Add 0.1µF cap near each IC' },
+      { label: 'Current', text: 'Ensure adequate power supply' }
+     ],
+     'ground': [
+      { label: 'GND Rail', text: 'Common reference for all signals' },
+      { label: 'Connect', text: 'Wire to VSS/GND pins' },
+      { label: 'Important', text: 'All grounds must connect together' },
+      { label: 'Return Path', text: 'Completes all circuits' }
+     ]
+    };
+    
+    const defaultTips = [
+     { label: 'Drag & Drop', text: 'Drag components onto breadboard' },
+     { label: 'Wire Mode', text: 'Click two points to connect' },
+     { label: 'Delete', text: 'Select and press Delete key' },
+     { label: 'Move', text: 'Click and drag components' },
+     { label: 'Rotate', text: 'Select component and press R key' }
+    ];
+    
+    const tipsToShow = component && tips[component.type] ? tips[component.type] : defaultTips;
+    const icon = component ? this.getComponentIcon(component.type) : '💡';
+    
+    let html = `<strong style="color: #1976D2;">${icon} Quick Tips:</strong>`;
+    tipsToShow.forEach(tip => {
+     html += `<span style="font-size: 13px; color: #555;"><strong>${tip.label}:</strong> ${tip.text}</span>`;
+    });
+    
+    tipsContainer.innerHTML = html;
+   }
+   
+   getComponentIcon(type) {
+    const icons = {
+     'w65c02s': '🖥️',
+     '28c256': '💾',
+     'w65c22': '🔌',
+     '7400-series': '⚡',
+     'ne555': '⏱️',
+     'led': '💡',
+     'resistor': '📏',
+     'capacitor': '🔋',
+     'button': '🔘',
+     'crystal': '💎',
+     'power': '🔌',
+     'ground': '⏚'
+    };
+    return icons[type] || '💡';
+   }
+
    updateComponentProperty(prop, value) {
     if (this.selectedComponent) {
      if (prop === 'x' || prop === 'y') {
       this.selectedComponent[prop] = parseFloat(value);
+      this.updateLEDStates();
      } else {
       this.selectedComponent[prop] = value;
      }
@@ -1215,18 +4184,71 @@
     }
    }
 
+   change7400ChipType(chipType) {
+    if (this.selectedComponent && this.selectedComponent.type === '7400-series') {
+     const chipLabels = {
+      '7400': '7400',
+      '7402': '7402',
+      '7404': '7404',
+      '7408': '7408',
+      '7432': '7432'
+     };
+     this.selectedComponent.chipType = chipType;
+     this.selectedComponent.label = chipLabels[chipType] || '7400';
+     this.draw();
+     this.updatePropertiesPanel();
+     this.updateQuickTips(this.selectedComponent);
+    }
+   }
+
+   updateWireProperty(prop, value) {
+    if (this.selectedWire) {
+     this.selectedWire[prop] = value;
+     this.draw();
+     this.updatePropertiesPanel();
+    }
+   }
+
    updateStatusBar() {
     document.getElementById('componentCount').textContent = this.components.length;
     document.getElementById('connectionCount').textContent = this.connections.length;
-    document.getElementById('selectedComponent').textContent =
-     this.selectedComponent ? this.selectedComponent.label : 'None';
+    
+    let selectedText = 'None';
+    if (this.selectedComponent) {
+     selectedText = this.selectedComponent.label;
+    } else if (this.selectedWire) {
+     selectedText = 'Wire';
+    }
+    
+    document.getElementById('selectedComponent').textContent = selectedText;
    }
 
    toggleConnectionMode() {
     this.connectionMode = !this.connectionMode;
     const modeIndicator = document.getElementById('connectionMode');
     modeIndicator.classList.toggle('active', this.connectionMode);
-    this.canvas.style.cursor = this.connectionMode ? 'crosshair' : 'default';
+    
+    // Update wire mode button appearance
+    const wireModeBtn = document.getElementById('wireMode');
+    const wireModeText = document.getElementById('wireModeText');
+    if (this.connectionMode) {
+     wireModeBtn.style.background = '#c0392b';
+     wireModeBtn.style.color = 'white';
+     wireModeBtn.textContent = 'Wire Mode ON';
+     wireModeText.innerHTML = '🔌 Wire Mode Active: Click on two points to create a connection<br><small style="margin-top: 5px; display: block;">💡 Hold <strong>Ctrl</strong> to move wire endpoints</small>';
+     // Clear any pending connection start when turning mode back on
+     this.connectionStart = null;
+     this.canvas.style.cursor = 'crosshair';
+    } else {
+     wireModeBtn.style.background = '';
+     wireModeBtn.style.color = '';
+     wireModeBtn.textContent = 'Wire Mode OFF';
+     this.editingWire = null;
+     this.editingWirePoint = null;
+     this.connectionStart = null;
+     this.canvas.style.cursor = 'default';
+    }
+    this.draw();
    }
 
    toggleGrid() {
@@ -1241,10 +4263,85 @@
      if (index > -1) {
       this.components.splice(index, 1);
       this.selectedComponent = null;
+      this.updateLEDStates();
       this.draw();
       this.updatePropertiesPanel();
       this.updateStatusBar();
      }
+    } else if (this.selectedWire) {
+     const index = this.connections.indexOf(this.selectedWire);
+     if (index > -1) {
+      this.connections.splice(index, 1);
+      this.selectedWire = null;
+      this.updateLEDStates();
+      this.draw();
+      this.updatePropertiesPanel();
+      this.updateStatusBar();
+     }
+    }
+   }
+
+   rotateSelected() {
+    if (this.selectedComponent) {
+     // Initialize rotation if not set
+     if (typeof this.selectedComponent.rotation === 'undefined') {
+      this.selectedComponent.rotation = 0;
+     }
+     
+     // Rotate by 90 degrees
+     this.selectedComponent.rotation = (this.selectedComponent.rotation + 90) % 360;
+     
+     // For non-square components, swap width and height to maintain proper positioning
+     const comp = this.selectedComponent;
+     if (comp.width !== comp.height) {
+      // Swap width and height
+      const oldWidth = comp.width;
+      const oldHeight = comp.height;
+      comp.width = oldHeight;
+      comp.height = oldWidth;
+      
+      // Adjust position to keep component centered at same point
+      const centerX = comp.x + oldWidth / 2;
+      const centerY = comp.y + oldHeight / 2;
+      comp.x = centerX - comp.width / 2;
+      comp.y = centerY - comp.height / 2;
+      
+      // Snap to grid
+      const snapped = this.snapToGrid(comp.x, comp.y);
+      comp.x = snapped.x;
+      comp.y = snapped.y;
+     }
+     
+     this.draw();
+     this.updatePropertiesPanel();
+    } else if (this.selectedWire) {
+     // Rotate wire by 90 degrees around its center
+     const wire = this.selectedWire;
+     const centerX = (wire.start.x + wire.end.x) / 2;
+     const centerY = (wire.start.y + wire.end.y) / 2;
+     
+     // Rotate start point
+     const startDx = wire.start.x - centerX;
+     const startDy = wire.start.y - centerY;
+     wire.start.x = centerX - startDy;
+     wire.start.y = centerY + startDx;
+     
+     // Rotate end point
+     const endDx = wire.end.x - centerX;
+     const endDy = wire.end.y - centerY;
+     wire.end.x = centerX - endDy;
+     wire.end.y = centerY + endDx;
+     
+     // Snap to grid
+     const gridSize = 20;
+     wire.start.x = Math.round(wire.start.x / gridSize) * gridSize + gridSize / 2;
+     wire.start.y = Math.round(wire.start.y / gridSize) * gridSize + gridSize / 2;
+     wire.end.x = Math.round(wire.end.x / gridSize) * gridSize + gridSize / 2;
+     wire.end.y = Math.round(wire.end.y / gridSize) * gridSize + gridSize / 2;
+     
+     this.updateLEDStates();
+     this.draw();
+     this.updatePropertiesPanel();
     }
    }
 
@@ -1253,6 +4350,8 @@
      this.components = [];
      this.connections = [];
      this.selectedComponent = null;
+     this.selectedWire = null;
+     this.updateLEDStates();
      this.draw();
      this.updatePropertiesPanel();
      this.updateStatusBar();
