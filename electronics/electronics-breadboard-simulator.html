@@ -585,6 +585,14 @@
          </div>
         </div>
 
+        <div class="component-item" draggable="true" data-type="62256">
+         <div class="component-icon">🧠</div>
+         <div class="component-info">
+          <div class="component-name">62256</div>
+          <div class="component-desc">SRAM 32KB</div>
+         </div>
+        </div>
+
         <div class="component-item" draggable="true" data-type="w65c22">
          <div class="component-icon">🔌</div>
          <div class="component-info">
@@ -633,11 +641,19 @@
          </div>
         </div>
 
-        <div class="component-item" draggable="true" data-type="button">
+        <div class="component-item" draggable="true" data-type="switch">
          <div class="component-icon">🔘</div>
          <div class="component-info">
-          <div class="component-name">Push Button</div>
-          <div class="component-desc">Momentary Switch</div>
+          <div class="component-name">Switch</div>
+          <div class="component-desc">Toggle Switch</div>
+         </div>
+        </div>
+
+        <div class="component-item" draggable="true" data-type="button">
+         <div class="component-icon">⏺️</div>
+         <div class="component-info">
+          <div class="component-name">Button</div>
+          <div class="component-desc">Momentary (Hold to activate)</div>
          </div>
         </div>
 
@@ -646,6 +662,22 @@
          <div class="component-info">
           <div class="component-name">Crystal</div>
           <div class="component-desc">1MHz Oscillator</div>
+         </div>
+        </div>
+
+        <div class="component-item" draggable="true" data-type="potentiometer">
+         <div class="component-icon">🎚️</div>
+         <div class="component-info">
+          <div class="component-name">Potentiometer</div>
+          <div class="component-desc">Variable Resistor</div>
+         </div>
+        </div>
+
+        <div class="component-item" draggable="true" data-type="photoresistor">
+         <div class="component-icon">☀️</div>
+         <div class="component-info">
+          <div class="component-name">Photoresistor</div>
+          <div class="component-desc">Light-Dependent Resistor</div>
          </div>
         </div>
 
@@ -741,8 +773,10 @@
     this.ctrlPressed = false;
     this.editingWire = null;
     this.editingWirePoint = null; // 'start' or 'end'
+    this.hoveredWirePoint = null; // Track hovered wire endpoint for highlighting
     this.isDraggingWire = false;
     this.wireDragOffset = { x: 0, y: 0 };
+    this.activeButton = null; // Track active momentary button for mouseup release
     
     // 555 Timer simulation interval
     this.simulationInterval = null;
@@ -756,7 +790,22 @@
       applications: ['Astable multivibrator', 'Monostable (one-shot)', 'Bistable flip-flop', 'PWM generation'],
       voltageRange: '4.5V to 16V (NE555), 2V to 15V (CMOS)',
       maxCurrent: '200mA output',
-      timingFormula: 'T = 1.1 × R × C (monostable)'
+      timingFormula: 'T = 1.1 × R × C (monostable)',
+      astableFormulas: {
+       frequency: 'f = 1.44 / ((R1 + 2×R2) × C)',
+       highTime: 't₁ = 0.693 × (R1 + R2) × C',
+       lowTime: 't₂ = 0.693 × R2 × C',
+       dutyCycle: 'D = (R1 + R2) / (R1 + 2×R2) × 100%'
+      },
+      monostableFormulas: {
+       pulseWidth: 'T = 1.1 × R × C',
+       description: 'One-shot pulse when triggered'
+      },
+      thresholds: {
+       trigger: '⅓ Vcc (triggers when below)',
+       threshold: '⅔ Vcc (resets when above)',
+       controlDefault: '⅔ Vcc'
+      }
      },
      pins: {
       1: { name: 'GND', fullName: 'Ground', description: 'Ground reference (0V). Connect to negative supply rail.', type: 'power' },
@@ -1089,24 +1138,61 @@
    }
    
    startSimulationLoop() {
-    // Start a simulation loop that runs every 500ms for 555 astable oscillation
+    // Start a simulation loop that runs at adaptive rate for 555 astable oscillation
     if (this.simulationInterval) {
      clearInterval(this.simulationInterval);
     }
+    // Base interval - will be adjusted based on fastest 555 frequency
+    this.baseSimulationInterval = 100; // 100ms base tick
+    this.lastToggleTime = {};
+    
     this.simulationInterval = setInterval(() => {
      this.runSimulationStep();
-    }, 500);
+    }, this.baseSimulationInterval);
    }
    
    runSimulationStep() {
-    // Toggle any 555s in astable mode
+    // Toggle any 555s in astable mode based on their calculated timing
+    const now = Date.now();
     let needsRedraw = false;
+    
     for (const comp of this.components) {
-     if (comp.type === 'ne555' && comp.astableMode && comp.hasPower) {
-      comp.outputState = !comp.outputState;
-      needsRedraw = true;
+     if (comp.type === 'ne555' && comp.astableMode && comp.hasPower && !comp.resetActive) {
+      const compId = comp.id || this.components.indexOf(comp);
+      
+      // Initialize toggle time if not set
+      if (!this.lastToggleTime[compId]) {
+       this.lastToggleTime[compId] = now;
+       comp.outputState = true; // Start HIGH
+      }
+      
+      // Calculate toggle interval based on timing values
+      let toggleInterval;
+      if (comp.timingValues && comp.timingValues.period) {
+       // Use calculated period, scaled for visibility (min 200ms, max 2000ms per half-cycle)
+       const halfPeriodMs = (comp.timingValues.period * 1000) / 2;
+       // Scale: if actual period < 400ms, slow it down; if > 4000ms, speed it up
+       if (halfPeriodMs < 200) {
+        toggleInterval = 200 + (halfPeriodMs / 200) * 100; // Scale up slow oscillations
+       } else if (halfPeriodMs > 2000) {
+        toggleInterval = 1500 + Math.log10(halfPeriodMs / 2000) * 500; // Scale down fast ones
+       } else {
+        toggleInterval = halfPeriodMs;
+       }
+      } else {
+       // Default to 500ms if no timing calculated
+       toggleInterval = 500;
+      }
+      
+      // Check if it's time to toggle
+      if (now - this.lastToggleTime[compId] >= toggleInterval) {
+       comp.outputState = !comp.outputState;
+       this.lastToggleTime[compId] = now;
+       needsRedraw = true;
+      }
      }
     }
+    
     if (needsRedraw) {
      this.updateLEDStates();
      this.draw();
@@ -1168,15 +1254,38 @@
      }
      if (e.key === 'Control' || e.key === 'Meta') {
       this.ctrlPressed = true;
+      // Change cursor to default when Ctrl is pressed in wire mode
+      if (this.connectionMode) {
+       this.canvas.style.cursor = 'default';
+       this.draw();
+      }
+     }
+     // Escape key cancels wire drawing in progress
+     if (e.key === 'Escape' && this.connectionMode && this.connectionStart) {
+      this.connectionStart = null;
+      this.draw();
      }
     });
 
     document.addEventListener('keyup', (e) => {
      if (e.key === 'Control' || e.key === 'Meta') {
       this.ctrlPressed = false;
-      // Reset wire editing mode when Ctrl is released
+      // Reset wire editing mode when Ctrl is released (but keep selectedWire)
       this.editingWire = null;
       this.editingWirePoint = null;
+      // Restore crosshair cursor in wire mode
+      if (this.connectionMode) {
+       this.canvas.style.cursor = 'crosshair';
+      }
+      this.draw();
+     }
+    });
+
+    // Right-click cancels wire drawing in progress
+    this.canvas.addEventListener('contextmenu', (e) => {
+     if (this.connectionMode && this.connectionStart) {
+      e.preventDefault();
+      this.connectionStart = null;
       this.draw();
      }
     });
@@ -1199,10 +1308,30 @@
      if (wirePoint) {
       this.editingWire = wirePoint.connection;
       this.editingWirePoint = wirePoint.point;
+      this.selectedWire = wirePoint.connection;
+      this.selectedComponent = null;
       this.isDragging = true;
+      this.updatePropertiesPanel();
+      this.updateStatusBar();
+      this.draw();
       return;
      }
-     // If ctrl is pressed but no wire endpoint found, fall through to normal connection mode
+     // Check if clicking on a wire (not endpoint) to select it
+     const clickedWire = this.getWireAt(x, y);
+     if (clickedWire) {
+      this.selectedWire = clickedWire;
+      this.selectedComponent = null;
+      this.updatePropertiesPanel();
+      this.updateStatusBar();
+      this.draw();
+      return;
+     }
+     // Clicking on empty space deselects wire
+     this.selectedWire = null;
+     this.updatePropertiesPanel();
+     this.updateStatusBar();
+     this.draw();
+     return;
     }
 
     if (this.connectionMode) {
@@ -1214,7 +1343,38 @@
     const clickedComponent = this.getComponentAt(x, y);
 
     if (clickedComponent) {
-     // Special handling for button: toggle on center click, drag on border click
+     // Special handling for switch: toggle on center click, drag on border click
+     if (clickedComponent.type === 'switch') {
+      const borderSize = 8; // 8px border for dragging
+      const isBorderClick =
+       x < clickedComponent.x + borderSize ||
+       x > clickedComponent.x + clickedComponent.width - borderSize ||
+       y < clickedComponent.y + borderSize ||
+       y > clickedComponent.y + clickedComponent.height - borderSize;
+
+      if (isBorderClick) {
+       // Drag switch
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+       this.isDragging = true;
+       this.dragStart = {
+        x: x - clickedComponent.x,
+        y: y - clickedComponent.y
+       };
+      } else {
+       // Toggle switch state
+       clickedComponent.isPressed = !clickedComponent.isPressed;
+       this.updateLEDStates();
+       this.selectedComponent = clickedComponent;
+       this.selectedWire = null;
+      }
+      this.updatePropertiesPanel();
+      this.draw();
+      this.updateStatusBar();
+      return;
+     }
+
+     // Special handling for button (momentary): activate on mousedown, deactivate on mouseup
      if (clickedComponent.type === 'button') {
       const borderSize = 8; // 8px border for dragging
       const isBorderClick =
@@ -1233,8 +1393,9 @@
         y: y - clickedComponent.y
        };
       } else {
-       // Toggle button state
-       clickedComponent.isPressed = !clickedComponent.isPressed;
+       // Momentary button: activate on mousedown (will deactivate on mouseup)
+       clickedComponent.isPressed = true;
+       this.activeButton = clickedComponent; // Track the active button for mouseup
        this.updateLEDStates();
        this.selectedComponent = clickedComponent;
        this.selectedWire = null;
@@ -1428,6 +1589,14 @@
 
     this.mousePos = { x, y };
     
+    // Track hovered endpoint for highlighting in wire mode with Ctrl
+    if (this.connectionMode && this.ctrlPressed) {
+     this.hoveredWirePoint = this.getWirePointAt(x, y);
+     this.draw();
+    } else {
+     this.hoveredWirePoint = null;
+    }
+    
     // Update cursor when hovering over selected wire (only when NOT in connection mode)
     if (!this.connectionMode) {
      if (this.selectedWire && !this.isDraggingWire) {
@@ -1496,6 +1665,15 @@
     this.dragStart = { x: 0, y: 0 };
    }
    handleMouseUp(e) {
+    // Handle momentary button release (deactivate on mouseup)
+    if (this.activeButton && this.activeButton.type === 'button') {
+     this.activeButton.isPressed = false;
+     this.activeButton = null;
+     this.updateLEDStates();
+     this.draw();
+     this.updatePropertiesPanel();
+    }
+
     if (this.isDragging && this.editingWire && this.editingWirePoint) {
      // Finish wire editing
      this.draw();
@@ -1872,6 +2050,13 @@
       label: '28C256',
       color: '#34495e'
      },
+     '62256': {
+      width: gridSize * 6,
+      height: gridSize * 14,
+      pins: 28,
+      label: '62256',
+      color: '#2c3e50'
+     },
      'w65c22': {
       width: gridSize * 6,
       height: gridSize * 20,
@@ -1919,13 +2104,22 @@
       color: '#3498db',
       value: '100nF'
      },
-     'button': {
+     'switch': {
       width: gridSize * 2,
       height: gridSize * 2,
       pins: 4,
       label: 'SW',
       color: '#34495e',
       isPressed: false
+     },
+     'button': {
+      width: gridSize * 2,
+      height: gridSize * 2,
+      pins: 4,
+      label: 'BTN',
+      color: '#2c3e50',
+      isPressed: false,
+      isMomentary: true
      },
      'crystal': {
       width: gridSize * 2,
@@ -1934,6 +2128,22 @@
       label: 'XTAL',
       color: '#1abc9c',
       value: '1MHz'
+     },
+     'potentiometer': {
+      width: gridSize * 2,
+      height: gridSize * 2,
+      pins: 3,
+      label: 'POT',
+      color: '#3498db',
+      value: '10kΩ'
+     },
+     'photoresistor': {
+      width: gridSize * 1.5,
+      height: gridSize * 1.5,
+      pins: 2,
+      label: 'LDR',
+      color: '#e67e22',
+      value: '10kΩ-1MΩ'
      },
      'power': {
       width: gridSize * 1,
@@ -2101,21 +2311,64 @@
      this.ctx.fill();
     }
     
+    // Highlight selected wire in wire mode (even when Ctrl is not pressed)
+    if (this.connectionMode && this.selectedWire && !this.isDragging) {
+     const conn = this.selectedWire;
+     // Draw highlight glow around the selected wire
+     this.ctx.strokeStyle = '#FFD700';
+     this.ctx.lineWidth = 8;
+     this.ctx.lineCap = 'round';
+     this.ctx.globalAlpha = 0.4;
+     this.ctx.beginPath();
+     this.ctx.moveTo(conn.start.x, conn.start.y);
+     this.ctx.lineTo(conn.end.x, conn.end.y);
+     this.ctx.stroke();
+     this.ctx.globalAlpha = 1.0;
+     this.ctx.lineCap = 'butt';
+    }
+    
     // Highlight wire endpoints when Ctrl is pressed in wire mode
     if (this.connectionMode && this.ctrlPressed && !this.isDragging) {
      this.connections.forEach(conn => {
-      // Highlight all wire endpoints
-      this.ctx.strokeStyle = '#FFD700';
-      this.ctx.lineWidth = 2;
-      this.ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+      const isSelectedWire = conn === this.selectedWire;
       
+      // Highlight all wire endpoints (more prominent for selected wire)
+      this.ctx.strokeStyle = isSelectedWire ? '#FF6600' : '#FFD700';
+      this.ctx.lineWidth = isSelectedWire ? 3 : 2;
+      this.ctx.fillStyle = isSelectedWire ? 'rgba(255, 102, 0, 0.4)' : 'rgba(255, 215, 0, 0.3)';
+      
+      // Check if this endpoint is being hovered
+      const isStartHovered = this.hoveredWirePoint && 
+       this.hoveredWirePoint.connection === conn && 
+       this.hoveredWirePoint.point === 'start';
+      const isEndHovered = this.hoveredWirePoint && 
+       this.hoveredWirePoint.connection === conn && 
+       this.hoveredWirePoint.point === 'end';
+      
+      // Draw start endpoint
+      if (isStartHovered) {
+       this.ctx.strokeStyle = '#00FF00';
+       this.ctx.lineWidth = 4;
+       this.ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+      }
       this.ctx.beginPath();
-      this.ctx.arc(conn.start.x, conn.start.y, 8, 0, Math.PI * 2);
+      this.ctx.arc(conn.start.x, conn.start.y, isStartHovered ? 10 : 8, 0, Math.PI * 2);
       this.ctx.fill();
       this.ctx.stroke();
       
+      // Reset style for end endpoint
+      this.ctx.strokeStyle = isSelectedWire ? '#FF6600' : '#FFD700';
+      this.ctx.lineWidth = isSelectedWire ? 3 : 2;
+      this.ctx.fillStyle = isSelectedWire ? 'rgba(255, 102, 0, 0.4)' : 'rgba(255, 215, 0, 0.3)';
+      
+      // Draw end endpoint
+      if (isEndHovered) {
+       this.ctx.strokeStyle = '#00FF00';
+       this.ctx.lineWidth = 4;
+       this.ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+      }
       this.ctx.beginPath();
-      this.ctx.arc(conn.end.x, conn.end.y, 8, 0, Math.PI * 2);
+      this.ctx.arc(conn.end.x, conn.end.y, isEndHovered ? 10 : 8, 0, Math.PI * 2);
       this.ctx.fill();
       this.ctx.stroke();
      });
@@ -2180,16 +2433,30 @@
      let bodyColor = comp.color;
      if (comp.type === 'led' && comp.isPowered) {
       bodyColor = this.getLEDLitColor(comp.color);
-     } else if (comp.type === 'button' && comp.isPressed) {
+     } else if ((comp.type === 'button' || comp.type === 'switch') && comp.isPressed) {
       bodyColor = '#27ae60'; // Green when pressed
      } else if (comp.type === 'ne555' && comp.hasPower) {
       bodyColor = '#2c3e50'; // Darker when powered
      }
      this.ctx.fillStyle = bodyColor;
-     this.ctx.fillRect(comp.x, comp.y, comp.width, comp.height);
+     
+     // Calculate body position (offset for capacitor to center with pins)
+     const gridSize = 20;
+     const rotation = comp.rotation || 0;
+     const isVertical = (rotation === 90 || rotation === 270);
+     let bodyX = comp.x;
+     let bodyY = comp.y;
+     if (comp.type === 'capacitor') {
+      if (!isVertical) {
+       bodyY = comp.y + gridSize / 2; // Move down to center with pins
+      } else {
+       bodyX = comp.x + gridSize / 2; // Move right to center with pins
+      }
+     }
+     this.ctx.fillRect(bodyX, bodyY, comp.width, comp.height);
 
-     // For buttons, draw an inner area to indicate the toggle zone
-     if (comp.type === 'button') {
+     // For buttons and switches, draw an inner area to indicate the toggle zone
+     if (comp.type === 'button' || comp.type === 'switch') {
       const borderSize = 8;
       this.ctx.fillStyle = comp.isPressed ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
       this.ctx.fillRect(
@@ -2198,14 +2465,34 @@
        comp.width - borderSize * 2,
        comp.height - borderSize * 2
       );
+      // Draw 'M' or 'T' label for momentary/toggle indication
+      this.ctx.fillStyle = comp.isPressed ? '#fff' : '#666';
+      this.ctx.font = 'bold 10px sans-serif';
+      this.ctx.textAlign = 'right';
+      this.ctx.textBaseline = 'top';
+      this.ctx.fillText(comp.type === 'button' ? 'M' : 'T', comp.x + comp.width - 3, comp.y + 2);
      }
      
      // Draw 555 output indicator on the IC
      if (comp.type === 'ne555') {
       const gridSize = 20;
-      // Draw small LED-like indicator for output state
-      const indicatorX = comp.x + comp.width / 2;
-      const indicatorY = comp.y + 8;
+      const rotation = comp.rotation || 0;
+      
+      // Draw small LED-like indicator for output state - position depends on rotation
+      let indicatorX, indicatorY;
+      if (rotation === 0) {
+       indicatorX = comp.x + comp.width / 2;
+       indicatorY = comp.y + 8;
+      } else if (rotation === 90) {
+       indicatorX = comp.x + comp.width - 8;
+       indicatorY = comp.y + comp.height / 2;
+      } else if (rotation === 180) {
+       indicatorX = comp.x + comp.width / 2;
+       indicatorY = comp.y + comp.height - 8;
+      } else { // 270
+       indicatorX = comp.x + 8;
+       indicatorY = comp.y + comp.height / 2;
+      }
       const indicatorRadius = 4;
       
       this.ctx.beginPath();
@@ -2216,73 +2503,203 @@
       this.ctx.lineWidth = 1;
       this.ctx.stroke();
       
-      // Draw notch at top to indicate pin 1 orientation
+      // Draw notch to indicate pin 1 orientation - position depends on rotation
       this.ctx.beginPath();
-      this.ctx.arc(comp.x + comp.width / 2, comp.y, 6, 0, Math.PI, false);
+      if (rotation === 0) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y, 6, 0, Math.PI, false);
+      } else if (rotation === 90) {
+       this.ctx.arc(comp.x + comp.width, comp.y + comp.height / 2, 6, -Math.PI / 2, Math.PI / 2, true);
+      } else if (rotation === 180) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y + comp.height, 6, 0, Math.PI, true);
+      } else { // 270
+       this.ctx.arc(comp.x, comp.y + comp.height / 2, 6, -Math.PI / 2, Math.PI / 2, false);
+      }
       this.ctx.fillStyle = '#666';
       this.ctx.fill();
      }
 
-     // Draw notch/dimple for W65C02S (6502) chip
+     // Draw notch/dimple for W65C02S (6502) chip - position depends on rotation
      if (comp.type === 'w65c02s') {
+      const rotation = comp.rotation || 0;
       this.ctx.beginPath();
-      this.ctx.arc(comp.x + comp.width / 2, comp.y, 8, 0, Math.PI, false);
+      if (rotation === 0) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y, 8, 0, Math.PI, false);
+      } else if (rotation === 90) {
+       this.ctx.arc(comp.x + comp.width, comp.y + comp.height / 2, 8, -Math.PI / 2, Math.PI / 2, true);
+      } else if (rotation === 180) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y + comp.height, 8, 0, Math.PI, true);
+      } else if (rotation === 270) {
+       this.ctx.arc(comp.x, comp.y + comp.height / 2, 8, -Math.PI / 2, Math.PI / 2, false);
+      }
       this.ctx.fillStyle = '#1a2a3a';
       this.ctx.fill();
      }
 
-     // Draw notch/dimple for W65C22 (6522 VIA) chip
+     // Draw notch/dimple for W65C22 (6522 VIA) chip - position depends on rotation
      if (comp.type === 'w65c22') {
+      const rotation = comp.rotation || 0;
       this.ctx.beginPath();
-      this.ctx.arc(comp.x + comp.width / 2, comp.y, 8, 0, Math.PI, false);
+      if (rotation === 0) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y, 8, 0, Math.PI, false);
+      } else if (rotation === 90) {
+       this.ctx.arc(comp.x + comp.width, comp.y + comp.height / 2, 8, -Math.PI / 2, Math.PI / 2, true);
+      } else if (rotation === 180) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y + comp.height, 8, 0, Math.PI, true);
+      } else if (rotation === 270) {
+       this.ctx.arc(comp.x, comp.y + comp.height / 2, 8, -Math.PI / 2, Math.PI / 2, false);
+      }
       this.ctx.fillStyle = '#1a2a3a';
       this.ctx.fill();
      }
 
-     // Draw notch/dimple for 28C256 (EEPROM) chip
+     // Draw notch/dimple for 28C256 (EEPROM) chip - position depends on rotation
      if (comp.type === '28c256') {
+      const rotation = comp.rotation || 0;
       this.ctx.beginPath();
-      this.ctx.arc(comp.x + comp.width / 2, comp.y, 7, 0, Math.PI, false);
+      if (rotation === 0) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y, 7, 0, Math.PI, false);
+      } else if (rotation === 90) {
+       this.ctx.arc(comp.x + comp.width, comp.y + comp.height / 2, 7, -Math.PI / 2, Math.PI / 2, true);
+      } else if (rotation === 180) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y + comp.height, 7, 0, Math.PI, true);
+      } else if (rotation === 270) {
+       this.ctx.arc(comp.x, comp.y + comp.height / 2, 7, -Math.PI / 2, Math.PI / 2, false);
+      }
       this.ctx.fillStyle = '#222e3a';
       this.ctx.fill();
      }
 
-     // Draw notch/dimple for 7400-series logic chips
-     if (comp.type === '7400-series') {
+     // Draw notch/dimple for 62256 (SRAM) chip - position depends on rotation
+     if (comp.type === '62256') {
+      const rotation = comp.rotation || 0;
       this.ctx.beginPath();
-      this.ctx.arc(comp.x + comp.width / 2, comp.y, 6, 0, Math.PI, false);
+      if (rotation === 0) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y, 7, 0, Math.PI, false);
+      } else if (rotation === 90) {
+       this.ctx.arc(comp.x + comp.width, comp.y + comp.height / 2, 7, -Math.PI / 2, Math.PI / 2, true);
+      } else if (rotation === 180) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y + comp.height, 7, 0, Math.PI, true);
+      } else if (rotation === 270) {
+       this.ctx.arc(comp.x, comp.y + comp.height / 2, 7, -Math.PI / 2, Math.PI / 2, false);
+      }
+      this.ctx.fillStyle = '#1a252f';
+      this.ctx.fill();
+     }
+
+     // Draw notch/dimple for 7400-series logic chips - position depends on rotation
+     if (comp.type === '7400-series') {
+      const rotation = comp.rotation || 0;
+      this.ctx.beginPath();
+      if (rotation === 0) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y, 6, 0, Math.PI, false);
+      } else if (rotation === 90) {
+       this.ctx.arc(comp.x + comp.width, comp.y + comp.height / 2, 6, -Math.PI / 2, Math.PI / 2, true);
+      } else if (rotation === 180) {
+       this.ctx.arc(comp.x + comp.width / 2, comp.y + comp.height, 6, 0, Math.PI, true);
+      } else if (rotation === 270) {
+       this.ctx.arc(comp.x, comp.y + comp.height / 2, 6, -Math.PI / 2, Math.PI / 2, false);
+      }
       this.ctx.fillStyle = '#5a6a7a';
       this.ctx.fill();
      }
 
-     // Draw border (thicker if selected)
+     // Draw potentiometer dial/knob
+     if (comp.type === 'potentiometer') {
+      const centerX = comp.x + comp.width / 2;
+      const centerY = comp.y + comp.height / 2;
+      const dialRadius = Math.min(comp.width, comp.height) / 2 - 4;
+      
+      // Draw outer dial ring
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, dialRadius, 0, Math.PI * 2);
+      this.ctx.fillStyle = '#1a252f';
+      this.ctx.fill();
+      
+      // Draw center indicator/knob
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, dialRadius / 2, 0, Math.PI * 2);
+      this.ctx.fillStyle = '#c0c0c0';
+      this.ctx.fill();
+      
+      // Draw position marker
+      this.ctx.beginPath();
+      this.ctx.moveTo(centerX, centerY - dialRadius / 2 + 2);
+      this.ctx.lineTo(centerX, centerY - dialRadius + 2);
+      this.ctx.strokeStyle = '#fff';
+      this.ctx.lineWidth = 2;
+      this.ctx.stroke();
+      this.ctx.lineWidth = 1;
+     }
+
+     // Draw photoresistor zigzag pattern
+     if (comp.type === 'photoresistor') {
+      const centerX = comp.x + comp.width / 2;
+      const centerY = comp.y + comp.height / 2;
+      const radius = Math.min(comp.width, comp.height) / 2 - 3;
+      
+      // Draw circular sensor area
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      this.ctx.fillStyle = '#d35400';
+      this.ctx.fill();
+      
+      // Draw zigzag resistive element
+      this.ctx.beginPath();
+      this.ctx.moveTo(centerX - radius + 5, centerY - 3);
+      this.ctx.lineTo(centerX - radius / 2, centerY + 3);
+      this.ctx.lineTo(centerX, centerY - 3);
+      this.ctx.lineTo(centerX + radius / 2, centerY + 3);
+      this.ctx.lineTo(centerX + radius - 5, centerY - 3);
+      this.ctx.strokeStyle = '#2c3e50';
+      this.ctx.lineWidth = 2;
+      this.ctx.stroke();
+      this.ctx.lineWidth = 1;
+     }
+
+     // Draw border (thicker if selected) - use body offset for capacitor
      this.ctx.strokeStyle = comp === this.selectedComponent ? '#2196F3' : '#000';
      this.ctx.lineWidth = comp === this.selectedComponent ? 3 : 1;
-     this.ctx.strokeRect(comp.x, comp.y, comp.width, comp.height);
+     if (comp.type === 'capacitor') {
+      this.ctx.strokeRect(bodyX, bodyY, comp.width, comp.height);
+     } else {
+      this.ctx.strokeRect(comp.x, comp.y, comp.width, comp.height);
+     }
 
-     // Draw label
+     // Draw label - use body offset for capacitor
      this.ctx.fillStyle = '#fff';
      this.ctx.font = 'bold 12px monospace';
      this.ctx.textAlign = 'center';
      this.ctx.textBaseline = 'middle';
-     this.ctx.fillText(comp.label, comp.x + comp.width / 2, comp.y + comp.height / 2);
+     if (comp.type === 'capacitor') {
+      this.ctx.fillText(comp.label, bodyX + comp.width / 2, bodyY + comp.height / 2);
+     } else {
+      this.ctx.fillText(comp.label, comp.x + comp.width / 2, comp.y + comp.height / 2);
+     }
 
      // Draw pins
      if (comp.pins && comp.pins > 2) {
-      if (comp.type === 'button' || comp.type === 'crystal') {
+      if (comp.type === 'button' || comp.type === 'switch' || comp.type === 'crystal' || comp.type === 'potentiometer') {
        this.drawSimpleComponentPins(comp);
       } else {
        this.drawICPins(comp);
       }
      } else if (comp.pins === 2) {
-      this.drawTwoPinComponent(comp);
+      if (comp.type === 'photoresistor') {
+       this.drawSimpleComponentPins(comp);
+      } else {
+       this.drawTwoPinComponent(comp);
+      }
      }
 
-     // Draw value if exists
+     // Draw value if exists - use body offset for capacitor
      if (comp.value) {
       this.ctx.fillStyle = '#333';
       this.ctx.font = '10px sans-serif';
-      this.ctx.fillText(comp.value, comp.x + comp.width / 2, comp.y + comp.height + 15);
+      if (comp.type === 'capacitor') {
+       this.ctx.fillText(comp.value, bodyX + comp.width / 2, bodyY + comp.height + 15);
+      } else {
+       this.ctx.fillText(comp.value, comp.x + comp.width / 2, comp.y + comp.height + 15);
+      }
      }
     });
    }
@@ -2438,30 +2855,30 @@
      }
     } else if (comp.type === 'capacitor') {
      if (!isVertical) {
-      // Horizontal capacitor - pins on left and right
+      // Horizontal capacitor - pins on left and right, centered on grid cells
       this.ctx.fillRect(
-       comp.x - gridSize + pinMargin,
-       comp.y + (comp.height - pinRenderSize) / 2,
+       comp.x - gridSize + (gridSize - pinRenderSize) / 2,
+       comp.y + (comp.height - pinRenderSize) / 2 + gridSize / 2,
        pinRenderSize,
        pinRenderSize
       );
       this.ctx.fillRect(
-       comp.x + comp.width + pinMargin,
-       comp.y + (comp.height - pinRenderSize) / 2,
+       comp.x + comp.width + (gridSize - pinRenderSize) / 2,
+       comp.y + (comp.height - pinRenderSize) / 2 + gridSize / 2,
        pinRenderSize,
        pinRenderSize
       );
      } else {
-      // Vertical capacitor - pins on top and bottom
+      // Vertical capacitor - pins on top and bottom, centered on grid cells
       this.ctx.fillRect(
-       comp.x + (comp.width - pinRenderSize) / 2,
-       comp.y - gridSize + pinMargin,
+       comp.x + (comp.width - pinRenderSize) / 2 + gridSize / 2,
+       comp.y - gridSize + (gridSize - pinRenderSize) / 2,
        pinRenderSize,
        pinRenderSize
       );
       this.ctx.fillRect(
-       comp.x + (comp.width - pinRenderSize) / 2,
-       comp.y + comp.height + pinMargin,
+       comp.x + (comp.width - pinRenderSize) / 2 + gridSize / 2,
+       comp.y + comp.height + (gridSize - pinRenderSize) / 2,
        pinRenderSize,
        pinRenderSize
       );
@@ -2553,54 +2970,102 @@
       y: comp.y + comp.height / 2,
       type: 'ground'
      });
-    } else if (comp.type === 'button') {
-     // Button has 4 pins - layout depends on rotation
+    } else if (comp.type === 'button' || comp.type === 'switch') {
+     // Button/Switch has 4 pins - layout depends on rotation
+     const pinType = comp.type === 'button' ? 'button' : 'switch';
      if (!isVertical) {
       // Left-top pin
       positions.push({
        x: comp.x - gridSize / 2,
        y: comp.y + gridSize / 2,
-       type: 'button-left'
+       type: `${pinType}-left`
       });
       // Left-bottom pin
       positions.push({
        x: comp.x - gridSize / 2,
        y: comp.y + gridSize + gridSize / 2,
-       type: 'button-left'
+       type: `${pinType}-left`
       });
       // Right-top pin
       positions.push({
        x: comp.x + comp.width + gridSize / 2,
        y: comp.y + gridSize / 2,
-       type: 'button-right'
+       type: `${pinType}-right`
       });
       // Right-bottom pin
       positions.push({
        x: comp.x + comp.width + gridSize / 2,
        y: comp.y + gridSize + gridSize / 2,
-       type: 'button-right'
+       type: `${pinType}-right`
       });
      } else {
       // Rotated - pins on top and bottom
       positions.push({
        x: comp.x + gridSize / 2,
        y: comp.y - gridSize / 2,
-       type: 'button-top'
+       type: `${pinType}-top`
       });
       positions.push({
        x: comp.x + gridSize + gridSize / 2,
        y: comp.y - gridSize / 2,
-       type: 'button-top'
+       type: `${pinType}-top`
       });
       positions.push({
        x: comp.x + gridSize / 2,
        y: comp.y + comp.height + gridSize / 2,
-       type: 'button-bottom'
+       type: `${pinType}-bottom`
       });
       positions.push({
        x: comp.x + gridSize + gridSize / 2,
        y: comp.y + comp.height + gridSize / 2,
-       type: 'button-bottom'
+       type: `${pinType}-bottom`
+      });
+     }
+    } else if (comp.type === 'crystal') {
+     // Crystal has 4 pins - layout depends on rotation
+     if (!isVertical) {
+      // Horizontal - pins on left and right
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + gridSize / 2,
+       type: 'crystal-left'
+      });
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + gridSize + gridSize / 2,
+       type: 'crystal-left'
+      });
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + gridSize / 2,
+       type: 'crystal-right'
+      });
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + gridSize + gridSize / 2,
+       type: 'crystal-right'
+      });
+     } else {
+      // Vertical - pins on top and bottom
+      positions.push({
+       x: comp.x + gridSize / 2,
+       y: comp.y - gridSize / 2,
+       type: 'crystal-top'
+      });
+      positions.push({
+       x: comp.x + gridSize + gridSize / 2,
+       y: comp.y - gridSize / 2,
+       type: 'crystal-top'
+      });
+      positions.push({
+       x: comp.x + gridSize / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'crystal-bottom'
+      });
+      positions.push({
+       x: comp.x + gridSize + gridSize / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'crystal-bottom'
       });
      }
     } else if (comp.type === 'ne555') {
@@ -2656,7 +3121,70 @@
      }
     } else if (comp.type === 'capacitor') {
      if (!isVertical) {
-      // Horizontal capacitor - pins on left and right
+      // Horizontal capacitor - pins on left and right, centered on grid cells
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + comp.height / 2 + gridSize / 2,
+       type: 'terminal'
+      });
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + comp.height / 2 + gridSize / 2,
+       type: 'terminal'
+      });
+     } else {
+      // Vertical capacitor - pins on top and bottom, centered on grid cells
+      positions.push({
+       x: comp.x + comp.width / 2 + gridSize / 2,
+       y: comp.y - gridSize / 2,
+       type: 'terminal'
+      });
+      positions.push({
+       x: comp.x + comp.width / 2 + gridSize / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'terminal'
+      });
+     }
+    } else if (comp.type === 'potentiometer') {
+     // Potentiometer has 3 pins: left (terminal 1), center (wiper), right (terminal 2)
+     if (!isVertical) {
+      // Horizontal - pins on left, center-bottom, right
+      positions.push({
+       x: comp.x - gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'pot-terminal-1'
+      });
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'pot-wiper'
+      });
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'pot-terminal-2'
+      });
+     } else {
+      // Vertical - pins on top, center-right, bottom
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y - gridSize / 2,
+       type: 'pot-terminal-1'
+      });
+      positions.push({
+       x: comp.x + comp.width + gridSize / 2,
+       y: comp.y + comp.height / 2,
+       type: 'pot-wiper'
+      });
+      positions.push({
+       x: comp.x + comp.width / 2,
+       y: comp.y + comp.height + gridSize / 2,
+       type: 'pot-terminal-2'
+      });
+     }
+    } else if (comp.type === 'photoresistor') {
+     // Photoresistor has 2 pins like a resistor
+     if (!isVertical) {
       positions.push({
        x: comp.x - gridSize / 2,
        y: comp.y + comp.height / 2,
@@ -2668,7 +3196,6 @@
        type: 'terminal'
       });
      } else {
-      // Vertical capacitor - pins on top and bottom
       positions.push({
        x: comp.x + comp.width / 2,
        y: comp.y - gridSize / 2,
@@ -2742,7 +3269,7 @@
        return true;
       }
       
-      // Check if this point connects to any pass-through component (like resistor or button)
+      // Check if this point connects to any pass-through component (like resistor, button or switch)
       for (const comp of this.components) {
        if (comp.type === 'resistor') {
         const pins = this.getComponentPinPositions(comp);
@@ -2758,8 +3285,8 @@
           }
          }
         }
-       } else if (comp.type === 'button') {
-        // Button only allows current through when pressed
+       } else if (comp.type === 'button' || comp.type === 'switch') {
+        // Button/Switch only allows current through when pressed
         if (comp.isPressed) {
          const pins = this.getComponentPinPositions(comp);
          // Find which pin we're connected to
@@ -2836,12 +3363,19 @@
       if (comp.astableMode === undefined) {
        comp.astableMode = false;
       }
+      if (comp.monostableMode === undefined) {
+       comp.monostableMode = false;
+      }
+      if (comp.resetActive === undefined) {
+       comp.resetActive = false;
+      }
       
       // Get pin positions
       const pin1 = this.get555PinPosition(comp, 1); // GND
       const pin2 = this.get555PinPosition(comp, 2); // TRIGGER
       const pin3 = this.get555PinPosition(comp, 3); // OUTPUT
       const pin4 = this.get555PinPosition(comp, 4); // RESET
+      const pin5 = this.get555PinPosition(comp, 5); // CONTROL
       const pin6 = this.get555PinPosition(comp, 6); // THRESHOLD
       const pin7 = this.get555PinPosition(comp, 7); // DISCHARGE
       const pin8 = this.get555PinPosition(comp, 8); // Vcc
@@ -2867,20 +3401,27 @@
       if (!comp.hasPower) {
        comp.outputState = false;
        comp.astableMode = false;
+       comp.monostableMode = false;
+       comp.resetActive = false;
+       comp.timingValues = null;
        continue;
       }
       
-      // Check RESET pin (active LOW) - in real circuits, grounding RESET forces output LOW
-      // For smoke and mirrors, we'll be lenient - only check if RESET is directly connected to a ground component
-      // (not through other pins used for power detection)
+      // Check RESET pin (active LOW) - forces output LOW when grounded
       const resetToVcc = this.arePinsConnected(pin4, pin8);
-      // Skip reset check for smoke and mirrors - assume circuit is intended to work
-      // const resetLow = !resetToVcc && this.traceConnectionWithout555Output(pin4, 'ground');
-      // if (resetLow) {
-      //  comp.outputState = false;
-      //  comp.astableMode = false;
-      //  continue;
-      // }
+      const resetLow = !resetToVcc && this.traceConnectionWithout555Output(pin4, 'ground');
+      comp.resetActive = resetLow;
+      
+      if (resetLow) {
+       comp.outputState = false;
+       comp.astableMode = false;
+       comp.monostableMode = false;
+       continue;
+      }
+      
+      // Get connected resistors and capacitors for timing calculation
+      const timingComponents = this.get555TimingComponents(comp);
+      comp.timingValues = this.calculate555Timing(timingComponents);
       
       // Check for ASTABLE MODE: Pins 2 (TRIGGER) and 6 (THRESHOLD) connected together
       const pin2And6Connected = this.arePinsConnected(pin2, pin6);
@@ -2891,22 +3432,276 @@
       // Alternative: Check if there's ANY capacitor connected to the 555 for simpler detection
       const hasAnyTimingCapacitor = this.hasCapacitorConnectedTo555(comp);
       
-      if ((pin2And6Connected && hasTimingCircuit) || hasAnyTimingCapacitor) {
+      // Check for discharge resistor connection (pin 7 to Vcc through resistor)
+      const hasDischargeResistor = this.hasResistorConnectedToPin(pin7);
+      
+      if ((pin2And6Connected && hasTimingCircuit) || (hasAnyTimingCapacitor && hasDischargeResistor)) {
        // ASTABLE MODE - oscillator
        comp.astableMode = true;
+       comp.monostableMode = false;
        // Output will be toggled by the simulation loop
+      } else if (hasAnyTimingCapacitor && !pin2And6Connected) {
+       // MONOSTABLE MODE - one-shot timer
+       comp.astableMode = false;
+       comp.monostableMode = true;
+       
+       // Check TRIGGER pin for monostable operation
+       const triggerLow = this.traceConnectionWithout555Output(pin2, 'ground');
+       if (triggerLow && !comp.monostableTriggered) {
+        comp.monostableTriggered = true;
+        comp.outputState = true;
+        // Set timeout for pulse width (simulated)
+        if (comp.timingValues && comp.timingValues.monostablePulse) {
+         const pulseMs = Math.min(comp.timingValues.monostablePulse * 1000, 5000); // Cap at 5s for demo
+         setTimeout(() => {
+          if (comp.monostableMode && comp.monostableTriggered) {
+           comp.outputState = false;
+           comp.monostableTriggered = false;
+           this.updateLEDStates();
+           this.draw();
+           this.updatePropertiesPanel();
+          }
+         }, pulseMs > 100 ? pulseMs : 500); // Min 500ms for visibility
+        }
+       }
       } else {
        comp.astableMode = false;
+       comp.monostableMode = false;
        
-       // BISTABLE/MONOSTABLE MODE
+       // BISTABLE MODE
        // Check TRIGGER pin (active LOW) - if grounded, output goes HIGH
        const triggerLow = this.traceConnectionWithout555Output(pin2, 'ground');
        if (triggerLow) {
         comp.outputState = true;
        }
+       
+       // Check THRESHOLD pin - if it goes high (connected to power), output goes LOW
+       const thresholdHigh = this.traceConnectionWithout555Output(pin6, 'power');
+       if (thresholdHigh) {
+        comp.outputState = false;
+       }
       }
      }
     }
+   }
+   
+   // Get resistors and capacitors connected to 555 for timing calculations
+   get555TimingComponents(ne555Comp) {
+    const components = {
+     resistors: [],
+     capacitors: [],
+     r1: null, // Resistor between Vcc and Discharge (pin 7)
+     r2: null, // Resistor between Discharge (pin 7) and Trigger/Threshold (pin 2/6)
+     c: null   // Timing capacitor
+    };
+    
+    const pin2 = this.get555PinPosition(ne555Comp, 2);
+    const pin6 = this.get555PinPosition(ne555Comp, 6);
+    const pin7 = this.get555PinPosition(ne555Comp, 7);
+    const pin8 = this.get555PinPosition(ne555Comp, 8);
+    
+    for (const comp of this.components) {
+     if (comp.type === 'resistor') {
+      const resPins = this.getComponentPinPositions(comp);
+      const value = this.parseResistorValue(comp.value);
+      
+      // Check if resistor connects pin 8 (Vcc) to pin 7 (Discharge) - this is R1
+      let connectsVccToDischarge = false;
+      let connectsDischargeToTrigger = false;
+      
+      for (const resPin of resPins) {
+       if (this.arePinsConnected(resPin, pin8)) {
+        for (const otherPin of resPins) {
+         if (otherPin !== resPin && this.arePinsConnected(otherPin, pin7)) {
+          connectsVccToDischarge = true;
+         }
+        }
+       }
+       if (this.arePinsConnected(resPin, pin7)) {
+        for (const otherPin of resPins) {
+         if (otherPin !== resPin && (this.arePinsConnected(otherPin, pin2) || this.arePinsConnected(otherPin, pin6))) {
+          connectsDischargeToTrigger = true;
+         }
+        }
+       }
+      }
+      
+      if (connectsVccToDischarge && !components.r1) {
+       components.r1 = value;
+      } else if (connectsDischargeToTrigger && !components.r2) {
+       components.r2 = value;
+      }
+      
+      components.resistors.push({ component: comp, value: value });
+     }
+     
+     if (comp.type === 'capacitor') {
+      const capPins = this.getComponentPinPositions(comp);
+      const value = this.parseCapacitorValue(comp.value);
+      
+      // Check if capacitor is connected to trigger/threshold and ground
+      for (const capPin of capPins) {
+       if (this.arePinsConnected(capPin, pin2) || this.arePinsConnected(capPin, pin6)) {
+        if (!components.c) {
+         components.c = value;
+        }
+       }
+      }
+      
+      components.capacitors.push({ component: comp, value: value });
+     }
+    }
+    
+    return components;
+   }
+   
+   // Parse resistor value string to ohms
+   parseResistorValue(valueStr) {
+    if (!valueStr) return 10000; // Default 10k
+    const str = valueStr.toString().toUpperCase();
+    let multiplier = 1;
+    let numStr = str;
+    
+    if (str.includes('M')) {
+     multiplier = 1000000;
+     numStr = str.replace('M', '').replace('Ω', '').replace('OHM', '').trim();
+    } else if (str.includes('K')) {
+     multiplier = 1000;
+     numStr = str.replace('K', '').replace('Ω', '').replace('OHM', '').trim();
+    } else {
+     numStr = str.replace('Ω', '').replace('OHM', '').trim();
+    }
+    
+    const num = parseFloat(numStr) || 10;
+    return num * multiplier;
+   }
+   
+   // Parse capacitor value string to Farads
+   parseCapacitorValue(valueStr) {
+    if (!valueStr) return 0.000001; // Default 1µF
+    const str = valueStr.toString().toUpperCase();
+    const strOriginal = valueStr.toString(); // Keep original for µ character
+    let multiplier = 1;
+    let numStr = str;
+    
+    if (str.includes('MF') || str.includes('MΜF')) {
+     multiplier = 0.001; // milliFarad
+     numStr = str.replace('MF', '').replace('MΜF', '').trim();
+    } else if (str.includes('UF') || strOriginal.includes('µF') || str.includes('ΜF')) {
+     multiplier = 0.000001; // microFarad
+     numStr = str.replace('UF', '').replace('ΜF', '').trim();
+     numStr = strOriginal.replace('µF', '').replace('μF', '').trim(); // Also handle lowercase micro
+    } else if (str.includes('NF')) {
+     multiplier = 0.000000001; // nanoFarad
+     numStr = str.replace('NF', '').trim();
+    } else if (str.includes('PF')) {
+     multiplier = 0.000000000001; // picoFarad
+     numStr = str.replace('PF', '').trim();
+    } else if (str.includes('F')) {
+     multiplier = 1;
+     numStr = str.replace('F', '').trim();
+    }
+    
+    const num = parseFloat(numStr) || 1;
+    return num * multiplier;
+   }
+   
+   // Calculate 555 timing values based on connected components
+   calculate555Timing(timingComponents) {
+    const { r1, r2, c } = timingComponents;
+    
+    if (!c) return null;
+    
+    const result = {
+     capacitance: c,
+     capacitanceDisplay: this.formatCapacitance(c)
+    };
+    
+    if (r1 && r2) {
+     // Astable mode calculations
+     result.r1 = r1;
+     result.r2 = r2;
+     result.r1Display = this.formatResistance(r1);
+     result.r2Display = this.formatResistance(r2);
+     
+     // t₁ (HIGH time) = 0.693 × (R1 + R2) × C
+     result.highTime = 0.693 * (r1 + r2) * c;
+     result.highTimeDisplay = this.formatTime(result.highTime);
+     
+     // t₂ (LOW time) = 0.693 × R2 × C  
+     result.lowTime = 0.693 * r2 * c;
+     result.lowTimeDisplay = this.formatTime(result.lowTime);
+     
+     // Period = t₁ + t₂
+     result.period = result.highTime + result.lowTime;
+     result.periodDisplay = this.formatTime(result.period);
+     
+     // Frequency = 1 / Period = 1.44 / ((R1 + 2×R2) × C)
+     result.frequency = 1 / result.period;
+     result.frequencyDisplay = this.formatFrequency(result.frequency);
+     
+     // Duty Cycle = (R1 + R2) / (R1 + 2×R2) × 100%
+     result.dutyCycle = ((r1 + r2) / (r1 + 2 * r2)) * 100;
+     result.dutyCycleDisplay = result.dutyCycle.toFixed(1) + '%';
+    } else if (r1 || r2) {
+     // Monostable mode - uses single resistor
+     const r = r1 || r2;
+     result.r = r;
+     result.rDisplay = this.formatResistance(r);
+     
+     // T = 1.1 × R × C
+     result.monostablePulse = 1.1 * r * c;
+     result.monostablePulseDisplay = this.formatTime(result.monostablePulse);
+    }
+    
+    return result;
+   }
+   
+   // Format resistance for display
+   formatResistance(ohms) {
+    if (ohms >= 1000000) return (ohms / 1000000).toFixed(2) + ' MΩ';
+    if (ohms >= 1000) return (ohms / 1000).toFixed(1) + ' kΩ';
+    return ohms.toFixed(0) + ' Ω';
+   }
+   
+   // Format capacitance for display
+   formatCapacitance(farads) {
+    if (farads >= 0.001) return (farads * 1000).toFixed(2) + ' mF';
+    if (farads >= 0.000001) return (farads * 1000000).toFixed(2) + ' µF';
+    if (farads >= 0.000000001) return (farads * 1000000000).toFixed(2) + ' nF';
+    return (farads * 1000000000000).toFixed(2) + ' pF';
+   }
+   
+   // Format time for display
+   formatTime(seconds) {
+    if (seconds >= 1) return seconds.toFixed(3) + ' s';
+    if (seconds >= 0.001) return (seconds * 1000).toFixed(2) + ' ms';
+    return (seconds * 1000000).toFixed(2) + ' µs';
+   }
+   
+   // Format frequency for display
+   formatFrequency(hz) {
+    if (hz >= 1000000) return (hz / 1000000).toFixed(2) + ' MHz';
+    if (hz >= 1000) return (hz / 1000).toFixed(2) + ' kHz';
+    if (hz >= 1) return hz.toFixed(2) + ' Hz';
+    return (hz * 1000).toFixed(2) + ' mHz';
+   }
+   
+   // Check if there's a resistor connected to a specific pin
+   hasResistorConnectedToPin(pin) {
+    if (!pin) return false;
+    
+    for (const comp of this.components) {
+     if (comp.type === 'resistor') {
+      const resPins = this.getComponentPinPositions(comp);
+      for (const resPin of resPins) {
+       if (this.arePinsConnected(pin, resPin)) {
+        return true;
+       }
+      }
+     }
+    }
+    return false;
    }
    
    // Check if two pins are connected via wires
@@ -3026,7 +3821,7 @@
        return true;
       }
       
-      // Check pass-through components (resistor, button)
+      // Check pass-through components (resistor, button, switch)
       for (const comp of this.components) {
        if (comp.type === 'resistor') {
         const pins = this.getComponentPinPositions(comp);
@@ -3041,7 +3836,7 @@
           }
          }
         }
-       } else if (comp.type === 'button' && comp.isPressed) {
+       } else if ((comp.type === 'button' || comp.type === 'switch') && comp.isPressed) {
         const pins = this.getComponentPinPositions(comp);
         for (let i = 0; i < pins.length; i++) {
          if (this.isPointNear(nextPoint, pins[i])) {
@@ -3066,69 +3861,215 @@
     const gridSize = 20;
     const pinRenderSize = 16; // 20px grid - 2px on each side
     const pinMargin = 2; // 2px margin on each side
+    const rotation = comp.rotation || 0;
+    const isVertical = (rotation === 90 || rotation === 270);
     
     this.ctx.fillStyle = '#c0c0c0';
 
     if (comp.type === 'crystal' && comp.pins === 4) {
-     // Crystal with 4 pins - 2 on each side, aligned to grid
-     // Top-left pin (left side, top position)
-     this.ctx.fillRect(
-      comp.x - gridSize + pinMargin,
-      comp.y + pinMargin,
-      pinRenderSize,
-      pinRenderSize
-     );
-     // Bottom-left pin (left side, bottom position)
-     this.ctx.fillRect(
-      comp.x - gridSize + pinMargin,
-      comp.y + gridSize + pinMargin,
-      pinRenderSize,
-      pinRenderSize
-     );
-     // Top-right pin (right side, top position)
-     this.ctx.fillRect(
-      comp.x + comp.width + pinMargin,
-      comp.y + pinMargin,
-      pinRenderSize,
-      pinRenderSize
-     );
-     // Bottom-right pin (right side, bottom position)
-     this.ctx.fillRect(
-      comp.x + comp.width + pinMargin,
-      comp.y + gridSize + pinMargin,
-      pinRenderSize,
-      pinRenderSize
-     );
-    } else if (comp.type === 'button' && comp.pins === 4) {
-     // Button with 4 pins - 2 on each side, aligned to grid
-     // Top-left pin (left side, top position)
-     this.ctx.fillRect(
-      comp.x - gridSize + pinMargin,
-      comp.y + pinMargin,
-      pinRenderSize,
-      pinRenderSize
-     );
-     // Bottom-left pin (left side, bottom position)
-     this.ctx.fillRect(
-      comp.x - gridSize + pinMargin,
-      comp.y + gridSize + pinMargin,
-      pinRenderSize,
-      pinRenderSize
-     );
-     // Top-right pin (right side, top position)
-     this.ctx.fillRect(
-      comp.x + comp.width + pinMargin,
-      comp.y + pinMargin,
-      pinRenderSize,
-      pinRenderSize
-     );
-     // Bottom-right pin (right side, bottom position)
-     this.ctx.fillRect(
-      comp.x + comp.width + pinMargin,
-      comp.y + gridSize + pinMargin,
-      pinRenderSize,
-      pinRenderSize
-     );
+     if (!isVertical) {
+      // Horizontal crystal - pins on left and right
+      // Top-left pin (left side, top position)
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom-left pin (left side, bottom position)
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Top-right pin (right side, top position)
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom-right pin (right side, bottom position)
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     } else {
+      // Vertical crystal - pins on top and bottom
+      // Top-left pin
+      this.ctx.fillRect(
+       comp.x + pinMargin,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Top-right pin
+      this.ctx.fillRect(
+       comp.x + gridSize + pinMargin,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom-left pin
+      this.ctx.fillRect(
+       comp.x + pinMargin,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom-right pin
+      this.ctx.fillRect(
+       comp.x + gridSize + pinMargin,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
+    } else if ((comp.type === 'button' || comp.type === 'switch') && comp.pins === 4) {
+     if (!isVertical) {
+      // Horizontal button/switch - pins on left and right
+      // Top-left pin (left side, top position)
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom-left pin (left side, bottom position)
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Top-right pin (right side, top position)
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom-right pin (right side, bottom position)
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     } else {
+      // Vertical button/switch - pins on top and bottom
+      // Top-left pin
+      this.ctx.fillRect(
+       comp.x + pinMargin,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Top-right pin
+      this.ctx.fillRect(
+       comp.x + gridSize + pinMargin,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom-left pin
+      this.ctx.fillRect(
+       comp.x + pinMargin,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom-right pin
+      this.ctx.fillRect(
+       comp.x + gridSize + pinMargin,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
+    } else if (comp.type === 'potentiometer') {
+     // Potentiometer has 3 pins
+     if (!isVertical) {
+      // Horizontal - pins on left, center-bottom, right
+      // Left pin
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + comp.height / 2 - pinRenderSize / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Center-bottom pin (wiper)
+      this.ctx.fillRect(
+       comp.x + comp.width / 2 - pinRenderSize / 2,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Right pin
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + comp.height / 2 - pinRenderSize / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+     } else {
+      // Vertical - pins on top, center-right, bottom
+      // Top pin
+      this.ctx.fillRect(
+       comp.x + comp.width / 2 - pinRenderSize / 2,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Center-right pin (wiper)
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + comp.height / 2 - pinRenderSize / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+      // Bottom pin
+      this.ctx.fillRect(
+       comp.x + comp.width / 2 - pinRenderSize / 2,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
+    } else if (comp.type === 'photoresistor') {
+     // Photoresistor has 2 pins like a resistor
+     if (!isVertical) {
+      // Horizontal - pins on left and right
+      this.ctx.fillRect(
+       comp.x - gridSize + pinMargin,
+       comp.y + comp.height / 2 - pinRenderSize / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+      this.ctx.fillRect(
+       comp.x + comp.width + pinMargin,
+       comp.y + comp.height / 2 - pinRenderSize / 2,
+       pinRenderSize,
+       pinRenderSize
+      );
+     } else {
+      // Vertical - pins on top and bottom
+      this.ctx.fillRect(
+       comp.x + comp.width / 2 - pinRenderSize / 2,
+       comp.y - gridSize + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+      this.ctx.fillRect(
+       comp.x + comp.width / 2 - pinRenderSize / 2,
+       comp.y + comp.height + pinMargin,
+       pinRenderSize,
+       pinRenderSize
+      );
+     }
     }
    }
 
@@ -3842,10 +4783,127 @@
       const statusText = comp.hasPower ? (comp.outputState ? 'OUTPUT HIGH' : 'OUTPUT LOW') : 'NO POWER';
       const statusIcon = comp.hasPower ? (comp.outputState ? '🟢' : '🔴') : '⚫';
       
-      // Mode indicator
-      const modeText = comp.astableMode ? '🔄 ASTABLE (Oscillating)' : '🔘 BISTABLE (Latched)';
-      const modeBg = comp.astableMode ? '#fff3cd' : '#e2e3e5';
-      const modeColor = comp.astableMode ? '#856404' : '#383d41';
+      // Mode indicator - now includes monostable
+      let modeText, modeBg, modeColor, modeIcon;
+      if (comp.resetActive) {
+       modeText = '⛔ RESET ACTIVE';
+       modeBg = '#f8d7da';
+       modeColor = '#721c24';
+       modeIcon = '🔴';
+      } else if (comp.astableMode) {
+       modeText = '🔄 ASTABLE (Oscillating)';
+       modeBg = '#fff3cd';
+       modeColor = '#856404';
+       modeIcon = '⚡';
+      } else if (comp.monostableMode) {
+       modeText = '⏱️ MONOSTABLE (One-Shot)';
+       modeBg = '#d1ecf1';
+       modeColor = '#0c5460';
+       modeIcon = '🎯';
+      } else {
+       modeText = '🔘 BISTABLE (Latched)';
+       modeBg = '#e2e3e5';
+       modeColor = '#383d41';
+       modeIcon = '🔒';
+      }
+      
+      // Generate timing calculations display
+      let timingHtml = '';
+      if (comp.timingValues) {
+       const tv = comp.timingValues;
+       if (comp.astableMode && tv.frequency) {
+        timingHtml = `
+         <div class="property-group">
+          <label class="property-label">📊 Calculated Timing (Astable)</label>
+          <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border-radius: 8px; padding: 12px; border: 1px solid #81c784;">
+           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+            <div style="background: white; padding: 8px; border-radius: 5px; text-align: center;">
+             <div style="font-size: 10px; color: #666; text-transform: uppercase;">Frequency</div>
+             <div style="font-size: 16px; font-weight: 700; color: #2e7d32;">${tv.frequencyDisplay}</div>
+            </div>
+            <div style="background: white; padding: 8px; border-radius: 5px; text-align: center;">
+             <div style="font-size: 10px; color: #666; text-transform: uppercase;">Duty Cycle</div>
+             <div style="font-size: 16px; font-weight: 700; color: #1565c0;">${tv.dutyCycleDisplay}</div>
+            </div>
+           </div>
+           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+            <div style="background: white; padding: 8px; border-radius: 5px; text-align: center;">
+             <div style="font-size: 10px; color: #666; text-transform: uppercase;">HIGH Time (t₁)</div>
+             <div style="font-size: 14px; font-weight: 600; color: #388e3c;">${tv.highTimeDisplay}</div>
+            </div>
+            <div style="background: white; padding: 8px; border-radius: 5px; text-align: center;">
+             <div style="font-size: 10px; color: #666; text-transform: uppercase;">LOW Time (t₂)</div>
+             <div style="font-size: 14px; font-weight: 600; color: #d32f2f;">${tv.lowTimeDisplay}</div>
+            </div>
+           </div>
+           <div style="background: white; padding: 8px; border-radius: 5px; text-align: center;">
+            <div style="font-size: 10px; color: #666; text-transform: uppercase;">Period</div>
+            <div style="font-size: 14px; font-weight: 600; color: #5e35b1;">${tv.periodDisplay}</div>
+           </div>
+          </div>
+         </div>
+         <div class="property-group">
+          <label class="property-label">🔧 Detected Components</label>
+          <div style="background: #f8f9fa; border-radius: 5px; padding: 10px; font-size: 12px;">
+           <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e0e0e0;">
+            <span style="color: #666;">R1 (Vcc→DIS)</span>
+            <span style="font-weight: 600; color: #e65100;">${tv.r1Display || 'Not detected'}</span>
+           </div>
+           <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e0e0e0;">
+            <span style="color: #666;">R2 (DIS→THR)</span>
+            <span style="font-weight: 600; color: #e65100;">${tv.r2Display || 'Not detected'}</span>
+           </div>
+           <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+            <span style="color: #666;">C (Timing Cap)</span>
+            <span style="font-weight: 600; color: #1565c0;">${tv.capacitanceDisplay}</span>
+           </div>
+          </div>
+         </div>
+         <div class="property-group">
+          <label class="property-label">📐 Astable Formulas</label>
+          <div style="background: #fff8e1; border-radius: 5px; padding: 10px; font-family: 'Courier New', monospace; font-size: 10px; line-height: 1.8; color: #5d4037;">
+           <div><strong>f</strong> = 1.44 / ((R1 + 2×R2) × C)</div>
+           <div><strong>t₁</strong> = 0.693 × (R1 + R2) × C</div>
+           <div><strong>t₂</strong> = 0.693 × R2 × C</div>
+           <div><strong>D</strong> = (R1 + R2) / (R1 + 2×R2)</div>
+          </div>
+         </div>`;
+       } else if (comp.monostableMode && tv.monostablePulse) {
+        timingHtml = `
+         <div class="property-group">
+          <label class="property-label">📊 Calculated Timing (Monostable)</label>
+          <div style="background: linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%); border-radius: 8px; padding: 12px; border: 1px solid #64b5f6;">
+           <div style="background: white; padding: 12px; border-radius: 5px; text-align: center; margin-bottom: 10px;">
+            <div style="font-size: 10px; color: #666; text-transform: uppercase;">Pulse Width</div>
+            <div style="font-size: 20px; font-weight: 700; color: #1565c0;">${tv.monostablePulseDisplay}</div>
+           </div>
+           <div style="font-size: 11px; color: #37474f; text-align: center;">
+            Output goes HIGH for this duration when triggered
+           </div>
+          </div>
+         </div>
+         <div class="property-group">
+          <label class="property-label">🔧 Detected Components</label>
+          <div style="background: #f8f9fa; border-radius: 5px; padding: 10px; font-size: 12px;">
+           <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e0e0e0;">
+            <span style="color: #666;">R (Timing)</span>
+            <span style="font-weight: 600; color: #e65100;">${tv.rDisplay || 'Not detected'}</span>
+           </div>
+           <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+            <span style="color: #666;">C (Timing Cap)</span>
+            <span style="font-weight: 600; color: #1565c0;">${tv.capacitanceDisplay}</span>
+           </div>
+          </div>
+         </div>
+         <div class="property-group">
+          <label class="property-label">📐 Monostable Formula</label>
+          <div style="background: #fff8e1; border-radius: 5px; padding: 10px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.8; color: #5d4037;">
+           <div><strong>T</strong> = 1.1 × R × C</div>
+           <div style="font-size: 10px; margin-top: 5px; color: #666;">Output pulse duration</div>
+          </div>
+         </div>`;
+       }
+      }
       
       panel.innerHTML = `
        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 0;">
@@ -3854,8 +4912,9 @@
        </div>
        <div class="property-group">
         <label class="property-label">Operating Mode</label>
-        <div style="padding: 10px; background: ${modeBg}; border-radius: 5px; color: ${modeColor}; font-weight: 600; font-size: 14px;">
-         ${modeText}
+        <div style="padding: 10px; background: ${modeBg}; border-radius: 5px; color: ${modeColor}; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+         <span style="font-size: 18px;">${modeIcon}</span>
+         <span>${modeText}</span>
         </div>
        </div>
        <div class="property-group">
@@ -3865,25 +4924,54 @@
           ${statusIcon} ${statusText}
          </div>
          <div style="font-size: 11px; color: #666; line-height: 1.4;">
-          ${comp.hasPower ? 
+          ${comp.resetActive ? 
+           'Pin 4 (RESET) is LOW - Output forced to LOW state' :
+           (comp.hasPower ? 
            (comp.astableMode ?
             'Output oscillating automatically - LED will blink' :
-            (comp.outputState ? 
-             'Pin 3 (OUT) is HIGH - Can power connected components' : 
-             'Pin 3 (OUT) is LOW - Waiting for trigger')) : 
-           'Connect Vcc (pin 8) to power and GND (pin 1) to ground'}
+            (comp.monostableMode ?
+             (comp.outputState ? 'Pulse in progress - Output HIGH' : 'Waiting for trigger on Pin 2') :
+             (comp.outputState ? 
+              'Pin 3 (OUT) is HIGH - Can power connected components' : 
+              'Pin 3 (OUT) is LOW - Waiting for trigger'))) : 
+           'Connect Vcc (pin 8) to power and GND (pin 1) to ground')}
          </div>
         </div>
        </div>
+       ${timingHtml}
        <div class="property-group">
-        <label class="property-label">${comp.astableMode ? 'Astable Mode Operation' : 'Bistable Mode Operation'}</label>
+        <label class="property-label">${comp.astableMode ? 'Astable Mode Operation' : (comp.monostableMode ? 'Monostable Mode Operation' : 'Bistable Mode Operation')}</label>
         <div style="background: #e8f4fd; border-radius: 5px; padding: 12px; font-size: 12px; line-height: 1.6;">
          ${comp.astableMode ?
           `<div style="margin-bottom: 8px;"><strong>⚡ AUTO-OSCILLATION:</strong> Output toggles automatically</div>
-           <div><strong>🔌 TIMING:</strong> Set by R/C values (simulated at ~1Hz)</div>` :
-          `<div style="margin-bottom: 8px;"><strong>🔘 TRIGGER (Pin 2):</strong> Ground to set output HIGH</div>
-           <div><strong>🔄 RESET (Pin 4):</strong> Ground to force output LOW</div>`
+           <div style="margin-bottom: 8px;"><strong>🔌 Circuit:</strong> Pin 2 & 6 connected, capacitor to GND</div>
+           <div><strong>📊 Timing:</strong> ${comp.timingValues ? 'Calculated from R1, R2, C values' : 'Connect R1, R2, C for timing'}</div>` :
+          (comp.monostableMode ?
+           `<div style="margin-bottom: 8px;"><strong>🎯 ONE-SHOT:</strong> Single pulse when triggered</div>
+            <div style="margin-bottom: 8px;"><strong>⚡ TRIGGER (Pin 2):</strong> Ground briefly to start pulse</div>
+            <div><strong>📊 TIMING:</strong> Pulse width set by R × C values</div>` :
+           `<div style="margin-bottom: 8px;"><strong>🔘 TRIGGER (Pin 2):</strong> Ground to set output HIGH</div>
+            <div style="margin-bottom: 8px;"><strong>📈 THRESHOLD (Pin 6):</strong> Connect to Vcc to set output LOW</div>
+            <div><strong>🔄 RESET (Pin 4):</strong> Ground to force output LOW</div>`
+          )
          }
+        </div>
+       </div>
+       <div class="property-group">
+        <label class="property-label">Internal Thresholds (5V Supply)</label>
+        <div style="background: #f3e5f5; border-radius: 5px; padding: 10px; font-size: 11px;">
+         <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e1bee7;">
+          <span style="color: #666;">Trigger (⅓ Vcc)</span>
+          <span style="font-weight: 600; color: #7b1fa2;">~1.67V</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e1bee7;">
+          <span style="color: #666;">Threshold (⅔ Vcc)</span>
+          <span style="font-weight: 600; color: #7b1fa2;">~3.33V</span>
+         </div>
+         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+          <span style="color: #666;">Control Default</span>
+          <span style="font-weight: 600; color: #7b1fa2;">~3.33V</span>
+         </div>
         </div>
        </div>
        <div class="property-group">
@@ -3915,7 +5003,7 @@
        </div>
        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 15px; border-radius: 4px;">
         <div style="font-size: 12px; color: #856404; line-height: 1.5;">
-         <strong>💡 Tip:</strong> Click on any pin to see detailed info about that specific pin.
+         <strong>💡 Tip:</strong> Click on any pin to see detailed info. Add resistors and capacitors to see calculated timing!
         </div>
        </div>
       `;
@@ -3989,12 +5077,53 @@
      </div>
      <div class="property-group">
          <label class="property-label">Rotation</label>
-         <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" class="property-input" value="${comp.rotation || 0}°" readonly style="flex: 1;">
-          <button class="btn btn-secondary" onclick="simulator.rotateSelected()" style="padding: 6px 12px;">🔄 Rotate</button>
-         </div>
+         <input type="text" class="property-input" value="${comp.rotation || 0}°" readonly>
      </div>
-     ${comp.value ? `
+     ${comp.type === 'resistor' ? `
+     <div class="property-group">
+         <label class="property-label">Resistance Value</label>
+         <select class="property-input" onchange="simulator.updateComponentProperty('value', this.value)">
+          <option value="100Ω" ${comp.value === '100Ω' ? 'selected' : ''}>100Ω</option>
+          <option value="220Ω" ${comp.value === '220Ω' ? 'selected' : ''}>220Ω</option>
+          <option value="470Ω" ${comp.value === '470Ω' ? 'selected' : ''}>470Ω</option>
+          <option value="1kΩ" ${comp.value === '1kΩ' ? 'selected' : ''}>1kΩ</option>
+          <option value="2.2kΩ" ${comp.value === '2.2kΩ' ? 'selected' : ''}>2.2kΩ</option>
+          <option value="4.7kΩ" ${comp.value === '4.7kΩ' ? 'selected' : ''}>4.7kΩ</option>
+          <option value="10kΩ" ${comp.value === '10kΩ' ? 'selected' : ''}>10kΩ</option>
+          <option value="22kΩ" ${comp.value === '22kΩ' ? 'selected' : ''}>22kΩ</option>
+          <option value="47kΩ" ${comp.value === '47kΩ' ? 'selected' : ''}>47kΩ</option>
+          <option value="100kΩ" ${comp.value === '100kΩ' ? 'selected' : ''}>100kΩ</option>
+         </select>
+     </div>
+     ` : ''}
+     ${comp.type === 'capacitor' ? `
+     <div class="property-group">
+         <label class="property-label">Capacitance Value</label>
+         <select class="property-input" onchange="simulator.updateComponentProperty('value', this.value)">
+          <option value="10pF" ${comp.value === '10pF' ? 'selected' : ''}>10pF</option>
+          <option value="100pF" ${comp.value === '100pF' ? 'selected' : ''}>100pF</option>
+          <option value="1nF" ${comp.value === '1nF' ? 'selected' : ''}>1nF</option>
+          <option value="10nF" ${comp.value === '10nF' ? 'selected' : ''}>10nF</option>
+          <option value="100nF" ${comp.value === '100nF' ? 'selected' : ''}>100nF</option>
+          <option value="1µF" ${comp.value === '1µF' ? 'selected' : ''}>1µF</option>
+          <option value="10µF" ${comp.value === '10µF' ? 'selected' : ''}>10µF</option>
+          <option value="47µF" ${comp.value === '47µF' ? 'selected' : ''}>47µF</option>
+          <option value="100µF" ${comp.value === '100µF' ? 'selected' : ''}>100µF</option>
+          <option value="470µF" ${comp.value === '470µF' ? 'selected' : ''}>470µF</option>
+         </select>
+     </div>
+     ` : ''}
+     ${comp.type === 'led' ? `
+     <div class="property-group">
+         <label class="property-label">LED Color</label>
+         <select class="property-input" onchange="simulator.updateLEDColor(this.value)">
+          <option value="Red" ${comp.value === 'Red' ? 'selected' : ''}>Red</option>
+          <option value="Yellow" ${comp.value === 'Yellow' ? 'selected' : ''}>Yellow</option>
+          <option value="Blue" ${comp.value === 'Blue' ? 'selected' : ''}>Blue</option>
+         </select>
+     </div>
+     ` : ''}
+     ${comp.value && comp.type !== 'resistor' && comp.type !== 'capacitor' && comp.type !== 'led' ? `
      <div class="property-group">
          <label class="property-label">Value</label>
          <input type="text" class="property-input" value="${comp.value}"
@@ -4014,15 +5143,28 @@
          </div>
      </div>
      ` : ''}
-     ${comp.type === 'button' ? `
+     ${comp.type === 'switch' ? `
      <div class="property-group">
-         <label class="property-label">Switch Status</label>
+         <label class="property-label">Toggle Switch Status</label>
          <div style="padding: 10px; background: ${comp.isPressed ? '#d4edda' : '#f8d7da'}; border-radius: 5px; border: 2px solid ${comp.isPressed ? '#28a745' : '#dc3545'};">
           <div style="font-size: 14px; font-weight: 600; color: ${comp.isPressed ? '#155724' : '#721c24'}; margin-bottom: 5px;">
            ${comp.isPressed ? '🟢 Switch is CLOSED (ON)' : '🔴 Switch is OPEN (OFF)'}
           </div>
           <div style="font-size: 11px; color: #666; line-height: 1.4;">
-           ${comp.isPressed ? 'Current can flow through the switch' : 'Click the switch to close the circuit'}
+           ${comp.isPressed ? 'Current can flow through the switch' : 'Click to toggle the switch ON/OFF'}
+          </div>
+         </div>
+     </div>
+     ` : ''}
+     ${comp.type === 'button' ? `
+     <div class="property-group">
+         <label class="property-label">Momentary Button Status</label>
+         <div style="padding: 10px; background: ${comp.isPressed ? '#d4edda' : '#f8d7da'}; border-radius: 5px; border: 2px solid ${comp.isPressed ? '#28a745' : '#dc3545'};">
+          <div style="font-size: 14px; font-weight: 600; color: ${comp.isPressed ? '#155724' : '#721c24'}; margin-bottom: 5px;">
+           ${comp.isPressed ? '🟢 Button PRESSED' : '🔴 Button RELEASED'}
+          </div>
+          <div style="font-size: 11px; color: #666; line-height: 1.4;">
+           ${comp.isPressed ? 'Current flowing while held down' : 'Hold mouse down to activate'}
           </div>
          </div>
      </div>
@@ -4077,10 +5219,12 @@
       { label: 'Shift', text: 'Serial shift register' }
      ],
      'ne555': [
-      { label: 'Timer IC', text: 'Pin 1=GND, Pin 8=VCC (+5V)' },
-      { label: 'Output', text: 'Pin 3 provides timer output' },
-      { label: 'Trigger', text: 'Pin 2 < ⅓VCC starts cycle' },
-      { label: 'Reset', text: 'Pin 4 LOW disables output' }
+      { label: 'Modes', text: 'Astable, Monostable, Bistable' },
+      { label: 'Astable', text: 'Add R1+R2+C for auto-oscillation' },
+      { label: 'Monostable', text: 'Add R+C for one-shot pulse' },
+      { label: 'Timing', text: 'Calculated from R/C values' },
+      { label: 'Reset', text: 'Pin 4 LOW forces output LOW' },
+      { label: 'Power', text: 'Pin 1=GND, Pin 8=VCC' }
      ],
      '7400-series': [
       { label: 'Logic IC', text: 'Select chip type from dropdown above' },
@@ -4158,6 +5302,7 @@
     const icons = {
      'w65c02s': '🖥️',
      '28c256': '💾',
+     '62256': '🧠',
      'w65c22': '🔌',
      '7400-series': '⚡',
      'ne555': '⏱️',
@@ -4165,7 +5310,10 @@
      'resistor': '📏',
      'capacitor': '🔋',
      'button': '🔘',
+     'switch': '🔘',
      'crystal': '💎',
+     'potentiometer': '🎚️',
+     'photoresistor': '☀️',
      'power': '🔌',
      'ground': '⏚'
     };
@@ -4177,10 +5325,28 @@
      if (prop === 'x' || prop === 'y') {
       this.selectedComponent[prop] = parseFloat(value);
       this.updateLEDStates();
+     } else if (prop === 'value') {
+      // Value changes may affect circuit calculations (e.g., 555 timer)
+      this.selectedComponent[prop] = value;
+      this.updateLEDStates();
      } else {
       this.selectedComponent[prop] = value;
      }
      this.draw();
+    }
+   }
+
+   updateLEDColor(colorName) {
+    if (this.selectedComponent && this.selectedComponent.type === 'led') {
+     const colorMap = {
+      'Red': '#c0392b',
+      'Yellow': '#f39c12',
+      'Blue': '#2980b9'
+     };
+     this.selectedComponent.value = colorName;
+     this.selectedComponent.color = colorMap[colorName] || '#c0392b';
+     this.draw();
+     this.updatePropertiesPanel();
     }
    }
 
@@ -4235,7 +5401,7 @@
      wireModeBtn.style.background = '#c0392b';
      wireModeBtn.style.color = 'white';
      wireModeBtn.textContent = 'Wire Mode ON';
-     wireModeText.innerHTML = '🔌 Wire Mode Active: Click on two points to create a connection<br><small style="margin-top: 5px; display: block;">💡 Hold <strong>Ctrl</strong> to move wire endpoints</small>';
+     wireModeText.innerHTML = '🔌 Wire Mode Active: Click on two points to create a connection<br><small style="margin-top: 5px; display: block;">💡 Hold <strong>Ctrl</strong> to move wire endpoints | Press <strong>Esc</strong> or <strong>Right-click</strong> to cancel wire</small>';
      // Clear any pending connection start when turning mode back on
      this.connectionStart = null;
      this.canvas.style.cursor = 'crosshair';
