@@ -1,6 +1,6 @@
 # Interactive HTML
 
-A collection of interactive electronics calculators, simulators, and educational tools built with HTML, CSS, and JavaScript. All tools run directly in the browser with no dependencies or installation required.
+A collection of interactive electronics calculators, simulators, computer science learning tools, and educational utilities built with HTML, CSS, and JavaScript. All tools run directly in the browser with no dependencies or installation required.
 
 ## 🚀 Quick Start
 
@@ -11,13 +11,21 @@ Or visit any tool directly from the list below.
 ## Features
 
 - **No Installation Required**: All tools are standalone HTML files that run directly in any modern web browser
-- **Interactive Visualizations**: Real-time visual feedback with SVG circuit diagrams and animated components
+- **Interactive Visualizations**: Real-time visual feedback with SVG circuit diagrams, animated components, and logic simulators
 - **Modern Design**: Professional light theme inspired by leading electronics education platforms
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
-- **Educational**: Perfect for electronics students, hobbyists, and professionals
+- **Educational**: Perfect for computer science students, electronics students, hobbyists, and professionals
 - **GitHub Pages Ready**: Optimized for hosting on GitHub Pages with SEO-friendly structure
 
 ## Available Tools
+
+### Computer Science Tools
+
+**[Browse All Computer Science Tools](computerScience/index.html)** | Interactive tools for learning programming fundamentals and computer science concepts
+
+- **[Number System Converter](computerScience/computerScience-number-converter.html)** - Convert between binary, hexadecimal, decimal, octal, and ASCII characters
+- **[Logic Gate Truth Tables](computerScience/computerScience-logic-gates.html)** - Explore digital logic gates and Boolean algebra with interactive truth tables
+- **[6502 Stack Pointer Visualizer](computerScience/computerScience-stackPointer.html)** - Understand 6502 processor stack operations and memory management
 
 ### General Tools
 
@@ -108,6 +116,15 @@ All tools are self-contained single-file applications. No web server, npm packag
 5. Use for practical everyday calculations
 ```
 
+**For number system conversions:**
+```
+1. Navigate to computerScience/ folder
+2. Open computerScience-number-converter.html
+3. Enter a value in any number system (binary, hex, decimal, or character)
+4. See instant conversions to all other formats
+5. Use for understanding binary data and character encoding
+```
+
 ## Technical Details
 
 - **Built with**: Pure HTML5, CSS3, and vanilla JavaScript
@@ -134,6 +151,11 @@ interactive-html/
 │   ├── DESIGN_SYSTEM.md                  # Color palette and design guidelines
 │   ├── QUICK_START.md                    # Developer quick start guide
 │   └── STRUCTURE.md                      # Template structure visualization
+├── computerScience/
+│   ├── index.html                        # Computer Science tools landing page
+│   ├── computerScience-number-converter.html    # Number system converter
+│   ├── computerScience-logic-gates.html         # Logic gate truth tables
+│   └── computerScience-stackPointer.html        # 6502 stack pointer visualizer
 ├── general/
 │   ├── index.html                        # General tools landing page
 │   └── general-volume-measurement.html   # Volume measurement calculator
@@ -225,21 +247,25 @@ See [QUICK_START.md](QUICK_START.md) and [STRUCTURE.md](STRUCTURE.md) for detail
 ## Use Cases
 
 ### For Students
-- Learn electronics concepts through interactive visualization
+- Learn electronics and computer science concepts through interactive visualization
 - Verify homework calculations
 - Understand component behavior and circuit operation
+- Master binary, hexadecimal, and logic gate fundamentals
+- Visualize low-level computer architecture concepts
 
 ### For Hobbyists
 - Design LED projects with proper current limiting
 - Calculate 555 timer values for projects
 - Decode resistor color codes quickly
 - Plan voltage divider circuits
+- Learn assembly programming and processor architecture
 
 ### For Professionals
 - Quick reference calculations
 - Prototype circuit design
 - Component selection assistance
 - Educational demonstrations
+- Teaching tools for computer science and electronics courses
 
 ## Browser Compatibility
 

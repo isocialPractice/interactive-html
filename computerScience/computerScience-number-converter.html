@@ -1,0 +1,678 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+ <title>Number System & Character Converter</title>
+ <style>
+  * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+
+  body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   background: linear-gradient(135deg, #1e3c72eb 0%, #2a5298eb 50%);
+   padding: 20px;
+   min-height: 100vh;
+  }
+
+  .container {
+   max-width: 1200px;
+   margin: 0 auto;
+   background: white;
+   border-radius: 10px;
+   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+   overflow: hidden;
+  }
+
+  .header {
+   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+   color: white;
+   padding: 20px 30px;
+  }
+
+  .header h1 {
+   color: white;
+   font-size: 24px;
+   font-weight: 600;
+   margin-bottom: 5px;
+  }
+
+  .header .subtitle {
+   color: white;
+   font-size: 14px;
+   opacity: 0.9;
+  }
+
+  .content-wrapper {
+   display: flex;
+   flex-wrap: wrap;
+   padding: 30px;
+   gap: 20px;
+  }
+
+  .left-panel {
+   flex: 1;
+   min-width: 300px;
+  }
+
+  .right-panel {
+   flex: 1;
+   min-width: 300px;
+  }
+
+  h2 {
+   font-size: 18px;
+   color: #2a5298;
+   margin-bottom: 15px;
+   padding-bottom: 10px;
+   border-bottom: 2px solid #667eea;
+  }
+
+  .converter-section {
+   background: #f8f9fa;
+   border-radius: 8px;
+   padding: 20px;
+   margin-bottom: 20px;
+  }
+
+  .input-group {
+   margin-bottom: 20px;
+  }
+
+  .input-group label {
+   display: block;
+   font-weight: 600;
+   color: #2a5298;
+   margin-bottom: 8px;
+   font-size: 14px;
+  }
+
+  .input-group input {
+   width: 100%;
+   padding: 12px;
+   border: 2px solid #d0d7de;
+   border-radius: 6px;
+   font-size: 16px;
+   font-family: 'Courier New', monospace;
+   transition: border-color 0.2s;
+  }
+
+  .input-group input:focus {
+   outline: none;
+   border-color: #2a5298;
+   box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+  }
+
+  .input-group input.error {
+   border-color: #f44336;
+  }
+
+  .input-group .helper-text {
+   font-size: 12px;
+   color: #6c757d;
+   margin-top: 5px;
+  }
+
+  .input-group .error-text {
+   font-size: 12px;
+   color: #f44336;
+   margin-top: 5px;
+   display: none;
+  }
+
+  .input-group input.error ~ .error-text {
+   display: block;
+  }
+
+  .output-grid {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 15px;
+   margin-top: 20px;
+  }
+
+  .output-box {
+   background: white;
+   border: 2px solid #d0d7de;
+   border-radius: 6px;
+   padding: 15px;
+  }
+
+  .output-box .label {
+   font-size: 12px;
+   font-weight: 600;
+   color: #6c757d;
+   text-transform: uppercase;
+   margin-bottom: 8px;
+  }
+
+  .output-box .value {
+   font-family: 'Courier New', monospace;
+   font-size: 18px;
+   color: #1f2328;
+   word-break: break-all;
+  }
+
+  .binary-display {
+   grid-column: 1 / -1;
+  }
+
+  .binary-display .value {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 5px;
+  }
+
+  .binary-byte {
+   background: #e3f2fd;
+   padding: 8px 10px;
+   border-radius: 4px;
+   font-family: 'Courier New', monospace;
+   font-size: 14px;
+   color: #1976D2;
+   border: 1px solid #90caf9;
+  }
+
+  .info-section {
+   background: #f8f9fa;
+   border-radius: 8px;
+   padding: 20px;
+   margin-bottom: 20px;
+  }
+
+  .info-section h3 {
+   font-size: 14px;
+   color: #2a5298;
+   margin-bottom: 10px;
+   font-weight: 600;
+  }
+
+  .info-section p {
+   font-size: 13px;
+   line-height: 1.6;
+   color: #555;
+   margin-bottom: 10px;
+  }
+
+  .info-section ul {
+   padding-left: 20px;
+   margin-bottom: 10px;
+  }
+
+  .info-section li {
+   font-size: 13px;
+   line-height: 1.6;
+   color: #555;
+   margin-bottom: 5px;
+  }
+
+  .info-box {
+   background: #fff3cd;
+   border-left: 4px solid #ffc107;
+   padding: 15px;
+   border-radius: 4px;
+   margin: 15px 0;
+  }
+
+  .info-box h3 {
+   font-size: 14px;
+   color: #856404;
+   margin-bottom: 8px;
+  }
+
+  .info-box p {
+   font-size: 13px;
+   color: #555;
+   line-height: 1.5;
+   margin: 5px 0;
+  }
+
+  .conversion-table {
+   width: 100%;
+   border-collapse: collapse;
+   margin-top: 15px;
+   font-size: 12px;
+  }
+
+  .conversion-table th {
+   background: #2a5298;
+   color: white;
+   padding: 10px;
+   text-align: left;
+   font-weight: 600;
+  }
+
+  .conversion-table td {
+   padding: 10px;
+   border-bottom: 1px solid #d0d7de;
+   font-family: 'Courier New', monospace;
+  }
+
+  .conversion-table tr:nth-child(even) {
+   background: #f8f9fa;
+  }
+
+  .btn {
+   padding: 10px 20px;
+   border: none;
+   border-radius: 5px;
+   cursor: pointer;
+   font-size: 14px;
+   font-weight: 500;
+   transition: all 0.2s;
+   background: #4CAF50;
+   color: white;
+   margin-top: 10px;
+  }
+
+  .btn:hover {
+   background: #45a049;
+   transform: translateY(-1px);
+   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  }
+
+  @media (max-width: 768px) {
+   .output-grid {
+    grid-template-columns: 1fr;
+   }
+
+   .binary-display {
+    grid-column: 1;
+   }
+  }
+ </style>
+
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+     <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#resistorTools" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#ledAndPowerTools" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#components" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-breadboard-simulator.html" class="nav-link">Breadboard Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/computerScience/index.html" class="nav-link dropdown-toggle"><span>💻</span> <span>Computer Science</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-number-converter.html" class="nav-link">Number Converter</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-logic-gates.html" class="nav-link">Logic Gates</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-stackPointer.html" class="nav-link">Stack Pointer Visualizer</a>
+     </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+ <div class="container">
+  <div class="header">
+   <h1>🔢 Number System & Character Converter</h1>
+   <div class="subtitle">Convert between Binary, Hexadecimal, Decimal, and ASCII/UTF-8</div>
+  </div>
+
+  <div class="content-wrapper">
+   <div class="left-panel">
+    <h2>Converter</h2>
+
+    <div class="converter-section">
+     <div class="input-group">
+      <label for="decimalInput">Decimal (Base 10)</label>
+      <input type="text" id="decimalInput" placeholder="Enter decimal number (e.g., 255)" />
+      <span class="helper-text">Range: 0 to 4,294,967,295 (32-bit unsigned)</span>
+      <span class="error-text">Invalid decimal number</span>
+     </div>
+
+     <div class="input-group">
+      <label for="hexInput">Hexadecimal (Base 16)</label>
+      <input type="text" id="hexInput" placeholder="Enter hex (e.g., 0xFF or FF)" />
+      <span class="helper-text">Use 0-9, A-F (case insensitive)</span>
+      <span class="error-text">Invalid hexadecimal number</span>
+     </div>
+
+     <div class="input-group">
+      <label for="binaryInput">Binary (Base 2)</label>
+      <input type="text" id="binaryInput" placeholder="Enter binary (e.g., 11111111)" />
+      <span class="helper-text">Use 0 and 1 only</span>
+      <span class="error-text">Invalid binary number</span>
+     </div>
+
+     <div class="input-group">
+      <label for="charInput">Character (ASCII/UTF-8)</label>
+      <input type="text" id="charInput" placeholder="Enter a character (e.g., A)" maxlength="1" />
+      <span class="helper-text">Single character only</span>
+     </div>
+
+     <button class="btn" onclick="converter.clear()">Clear All</button>
+    </div>
+
+    <div class="converter-section">
+     <h3 style="margin-bottom: 15px; color: #2a5298;">Conversions</h3>
+     <div class="output-grid">
+      <div class="output-box binary-display">
+       <div class="label">Binary (grouped by bytes)</div>
+       <div class="value" id="binaryOutput">--</div>
+      </div>
+      <div class="output-box">
+       <div class="label">Hexadecimal</div>
+       <div class="value" id="hexOutput">--</div>
+      </div>
+      <div class="output-box">
+       <div class="label">Decimal</div>
+       <div class="value" id="decimalOutput">--</div>
+      </div>
+      <div class="output-box">
+       <div class="label">Octal (Base 8)</div>
+       <div class="value" id="octalOutput">--</div>
+      </div>
+      <div class="output-box">
+       <div class="label">ASCII/UTF-8 Char</div>
+       <div class="value" id="charOutput">--</div>
+      </div>
+      <div class="output-box">
+       <div class="label">Bits</div>
+       <div class="value" id="bitsOutput">--</div>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <div class="right-panel">
+    <h2>Reference Guide</h2>
+
+    <div class="info-section">
+     <h3>Number Systems Overview</h3>
+     <p><strong>Binary (Base 2):</strong> Uses only 0 and 1. Each digit represents a power of 2.</p>
+     <p><strong>Decimal (Base 10):</strong> Standard counting system. Uses digits 0-9.</p>
+     <p><strong>Hexadecimal (Base 16):</strong> Uses 0-9 and A-F. Compact representation of binary.</p>
+     <p><strong>Octal (Base 8):</strong> Uses 0-7. Common in Unix file permissions.</p>
+    </div>
+
+    <div class="info-box">
+     <h3>Why Hexadecimal?</h3>
+     <p>Hexadecimal is widely used in computing because:</p>
+     <ul>
+      <li>One hex digit = exactly 4 bits (half a byte)</li>
+      <li>Two hex digits = exactly 1 byte (8 bits)</li>
+      <li>Much more compact and readable than binary</li>
+      <li>Easy conversion to/from binary</li>
+     </ul>
+    </div>
+
+    <div class="info-section">
+     <h3>Common Values Reference</h3>
+     <table class="conversion-table">
+      <thead>
+       <tr>
+        <th>Dec</th>
+        <th>Hex</th>
+        <th>Binary</th>
+        <th>Char</th>
+       </tr>
+      </thead>
+      <tbody>
+       <tr><td>0</td><td>0x00</td><td>00000000</td><td>NUL</td></tr>
+       <tr><td>32</td><td>0x20</td><td>00100000</td><td>Space</td></tr>
+       <tr><td>48</td><td>0x30</td><td>00110000</td><td>0</td></tr>
+       <tr><td>65</td><td>0x41</td><td>01000001</td><td>A</td></tr>
+       <tr><td>97</td><td>0x61</td><td>01100001</td><td>a</td></tr>
+       <tr><td>127</td><td>0x7F</td><td>01111111</td><td>DEL</td></tr>
+       <tr><td>255</td><td>0xFF</td><td>11111111</td><td>ÿ</td></tr>
+      </tbody>
+     </table>
+    </div>
+
+    <div class="info-section">
+     <h3>Bit Positions & Powers of 2</h3>
+     <p>Each bit position in binary represents a power of 2:</p>
+     <table class="conversion-table">
+      <thead>
+       <tr>
+        <th>Bit</th>
+        <th>Power</th>
+        <th>Value</th>
+        <th>Hex</th>
+       </tr>
+      </thead>
+      <tbody>
+       <tr><td>Bit 0</td><td>2<sup>0</sup></td><td>1</td><td>0x01</td></tr>
+       <tr><td>Bit 1</td><td>2<sup>1</sup></td><td>2</td><td>0x02</td></tr>
+       <tr><td>Bit 2</td><td>2<sup>2</sup></td><td>4</td><td>0x04</td></tr>
+       <tr><td>Bit 3</td><td>2<sup>3</sup></td><td>8</td><td>0x08</td></tr>
+       <tr><td>Bit 4</td><td>2<sup>4</sup></td><td>16</td><td>0x10</td></tr>
+       <tr><td>Bit 5</td><td>2<sup>5</sup></td><td>32</td><td>0x20</td></tr>
+       <tr><td>Bit 6</td><td>2<sup>6</sup></td><td>64</td><td>0x40</td></tr>
+       <tr><td>Bit 7</td><td>2<sup>7</sup></td><td>128</td><td>0x80</td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <script>
+  class NumberConverter {
+   constructor() {
+    this.decimalInput = document.getElementById('decimalInput');
+    this.hexInput = document.getElementById('hexInput');
+    this.binaryInput = document.getElementById('binaryInput');
+    this.charInput = document.getElementById('charInput');
+
+    this.setupEventListeners();
+   }
+
+   setupEventListeners() {
+    this.decimalInput.addEventListener('input', () => this.convertFromDecimal());
+    this.hexInput.addEventListener('input', () => this.convertFromHex());
+    this.binaryInput.addEventListener('input', () => this.convertFromBinary());
+    this.charInput.addEventListener('input', () => this.convertFromChar());
+   }
+
+   convertFromDecimal() {
+    const value = this.decimalInput.value.trim();
+    if (!value) {
+     this.clearOutputs();
+     return;
+    }
+
+    const decimal = parseInt(value, 10);
+    if (isNaN(decimal) || decimal < 0 || decimal > 0xFFFFFFFF) {
+     this.decimalInput.classList.add('error');
+     return;
+    }
+
+    this.decimalInput.classList.remove('error');
+    this.updateOutputs(decimal);
+   }
+
+   convertFromHex() {
+    let value = this.hexInput.value.trim();
+    if (!value) {
+     this.clearOutputs();
+     return;
+    }
+
+    // Remove 0x prefix if present
+    value = value.replace(/^0x/i, '');
+
+    const decimal = parseInt(value, 16);
+    if (isNaN(decimal) || !/^[0-9A-Fa-f]+$/.test(value)) {
+     this.hexInput.classList.add('error');
+     return;
+    }
+
+    this.hexInput.classList.remove('error');
+    this.updateOutputs(decimal);
+   }
+
+   convertFromBinary() {
+    const value = this.binaryInput.value.trim();
+    if (!value) {
+     this.clearOutputs();
+     return;
+    }
+
+    const decimal = parseInt(value, 2);
+    if (isNaN(decimal) || !/^[01]+$/.test(value)) {
+     this.binaryInput.classList.add('error');
+     return;
+    }
+
+    this.binaryInput.classList.remove('error');
+    this.updateOutputs(decimal);
+   }
+
+   convertFromChar() {
+    const value = this.charInput.value;
+    if (!value) {
+     this.clearOutputs();
+     return;
+    }
+
+    const decimal = value.charCodeAt(0);
+    this.updateOutputs(decimal);
+   }
+
+   updateOutputs(decimal) {
+    // Binary with byte grouping
+    const binary = decimal.toString(2).padStart(8, '0');
+    const binaryOutput = document.getElementById('binaryOutput');
+    binaryOutput.innerHTML = '';
+
+    // Group by bytes (8 bits)
+    const fullBinary = decimal.toString(2).padStart(((Math.ceil(decimal.toString(2).length / 8)) * 8), '0');
+    for (let i = 0; i < fullBinary.length; i += 8) {
+     const byte = fullBinary.substr(i, 8);
+     const span = document.createElement('span');
+     span.className = 'binary-byte';
+     span.textContent = byte;
+     binaryOutput.appendChild(span);
+    }
+
+    // Other outputs
+    document.getElementById('hexOutput').textContent = '0x' + decimal.toString(16).toUpperCase();
+    document.getElementById('decimalOutput').textContent = decimal.toString(10);
+    document.getElementById('octalOutput').textContent = '0' + decimal.toString(8);
+
+    // Character output
+    const charOutput = document.getElementById('charOutput');
+    if (decimal >= 32 && decimal <= 126) {
+     charOutput.textContent = String.fromCharCode(decimal);
+    } else if (decimal < 32) {
+     const controlChars = ['NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL', 'BS', 'TAB', 'LF', 'VT', 'FF', 'CR', 'SO', 'SI', 'DLE', 'DC1', 'DC2', 'DC3', 'DC4', 'NAK', 'SYN', 'ETB', 'CAN', 'EM', 'SUB', 'ESC', 'FS', 'GS', 'RS', 'US'];
+     charOutput.textContent = controlChars[decimal] + ' (control)';
+    } else if (decimal === 127) {
+     charOutput.textContent = 'DEL (control)';
+    } else if (decimal <= 255) {
+     charOutput.textContent = String.fromCharCode(decimal) + ' (extended ASCII)';
+    } else {
+     try {
+      charOutput.textContent = String.fromCharCode(decimal);
+     } catch (e) {
+      charOutput.textContent = '(not printable)';
+     }
+    }
+
+    // Bit count
+    document.getElementById('bitsOutput').textContent = fullBinary.length + ' bits';
+   }
+
+   clearOutputs() {
+    document.getElementById('binaryOutput').textContent = '--';
+    document.getElementById('hexOutput').textContent = '--';
+    document.getElementById('decimalOutput').textContent = '--';
+    document.getElementById('octalOutput').textContent = '--';
+    document.getElementById('charOutput').textContent = '--';
+    document.getElementById('bitsOutput').textContent = '--';
+   }
+
+   clear() {
+    this.decimalInput.value = '';
+    this.hexInput.value = '';
+    this.binaryInput.value = '';
+    this.charInput.value = '';
+    this.decimalInput.classList.remove('error');
+    this.hexInput.classList.remove('error');
+    this.binaryInput.classList.remove('error');
+    this.clearOutputs();
+   }
+  }
+
+  // Initialize the converter
+  const converter = new NumberConverter();
+ </script>
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>

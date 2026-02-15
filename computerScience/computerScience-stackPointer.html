@@ -1,0 +1,644 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+ <title>6502 Stack Pointer Visualization - Ben Eater Tutorial</title>
+ <style>
+  * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+
+  body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   background: linear-gradient(135deg, #1e3c72eb 0%, #2a5298eb 50%);
+   padding: 20px;
+   min-height: 100vh;
+  }
+
+  .container {
+   max-width: 1400px;
+   margin: 0 auto;
+   background: white;
+   border-radius: 10px;
+   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+   overflow: hidden;
+  }
+
+  .header {
+   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+   color: white;
+   padding: 20px 30px;
+  }
+
+  .header h1 {
+   color: white;
+   font-size: 24px;
+   font-weight: 600;
+   margin-bottom: 5px;
+  }
+
+  .header .subtitle {
+   color: white;
+   font-size: 14px;
+   opacity: 0.9;
+  }
+
+  .content-wrapper {
+   display: flex;
+   min-height: 600px;
+  }
+
+  .stack-section {
+   flex: 1;
+   padding: 30px;
+   border-right: 2px solid #e0e0e0;
+  }
+
+  .info-section {
+   width: 400px;
+   padding: 30px;
+   background: #f8f9fa;
+  }
+
+  h2 {
+   font-size: 18px;
+   color: #2a5298;
+   margin-bottom: 15px;
+   padding-bottom: 10px;
+   border-bottom: 2px solid #667eea;
+  }
+
+  .memory-display {
+   background: #1e1e1e;
+   border-radius: 8px;
+   padding: 20px;
+   font-family: 'Courier New', monospace;
+   color: #d4d4d4;
+   margin: 20px 0;
+   max-height: 500px;
+   overflow-y: auto;
+  }
+
+  .memory-row {
+   display: flex;
+   padding: 4px 0;
+   font-size: 14px;
+   line-height: 1.6;
+  }
+
+  .memory-address {
+   color: #4fc3f7;
+   width: 80px;
+   font-weight: 600;
+  }
+
+  .memory-value {
+   color: #ce93d8;
+   width: 60px;
+  }
+
+  .memory-instruction {
+   color: #9ccc65;
+   flex: 1;
+  }
+
+  .memory-row.highlight {
+   background: rgba(102, 126, 234, 0.2);
+   border-radius: 4px;
+   padding-left: 10px;
+   margin-left: -10px;
+  }
+
+  .memory-row.stack-pointer {
+   background: rgba(255, 193, 7, 0.3);
+   border-left: 4px solid #ffc107;
+   padding-left: 6px;
+   margin-left: -10px;
+  }
+
+  .memory-row.stack-data {
+   background: rgba(76, 175, 80, 0.2);
+  }
+
+  .controls {
+   display: flex;
+   gap: 10px;
+   margin: 20px 0;
+   flex-wrap: wrap;
+  }
+
+  .btn {
+   padding: 10px 20px;
+   border: none;
+   border-radius: 5px;
+   cursor: pointer;
+   font-size: 14px;
+   font-weight: 500;
+   transition: all 0.2s;
+  }
+
+  .btn-primary {
+   background: #4CAF50;
+   color: white;
+  }
+
+  .btn-primary:hover {
+   background: #45a049;
+   transform: translateY(-1px);
+   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  }
+
+  .btn-secondary {
+   background: #2196F3;
+   color: white;
+  }
+
+  .btn-secondary:hover {
+   background: #0b7dda;
+   transform: translateY(-1px);
+   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  }
+
+  .btn-danger {
+   background: #f44336;
+   color: white;
+  }
+
+  .btn-danger:hover {
+   background: #da190b;
+   transform: translateY(-1px);
+   box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+  }
+
+  .status-box {
+   background: #e3f2fd;
+   border-left: 4px solid #2196F3;
+   padding: 15px;
+   border-radius: 4px;
+   margin: 15px 0;
+  }
+
+  .status-box h3 {
+   font-size: 14px;
+   color: #1976D2;
+   margin-bottom: 8px;
+  }
+
+  .status-box p {
+   font-size: 13px;
+   color: #555;
+   line-height: 1.5;
+   margin: 5px 0;
+  }
+
+  .info-box {
+   background: #fff3cd;
+   border-left: 4px solid #ffc107;
+   padding: 15px;
+   border-radius: 4px;
+   margin: 15px 0;
+  }
+
+  .info-box h3 {
+   font-size: 14px;
+   color: #856404;
+   margin-bottom: 8px;
+  }
+
+  .info-box p {
+   font-size: 13px;
+   color: #555;
+   line-height: 1.5;
+   margin: 5px 0;
+  }
+
+  .code-box {
+   background: #f8f9fa;
+   border: 1px solid #dee2e6;
+   border-radius: 4px;
+   padding: 15px;
+   margin: 15px 0;
+   font-family: 'Courier New', monospace;
+   font-size: 13px;
+  }
+
+  .code-box code {
+   color: #d63384;
+  }
+
+  .explanation {
+   font-size: 13px;
+   line-height: 1.6;
+   color: #555;
+   margin: 15px 0;
+  }
+
+  .legend {
+   display: flex;
+   gap: 15px;
+   margin: 15px 0;
+   flex-wrap: wrap;
+  }
+
+  .legend-item {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   font-size: 12px;
+  }
+
+  .legend-color {
+   width: 20px;
+   height: 20px;
+   border-radius: 3px;
+  }
+
+  @media (max-width: 1024px) {
+   .content-wrapper {
+    flex-direction: column;
+   }
+
+   .stack-section {
+    border-right: none;
+    border-bottom: 2px solid #e0e0e0;
+   }
+
+   .info-section {
+    width: 100%;
+   }
+  }
+ </style>
+
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+     <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#resistorTools" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#ledAndPowerTools" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#components" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-breadboard-simulator.html" class="nav-link">Breadboard Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/computerScience/index.html" class="nav-link dropdown-toggle"><span>💻</span> <span>Computer Science</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-number-converter.html" class="nav-link">Number Converter</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-logic-gates.html" class="nav-link">Logic Gates</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-stackPointer.html" class="nav-link">Stack Pointer Visualizer</a>
+     </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+ <div class="container">
+  <div class="header">
+   <h1>🔄 6502 Stack Pointer Visualization</h1>
+   <div class="subtitle">Understanding Stack Operations and Pointer Management</div>
+  </div>
+
+  <div class="content-wrapper">
+   <div class="stack-section">
+    <h2>Stack Memory ($0100 - $01FF)</h2>
+
+    <div class="controls">
+     <button class="btn btn-primary" onclick="stackSim.pushToStack()">PHA (Push)</button>
+     <button class="btn btn-secondary" onclick="stackSim.pullFromStack()">PLA (Pull)</button>
+     <button class="btn btn-danger" onclick="stackSim.resetStack()">Reset Stack</button>
+     <button class="btn btn-primary" onclick="stackSim.initializeStackPointer()">Initialize SP</button>
+    </div>
+
+    <div class="legend">
+     <div class="legend-item">
+      <div class="legend-color" style="background: rgba(255, 193, 7, 0.3); border-left: 4px solid #ffc107;"></div>
+      <span>Stack Pointer (SP)</span>
+     </div>
+     <div class="legend-item">
+      <div class="legend-color" style="background: rgba(76, 175, 80, 0.2);"></div>
+      <span>Stack Data</span>
+     </div>
+     <div class="legend-item">
+      <div class="legend-color" style="background: rgba(102, 126, 234, 0.2);"></div>
+      <span>Active Region</span>
+     </div>
+    </div>
+
+    <div class="memory-display" id="stackMemory"></div>
+
+    <div class="status-box">
+     <h3>Current Status</h3>
+     <p id="statusMessage">Stack Pointer initialized to $01FF. Ready for operations.</p>
+     <p><strong>Stack Pointer:</strong> <span id="spValue">$01FF</span></p>
+     <p><strong>Operations:</strong> <span id="opCount">0</span> push, <span id="pullCount">0</span> pull</p>
+    </div>
+   </div>
+
+   <div class="info-section">
+    <h2>About the 6502 Stack</h2>
+
+    <div class="explanation">
+     The 6502 stack is 256 bytes located at memory addresses <code>$0100-$01FF</code>.
+     The Stack Pointer (SP) register points to the next available location.
+    </div>
+
+    <div class="info-box">
+     <h3>Stack Pointer Initialization</h3>
+     <p>The stack pointer starting address is not predetermined. You must initialize it:</p>
+    </div>
+
+    <div class="code-box">
+     <code>reset:</code><br>
+     &nbsp;&nbsp;<code>ldx #$ff</code> &nbsp;; Load X with $FF<br>
+     &nbsp;&nbsp;<code>txs</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; Transfer X to Stack Pointer<br>
+     &nbsp;&nbsp;; Stack now at $01FF
+    </div>
+
+    <div class="explanation">
+     This initializes the stack pointer to <code>$01FF</code>, the top of the stack memory page.
+    </div>
+
+    <div class="info-box">
+     <h3>Push Operation (PHA)</h3>
+     <p>The <code>PHA</code> instruction pushes the accumulator onto the stack:</p>
+    </div>
+
+    <div class="code-box">
+     <code>lda #$38</code> &nbsp;&nbsp;; Load value into A<br>
+     <code>pha</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; Push A to stack<br>
+     ; SP decrements after write
+    </div>
+
+    <div class="explanation">
+     When you push, the value is written to the address pointed to by SP,
+     then SP is decremented. The stack grows downward from $01FF to $0100.
+    </div>
+
+    <div class="info-box">
+     <h3>Pull Operation (PLA)</h3>
+     <p>The <code>PLA</code> instruction pulls from the stack into the accumulator:</p>
+    </div>
+
+    <div class="code-box">
+     <code>pla</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; Pull from stack to A<br>
+     ; SP increments before read
+    </div>
+
+    <div class="explanation">
+     When you pull, SP is incremented first, then the value at that address
+     is read into the accumulator.
+    </div>
+
+    <div class="info-box">
+     <h3>Stack Overflow Warning</h3>
+     <p>The 6502 stack is only 256 bytes! If you push more than 256 values
+     without pulling, you'll get a <strong>stack overflow</strong> and overwrite
+     important data.</p>
+    </div>
+
+    <div class="explanation">
+     <strong>Important for JSR/RTS:</strong> The <code>JSR</code> (Jump to Subroutine)
+     instruction pushes the return address onto the stack. The <code>RTS</code>
+     (Return from Subroutine) pulls it back. This is why the stack needs RAM to work properly!
+    </div>
+
+    <div class="info-box">
+     <h3>Real-World Example</h3>
+     <p>In the Ben Eater 6502 project, subroutines like <code>lcd_instruction</code>
+     use <code>JSR</code> to call and <code>RTS</code> to return. Without RAM at
+     $0100-$01FF, these instructions will fail because there's nowhere to store
+     the return address!</p>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <script>
+  class StackSimulator {
+   constructor() {
+    this.stackPointer = 0xFF; // Stack pointer value (0x00-0xFF)
+    this.stack = new Array(256).fill(0x00);
+    this.pushCount = 0;
+    this.pullCount = 0;
+    this.accumulatorValue = 0x38; // Default value for PHA
+    this.renderStack();
+   }
+
+   getFullAddress(sp) {
+    return 0x0100 + sp;
+   }
+
+   initializeStackPointer() {
+    this.stackPointer = 0xFF;
+    this.updateStatus('Stack Pointer initialized with LDX #$FF / TXS. SP now at $01FF.');
+    this.renderStack();
+   }
+
+   pushToStack() {
+    if (this.stackPointer === 0x00) {
+     this.updateStatus('⚠️ STACK OVERFLOW! Cannot push - stack is full.');
+     return;
+    }
+
+    // Push: Write to [SP], then decrement SP
+    this.stack[this.stackPointer] = this.accumulatorValue;
+    this.updateStatus(`PHA: Pushed $${this.accumulatorValue.toString(16).toUpperCase().padStart(2, '0')} to $${this.getFullAddress(this.stackPointer).toString(16).toUpperCase().padStart(4, '0')}`);
+    this.stackPointer--;
+    this.pushCount++;
+
+    // Change accumulator value for next push
+    this.accumulatorValue = (this.accumulatorValue + 0x11) & 0xFF;
+
+    this.renderStack();
+   }
+
+   pullFromStack() {
+    if (this.stackPointer === 0xFF) {
+     this.updateStatus('⚠️ STACK UNDERFLOW! Cannot pull - stack is empty.');
+     return;
+    }
+
+    // Pull: Increment SP, then read from [SP]
+    this.stackPointer++;
+    const value = this.stack[this.stackPointer];
+    this.updateStatus(`PLA: Pulled $${value.toString(16).toUpperCase().padStart(2, '0')} from $${this.getFullAddress(this.stackPointer).toString(16).toUpperCase().padStart(4, '0')} into A`);
+    this.stack[this.stackPointer] = 0x00; // Clear after pulling (visualization only)
+    this.pullCount++;
+
+    this.renderStack();
+   }
+
+   resetStack() {
+    this.stackPointer = 0xFF;
+    this.stack = new Array(256).fill(0x00);
+    this.pushCount = 0;
+    this.pullCount = 0;
+    this.accumulatorValue = 0x38;
+    this.updateStatus('Stack reset. All memory cleared, SP at $01FF.');
+    this.renderStack();
+   }
+
+   renderStack() {
+    const container = document.getElementById('stackMemory');
+    let html = '';
+
+    // Show a window around the current stack pointer
+    const startAddr = Math.max(0, this.stackPointer - 5);
+    const endAddr = Math.min(255, this.stackPointer + 10);
+
+    // Show top of stack always
+    if (startAddr > 0xF0) {
+     html += this.renderMemoryRow(0xFF, true);
+     html += this.renderMemoryRow(0xFE, true);
+     html += this.renderMemoryRow(0xFD, true);
+    }
+
+    // Show ellipsis if we're not at the top
+    if (startAddr < 0xF0 && startAddr > 0) {
+     html += '<div class="memory-row" style="text-align: center; color: #666;">...</div>';
+    }
+
+    // Show current region
+    for (let i = startAddr; i <= endAddr; i++) {
+     html += this.renderMemoryRow(i, i >= 0xF0);
+    }
+
+    // Show ellipsis if we're not at the bottom
+    if (endAddr < 0x20) {
+     html += '<div class="memory-row" style="text-align: center; color: #666;">...</div>';
+    }
+
+    // Show bottom region
+    if (endAddr < 0x10) {
+     html += this.renderMemoryRow(0x02, false);
+     html += this.renderMemoryRow(0x01, false);
+     html += this.renderMemoryRow(0x00, false);
+    }
+
+    container.innerHTML = html;
+
+    // Update status values
+    document.getElementById('spValue').textContent = '$' + this.getFullAddress(this.stackPointer).toString(16).toUpperCase().padStart(4, '0');
+    document.getElementById('opCount').textContent = this.pushCount;
+    document.getElementById('pullCount').textContent = this.pullCount;
+   }
+
+   renderMemoryRow(index, highlightRegion) {
+    const addr = this.getFullAddress(index);
+    const value = this.stack[index];
+    const isStackPointer = (index === this.stackPointer);
+    const hasData = (value !== 0x00);
+
+    let rowClass = 'memory-row';
+    let arrow = '    ';
+
+    if (isStackPointer) {
+     rowClass += ' stack-pointer';
+     arrow = 'SP →';
+    } else if (hasData) {
+     rowClass += ' stack-data';
+    } else if (highlightRegion) {
+     rowClass += ' highlight';
+    }
+
+    let annotation = '';
+    if (isStackPointer && this.stackPointer === 0xFF) {
+     annotation = '  ; Stack empty (initialized)';
+    } else if (isStackPointer) {
+     annotation = '  ; Next push location';
+    } else if (hasData) {
+     annotation = '  ; Data on stack';
+    }
+
+    return `
+     <div class="${rowClass}">
+      <span class="memory-address">${arrow} $${addr.toString(16).toUpperCase().padStart(4, '0')}</span>
+      <span class="memory-value">$${value.toString(16).toUpperCase().padStart(2, '0')}</span>
+      <span class="memory-instruction">${annotation}</span>
+     </div>
+    `;
+   }
+
+   updateStatus(message) {
+    document.getElementById('statusMessage').textContent = message;
+   }
+  }
+
+  // Initialize the simulator
+  const stackSim = new StackSimulator();
+ </script>
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>

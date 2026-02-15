@@ -1,0 +1,662 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/page.html" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+ <title>Logic Gate Truth Table Generator</title>
+ <style>
+  * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+
+  body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   background: linear-gradient(135deg, #1e3c72eb 0%, #2a5298eb 50%);
+   padding: 20px;
+   min-height: 100vh;
+  }
+
+  .container {
+   max-width: 1400px;
+   margin: 0 auto;
+   background: white;
+   border-radius: 10px;
+   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+   overflow: hidden;
+  }
+
+  .header {
+   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+   color: white;
+   padding: 20px 30px;
+  }
+
+  .header h1 {
+   color: white;
+   font-size: 24px;
+   font-weight: 600;
+   margin-bottom: 5px;
+  }
+
+  .header .subtitle {
+   color: white;
+   font-size: 14px;
+   opacity: 0.9;
+  }
+
+  .content-wrapper {
+   display: flex;
+   flex-wrap: wrap;
+  }
+
+  .left-panel {
+   flex: 1;
+   min-width: 300px;
+   padding: 30px;
+   border-right: 2px solid #e0e0e0;
+  }
+
+  .right-panel {
+   width: 500px;
+   padding: 30px;
+   background: #f8f9fa;
+  }
+
+  h2 {
+   font-size: 18px;
+   color: #2a5298;
+   margin-bottom: 15px;
+   padding-bottom: 10px;
+   border-bottom: 2px solid #667eea;
+  }
+
+  .gate-selector {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+   gap: 10px;
+   margin-bottom: 20px;
+  }
+
+  .gate-btn {
+   padding: 15px;
+   border: 2px solid #d0d7de;
+   border-radius: 6px;
+   background: white;
+   cursor: pointer;
+   font-size: 14px;
+   font-weight: 600;
+   transition: all 0.2s;
+   color: #2a5298;
+  }
+
+  .gate-btn:hover {
+   border-color: #2a5298;
+   background: #e3f2fd;
+   transform: translateY(-2px);
+  }
+
+  .gate-btn.active {
+   background: #2a5298;
+   color: white;
+   border-color: #2a5298;
+  }
+
+  .inputs-section {
+   background: #f8f9fa;
+   border-radius: 8px;
+   padding: 20px;
+   margin-bottom: 20px;
+  }
+
+  .inputs-section label {
+   display: block;
+   font-weight: 600;
+   color: #2a5298;
+   margin-bottom: 10px;
+   font-size: 14px;
+  }
+
+  .inputs-section select {
+   width: 100%;
+   padding: 10px;
+   border: 2px solid #d0d7de;
+   border-radius: 6px;
+   font-size: 14px;
+   background: white;
+   cursor: pointer;
+  }
+
+  .truth-table {
+   width: 100%;
+   border-collapse: collapse;
+   margin-top: 20px;
+   background: white;
+   border-radius: 8px;
+   overflow: hidden;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .truth-table th {
+   background: #2a5298;
+   color: white;
+   padding: 12px;
+   text-align: center;
+   font-weight: 600;
+   font-size: 14px;
+  }
+
+  .truth-table td {
+   padding: 12px;
+   text-align: center;
+   border-bottom: 1px solid #d0e0e0;
+   font-family: 'Courier New', monospace;
+   font-size: 14px;
+  }
+
+  .truth-table tr:nth-child(even) {
+   background: #f8f9fa;
+  }
+
+  .truth-table tr:hover {
+   background: #e3f2fd;
+  }
+
+  .truth-table .output-col {
+   background: #e3f2fd;
+   font-weight: 600;
+   color: #1976D2;
+  }
+
+  .truth-table .output-true {
+   background: #c8e6c9;
+   color: #2e7d32;
+   font-weight: 600;
+  }
+
+  .truth-table .output-false {
+   background: #ffcdd2;
+   color: #c62828;
+   font-weight: 600;
+  }
+
+  .gate-visual {
+   text-align: center;
+   padding: 20px;
+   background: white;
+   border-radius: 8px;
+   margin-bottom: 20px;
+  }
+
+  .gate-visual svg {
+   max-width: 200px;
+   height: auto;
+  }
+
+  .gate-visual .gate-name {
+   font-size: 18px;
+   font-weight: 600;
+   color: #2a5298;
+   margin-top: 10px;
+  }
+
+  .gate-visual .gate-description {
+   font-size: 13px;
+   color: #555;
+   margin-top: 5px;
+  }
+
+  .info-section {
+   background: white;
+   border-radius: 8px;
+   padding: 20px;
+   margin-bottom: 20px;
+  }
+
+  .info-section h3 {
+   font-size: 14px;
+   color: #2a5298;
+   margin-bottom: 10px;
+   font-weight: 600;
+  }
+
+  .info-section p {
+   font-size: 13px;
+   line-height: 1.6;
+   color: #555;
+   margin-bottom: 10px;
+  }
+
+  .info-section ul {
+   padding-left: 20px;
+   margin-bottom: 10px;
+  }
+
+  .info-section li {
+   font-size: 13px;
+   line-height: 1.6;
+   color: #555;
+   margin-bottom: 5px;
+  }
+
+  .info-box {
+   background: #fff3cd;
+   border-left: 4px solid #ffc107;
+   padding: 15px;
+   border-radius: 4px;
+   margin: 15px 0;
+  }
+
+  .info-box h3 {
+   font-size: 14px;
+   color: #856404;
+   margin-bottom: 8px;
+  }
+
+  .info-box p {
+   font-size: 13px;
+   color: #555;
+   line-height: 1.5;
+   margin: 5px 0;
+  }
+
+  .formula {
+   background: #1e1e1e;
+   color: #d4d4d4;
+   padding: 15px;
+   border-radius: 6px;
+   font-family: 'Courier New', monospace;
+   font-size: 14px;
+   margin: 10px 0;
+   text-align: center;
+  }
+
+  @media (max-width: 1024px) {
+   .content-wrapper {
+    flex-direction: column;
+   }
+
+   .left-panel {
+    border-right: none;
+    border-bottom: 2px solid #e0e0e0;
+   }
+
+   .right-panel {
+    width: 100%;
+   }
+  }
+ </style>
+
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+     <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#resistorTools" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#ledAndPowerTools" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#components" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-breadboard-simulator.html" class="nav-link">Breadboard Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/computerScience/index.html" class="nav-link dropdown-toggle"><span>💻</span> <span>Computer Science</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-number-converter.html" class="nav-link">Number Converter</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-logic-gates.html" class="nav-link">Logic Gates</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-stackPointer.html" class="nav-link">Stack Pointer Visualizer</a>
+     </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+ <div class="container">
+  <div class="header">
+   <h1>⚡ Logic Gate Truth Table Generator</h1>
+   <div class="subtitle">Explore Digital Logic Gates and Boolean Algebra</div>
+  </div>
+
+  <div class="content-wrapper">
+   <div class="left-panel">
+    <h2>Select Logic Gate</h2>
+
+    <div class="gate-selector">
+     <button class="gate-btn active" onclick="logicSim.selectGate('AND')">AND</button>
+     <button class="gate-btn" onclick="logicSim.selectGate('OR')">OR</button>
+     <button class="gate-btn" onclick="logicSim.selectGate('NOT')">NOT</button>
+     <button class="gate-btn" onclick="logicSim.selectGate('NAND')">NAND</button>
+     <button class="gate-btn" onclick="logicSim.selectGate('NOR')">NOR</button>
+     <button class="gate-btn" onclick="logicSim.selectGate('XOR')">XOR</button>
+     <button class="gate-btn" onclick="logicSim.selectGate('XNOR')">XNOR</button>
+    </div>
+
+    <div class="inputs-section">
+     <label for="inputCount">Number of Inputs (for multi-input gates):</label>
+     <select id="inputCount" onchange="logicSim.updateInputCount()">
+      <option value="2" selected>2 inputs</option>
+      <option value="3">3 inputs</option>
+      <option value="4">4 inputs</option>
+     </select>
+    </div>
+
+    <div class="gate-visual" id="gateVisual">
+     <div class="gate-name">AND Gate</div>
+     <div class="gate-description">Output is TRUE only when all inputs are TRUE</div>
+     <div class="formula">Y = A · B</div>
+    </div>
+
+    <h2>Truth Table</h2>
+    <div id="truthTableContainer"></div>
+   </div>
+
+   <div class="right-panel">
+    <h2>Gate Information</h2>
+
+    <div class="info-section" id="gateInfo">
+     <h3>AND Gate</h3>
+     <p>The AND gate outputs TRUE (1) only when all inputs are TRUE (1). If any input is FALSE (0), the output is FALSE.</p>
+     <p><strong>Real-world analogy:</strong> Two switches in series - both must be closed for the light to turn on.</p>
+     <p><strong>Boolean algebra:</strong> Y = A · B (or A AND B)</p>
+     <p><strong>Applications:</strong></p>
+     <ul>
+      <li>Safety systems requiring multiple conditions</li>
+      <li>Masking operations in processors</li>
+      <li>Address decoders in memory circuits</li>
+     </ul>
+    </div>
+
+    <div class="info-box">
+     <h3>Boolean Algebra Basics</h3>
+     <p>Boolean algebra uses binary values (0 and 1) to represent FALSE and TRUE. Logic gates implement Boolean operations in hardware.</p>
+    </div>
+
+    <div class="info-section">
+     <h3>Gate Symbols</h3>
+     <p><strong>AND:</strong> D-shaped gate (multiplication)</p>
+     <p><strong>OR:</strong> Shield-shaped gate (addition)</p>
+     <p><strong>NOT:</strong> Triangle with circle (inversion)</p>
+     <p><strong>NAND:</strong> AND gate with circle at output (universal gate)</p>
+     <p><strong>NOR:</strong> OR gate with circle at output (universal gate)</p>
+     <p><strong>XOR:</strong> Shield with extra line (exclusive OR)</p>
+     <p><strong>XNOR:</strong> XOR with circle at output (equality)</p>
+    </div>
+
+    <div class="info-box">
+     <h3>Universal Gates</h3>
+     <p>NAND and NOR gates are called "universal gates" because any Boolean function can be implemented using only NAND gates or only NOR gates.</p>
+    </div>
+
+    <div class="info-section">
+     <h3>De Morgan's Laws</h3>
+     <p>Important identities in Boolean algebra:</p>
+     <div class="formula">NOT(A AND B) = (NOT A) OR (NOT B)</div>
+     <div class="formula">NOT(A OR B) = (NOT A) AND (NOT B)</div>
+     <p>These laws show the relationship between AND/OR gates and their negated forms (NAND/NOR).</p>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <script>
+  class LogicSimulator {
+   constructor() {
+    this.currentGate = 'AND';
+    this.inputCount = 2;
+    this.generateTruthTable();
+   }
+
+   selectGate(gate) {
+    this.currentGate = gate;
+
+    // Update button states
+    document.querySelectorAll('.gate-btn').forEach(btn => {
+     btn.classList.remove('active');
+     if (btn.textContent === gate) {
+      btn.classList.add('active');
+     }
+    });
+
+    // Disable input count for NOT gate
+    const inputSelect = document.getElementById('inputCount');
+    inputSelect.disabled = (gate === 'NOT');
+    if (gate === 'NOT') {
+     this.inputCount = 1;
+    }
+
+    this.updateGateInfo();
+    this.generateTruthTable();
+   }
+
+   updateInputCount() {
+    if (this.currentGate === 'NOT') return;
+    this.inputCount = parseInt(document.getElementById('inputCount').value);
+    this.generateTruthTable();
+   }
+
+   updateGateInfo() {
+    const gateInfos = {
+     'AND': {
+      name: 'AND Gate',
+      description: 'Output is TRUE only when all inputs are TRUE',
+      formula: 'Y = A · B',
+      text: 'The AND gate outputs TRUE (1) only when all inputs are TRUE (1). If any input is FALSE (0), the output is FALSE.',
+      analogy: 'Two switches in series - both must be closed for the light to turn on.',
+      algebra: 'Y = A · B (or A AND B)',
+      applications: ['Safety systems requiring multiple conditions', 'Masking operations in processors', 'Address decoders in memory circuits']
+     },
+     'OR': {
+      name: 'OR Gate',
+      description: 'Output is TRUE when at least one input is TRUE',
+      formula: 'Y = A + B',
+      text: 'The OR gate outputs TRUE (1) when at least one input is TRUE (1). The output is FALSE only when all inputs are FALSE.',
+      analogy: 'Two switches in parallel - either switch can turn on the light.',
+      algebra: 'Y = A + B (or A OR B)',
+      applications: ['Alert systems with multiple triggers', 'Combining multiple signals', 'Priority encoders']
+     },
+     'NOT': {
+      name: 'NOT Gate (Inverter)',
+      description: 'Output is the inverse of the input',
+      formula: 'Y = Ā',
+      text: 'The NOT gate (inverter) outputs the opposite of its input. If the input is TRUE (1), the output is FALSE (0), and vice versa.',
+      analogy: 'A switch that turns off a light when pressed and turns it on when released.',
+      algebra: 'Y = Ā (or NOT A)',
+      applications: ['Signal inversion', 'Creating complementary signals', 'Building blocks for other gates']
+     },
+     'NAND': {
+      name: 'NAND Gate',
+      description: 'Output is FALSE only when all inputs are TRUE',
+      formula: 'Y = ‾(A · B)',
+      text: 'The NAND gate is the inverse of AND. It outputs FALSE only when all inputs are TRUE. This is a universal gate.',
+      analogy: 'A normally-closed relay that opens only when all conditions are met.',
+      algebra: 'Y = ‾(A · B) (NOT(A AND B))',
+      applications: ['Universal logic - can build any circuit', 'Memory cells (SR latches)', 'Most common gate in integrated circuits']
+     },
+     'NOR': {
+      name: 'NOR Gate',
+      description: 'Output is TRUE only when all inputs are FALSE',
+      formula: 'Y = ‾(A + B)',
+      text: 'The NOR gate is the inverse of OR. It outputs TRUE only when all inputs are FALSE. This is also a universal gate.',
+      analogy: 'A light that is on only when no switches are pressed.',
+      algebra: 'Y = ‾(A + B) (NOT(A OR B))',
+      applications: ['Universal logic - can build any circuit', 'Memory cells', 'Detecting all-zero conditions']
+     },
+     'XOR': {
+      name: 'XOR Gate (Exclusive OR)',
+      description: 'Output is TRUE when inputs are different',
+      formula: 'Y = A ⊕ B',
+      text: 'The XOR gate outputs TRUE when the inputs are different. For two inputs, it\'s TRUE when exactly one input is TRUE.',
+      analogy: 'A light controlled by two switches - flipping either switch toggles the light.',
+      algebra: 'Y = A ⊕ B (A XOR B)',
+      applications: ['Binary addition (sum bit)', 'Parity checking', 'Encryption algorithms', 'Comparators']
+     },
+     'XNOR': {
+      name: 'XNOR Gate (Exclusive NOR)',
+      description: 'Output is TRUE when inputs are the same',
+      formula: 'Y = ‾(A ⊕ B)',
+      text: 'The XNOR gate (equality gate) outputs TRUE when all inputs are the same. It\'s the inverse of XOR.',
+      analogy: 'A detector that signals when two conditions match.',
+      algebra: 'Y = ‾(A ⊕ B) (NOT(A XOR B))',
+      applications: ['Equality comparators', 'Error detection', 'Digital communication']
+     }
+    };
+
+    const info = gateInfos[this.currentGate];
+
+    document.querySelector('.gate-name').textContent = info.name;
+    document.querySelector('.gate-description').textContent = info.description;
+    document.querySelector('.formula').textContent = info.formula;
+
+    const gateInfoDiv = document.getElementById('gateInfo');
+    let applicationsHTML = '<ul>';
+    info.applications.forEach(app => {
+     applicationsHTML += `<li>${app}</li>`;
+    });
+    applicationsHTML += '</ul>';
+
+    gateInfoDiv.innerHTML = `
+     <h3>${info.name}</h3>
+     <p>${info.text}</p>
+     <p><strong>Real-world analogy:</strong> ${info.analogy}</p>
+     <p><strong>Boolean algebra:</strong> ${info.algebra}</p>
+     <p><strong>Applications:</strong></p>
+     ${applicationsHTML}
+    `;
+   }
+
+   generateTruthTable() {
+    const container = document.getElementById('truthTableContainer');
+    const rows = Math.pow(2, this.inputCount);
+
+    let html = '<table class="truth-table"><thead><tr>';
+
+    // Header
+    const inputs = [];
+    for (let i = 0; i < this.inputCount; i++) {
+     const inputName = String.fromCharCode(65 + i); // A, B, C, D
+     inputs.push(inputName);
+     html += `<th>${inputName}</th>`;
+    }
+    html += '<th class="output-col">Output</th></tr></thead><tbody>';
+
+    // Rows
+    for (let i = 0; i < rows; i++) {
+     html += '<tr>';
+
+     // Input values
+     const inputValues = [];
+     for (let j = this.inputCount - 1; j >= 0; j--) {
+      const bit = (i >> j) & 1;
+      inputValues.push(bit);
+      html += `<td>${bit}</td>`;
+     }
+
+     // Output value
+     const output = this.calculateOutput(inputValues);
+     const outputClass = output ? 'output-true' : 'output-false';
+     html += `<td class="${outputClass}">${output ? 1 : 0}</td>`;
+
+     html += '</tr>';
+    }
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+   }
+
+   calculateOutput(inputs) {
+    switch(this.currentGate) {
+     case 'AND':
+      return inputs.every(v => v === 1);
+     case 'OR':
+      return inputs.some(v => v === 1);
+     case 'NOT':
+      return inputs[0] === 0;
+     case 'NAND':
+      return !inputs.every(v => v === 1);
+     case 'NOR':
+      return !inputs.some(v => v === 1);
+     case 'XOR':
+      return inputs.filter(v => v === 1).length % 2 === 1;
+     case 'XNOR':
+      return inputs.filter(v => v === 1).length % 2 === 0;
+     default:
+      return false;
+    }
+   }
+  }
+
+  // Initialize the simulator
+  const logicSim = new LogicSimulator();
+ </script>
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>

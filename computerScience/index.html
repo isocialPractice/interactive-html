@@ -4,30 +4,31 @@
 <link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
 <link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
 <!-- InstanceBeginEditable name="head" -->
-  <title>555 Timer Tools | Interactive Calculators & Simulators</title>
-  <meta name="description" content="Comprehensive collection of 555 timer calculators and simulators. Learn about astable, monostable, and bistable modes with interactive visualizations.">
-  <style>
-   * {
+ <title>Computer Science Interactive Tools | Binary, Logic Gates & Programming Concepts</title>
+ <meta name="description" content="Interactive tools for learning computer science fundamentals. Explore binary conversion, logic gates, programming concepts, and more with visual, hands-on demonstrations.">
+ <style>
+  * {
    margin: 0;
    padding: 0;
    box-sizing: border-box;
   }
 
   body {
+   background: linear-gradient(0deg, #2a5298 0%, white 50%);
    font-family: 'Inter', 'Segoe UI', -apple-system, system-ui, sans-serif;
-   background: linear-gradient(180deg, rgb(250, 250, 255) 0%, rgb(245, 245, 255) 100%);
-   color: darkslateblue;
+   color: #1A1A1A;
    line-height: 1.6;
    min-height: 100vh;
   }
 
   header {
-   background: linear-gradient(180deg, white 0%, lightskyblue 25%, darkblue 125%);
+   background: linear-gradient(180deg, white 0%, #4a7bb7 65%, #2a5298 90%);
    color: white;
-   box-shadow: 0 4px 16px rgba(255, 140, 0, 0.3);
+   box-shadow: 0 4px 16px rgba(42, 82, 152, 0.3);
    padding: 48px 0;
    margin-bottom: 48px;
   }
+  header h1 { color: #1e3c72; }
 
   .header-content {
    max-width: 1200px;
@@ -43,6 +44,8 @@
    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
+  a { color: #2a5298 !important; }
+  a.nav-link { color: #6c757d !important; }
   .tagline {
    font-size: 20px;
    font-weight: 500;
@@ -59,17 +62,17 @@
    background: white;
    border-radius: 16px;
    padding: 32px;
-   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-   border-left: 4px solid darkslateblue;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+   border-left: 4px solid #2a5298;
   }
 
-   .intro-card h2 {
-   color: darkslateblue;
+  .intro-card h2 {
+   color: #2a5298;
    font-size: 24px;
    margin-bottom: 16px;
   }
 
-   .intro-card p {
+  .intro-card p {
    color: #6C757D;
    line-height: 1.8;
    margin-bottom: 12px;
@@ -93,7 +96,7 @@
    border-radius: 16px;
    padding: 28px;
    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-   border: 2px solid darkslateblue;
+   border: 2px solid #d4e3f7;
    transition: all 0.3s;
    text-decoration: none;
    color: inherit;
@@ -102,14 +105,14 @@
 
   .tool-card:hover {
    transform: translateY(-6px);
-   box-shadow: 0 12px 32px rgba(0, 123, 255, 0.25);
-   border-color: lightskyblue;
+   box-shadow: 0 12px 32px rgba(42, 82, 152, 0.25);
+   border-color: #2a5298;
   }
 
   .tool-icon {
    width: 64px;
    height: 64px;
-   background: linear-gradient(180deg, lightskyblue 0%, darkblue 100%);
+   background: linear-gradient(135deg, #4a7bb7 0%, #2a5298 100%);
    border-radius: 14px;
    display: flex;
    align-items: center;
@@ -117,7 +120,7 @@
    font-size: 32px;
    margin-bottom: 20px;
    color: #FFFFFF;
-   box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+   box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
   }
 
   .tool-title {
@@ -140,7 +143,7 @@
    padding-left: 0;
   }
 
-   .tool-features li {
+  .tool-features li {
    color: #495057;
    font-size: 14px;
    padding: 6px 0;
@@ -148,17 +151,17 @@
    position: relative;
   }
 
-   .tool-features li:before {
+  .tool-features li:before {
    content: "✓";
    position: absolute;
    left: 0;
-   color: darkslateblue;
+   color: #2a5298;
    font-weight: bold;
   }
 
   .tool-badge {
    display: inline-block;
-   background: linear-gradient(180deg, lightskyblue 0%, darkblue 100%);
+   background: linear-gradient(135deg, #4a7bb7 0%, #2a5298 100%);
    color: white;
    padding: 6px 14px;
    border-radius: 8px;
@@ -167,44 +170,42 @@
    margin-top: 12px;
   }
 
-  .learning-section {
+  .coming-soon {
    background: white;
    border-radius: 16px;
    padding: 32px;
-   margin-bottom: 48px;
+   text-align: center;
    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
 
-   .learning-section h2 {
-   color: darkslateblue;
+  .coming-soon h2 {
+   color: #1e3c72;
    font-size: 28px;
-   margin-bottom: 24px;
+   margin-bottom: 16px;
   }
 
-  .mode-grid {
-   display: grid;
-   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-   gap: 20px;
-   margin-top: 24px;
-  }
-
-  .mode-card {
-   background: #b0c4de1f;
-   border-radius: 12px;
-   padding: 20px;
-   border: 1px solid darkslateblue;
-  }
-
-   .mode-card h3 {
-   color: darkslateblue;
-   font-size: 18px;
-   margin-bottom: 8px;
-  }
-
-   .mode-card p {
-   color: #6C757D;
-   font-size: 14px;
+  .coming-soon p {
+   color: #2a5298;
+   font-size: 16px;
    line-height: 1.6;
+  }
+
+  .coming-soon-list {
+   list-style: none;
+   margin: 24px 0;
+   padding: 0;
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+   gap: 12px;
+  }
+
+  .coming-soon-list li {
+   color: #1f2328 !important;
+   font-size: 15px;
+   padding: 12px;
+   background: #F8F9FA;
+   border-radius: 8px;
+   border-left: 3px solid #2a5298;
   }
 
   footer {
@@ -227,32 +228,31 @@
    margin-top: 16px;
   }
 
-   .footer-links a {
-   color: darkslateblue;
+  .footer-links a {
+   color: #2a5298;
    text-decoration: none;
    margin: 0 12px;
    font-weight: 500;
   }
 
-   .footer-links a:hover {
+  .footer-links a:hover {
    text-decoration: underline;
   }
 
-   @media (max-width: 768px) {
-  h1 {
-   font-size: 36px;
-  }
+  @media (max-width: 768px) {
+   h1 {
+    font-size: 36px;
+   }
 
-  .tools-grid {
-   grid-template-columns: 1fr;
-  }
+   .tools-grid {
+    grid-template-columns: 1fr;
+   }
 
-  .mode-grid {
-   grid-template-columns: 1fr;
+   .coming-soon-list {
+    grid-template-columns: 1fr;
+   }
   }
-  }
-  </style>
-
+ </style>
 <!-- InstanceEndEditable -->
 </head>
 
@@ -323,112 +323,96 @@
  </nav>
 
 <!-- InstanceBeginEditable name="page" -->
-  <header style="margin-top: -72px; padding-top: 96px;">
-   <div class="header-content">
-    <h1>⏱️ 555 Timer Tools</h1>
-    <p class="tagline">Master the classic 555 timer IC with interactive simulators and calculators</p>
-   </div>
-  </header>
+ <header style="margin-top: -72px; padding-top: 96px;">
+  <div class="header-content">
+   <h1>💻 Computer Science Tools</h1>
+   <p class="tagline">Interactive tools for learning programming fundamentals and computer science concepts</p>
+  </div>
+ </header>
 
-  <div class="intro-section">
-   <div class="intro-card">
-    <h2>About the 555 Timer</h2>
-    <p>The 555 timer IC is one of the most popular and versatile integrated circuits ever created. Since its introduction in 1972, it has been used in countless applications ranging from simple LED flashers to complex timing circuits and pulse generators.</p>
-    <p>Our interactive tools help you understand and design circuits using the 555 timer in its three primary operating modes: <strong>astable</strong> (oscillator), <strong>monostable</strong> (one-shot), and <strong>bistable</strong> (flip-flop).</p>
-   </div>
+ <div class="intro-section">
+  <div class="intro-card">
+   <h2>Learn by Doing</h2>
+   <p>Computer science concepts come alive when you can see them in action. Our interactive tools help you understand binary systems, logic gates, memory management, and programming fundamentals through hands-on experimentation.</p>
+   <p>Whether you're studying for a course, building your first computer, or exploring low-level programming, these visualizations make complex concepts clear and intuitive.</p>
+  </div>
+ </div>
+
+ <div class="container">
+  <!-- Current Tools -->
+  <div class="tools-grid">
+   <a href="computerScience-number-converter.html" class="tool-card">
+    <div class="tool-icon">🔢</div>
+    <h3 class="tool-title">Number System Converter</h3>
+    <p class="tool-description">Convert between binary, hexadecimal, decimal, octal, and ASCII characters. Understand how computers represent numbers and text at the fundamental level.</p>
+    <ul class="tool-features">
+     <li>Binary ↔ Hex ↔ Decimal ↔ Octal</li>
+     <li>ASCII/UTF-8 character encoding</li>
+     <li>Byte-grouped binary display</li>
+     <li>Powers of 2 reference table</li>
+     <li>Real-time conversion</li>
+    </ul>
+    <span class="tool-badge">Number Systems</span>
+   </a>
+
+   <a href="computerScience-logic-gates.html" class="tool-card">
+    <div class="tool-icon">⚡</div>
+    <h3 class="tool-title">Logic Gate Truth Tables</h3>
+    <p class="tool-description">Explore digital logic gates and Boolean algebra. Generate truth tables for AND, OR, NOT, NAND, NOR, XOR, and XNOR gates with multiple inputs.</p>
+    <ul class="tool-features">
+     <li>All 7 fundamental logic gates</li>
+     <li>Support for 2-4 input gates</li>
+     <li>Interactive truth tables</li>
+     <li>Boolean algebra formulas</li>
+     <li>Real-world applications</li>
+    </ul>
+    <span class="tool-badge">Digital Logic</span>
+   </a>
+
+   <a href="computerScience-stackPointer.html" class="tool-card">
+    <div class="tool-icon">🔄</div>
+    <h3 class="tool-title">6502 Stack Pointer Visualizer</h3>
+    <p class="tool-description">Understand how the 6502 processor's stack works. Visualize push/pull operations and see why RAM is essential for subroutine calls in the Ben Eater 6502 computer.</p>
+    <ul class="tool-features">
+     <li>Interactive stack memory view</li>
+     <li>PHA/PLA operations</li>
+     <li>Stack pointer tracking</li>
+     <li>JSR/RTS explanation</li>
+     <li>Stack overflow detection</li>
+    </ul>
+    <span class="tool-badge">Assembly & Architecture</span>
+   </a>
   </div>
 
-  <div class="container">
-   <!-- Main Tools Grid -->
-   <div class="tools-grid">
-    <a href="555-timer-simulator.html" class="tool-card">
-     <div class="tool-icon">⚙️</div>
-     <h3 class="tool-title">555 Timer Interactive Simulator</h3>
-     <p class="tool-description">The most comprehensive 555 timer tool. Explore all three operating modes with real-time waveform visualization and dynamic component adjustments.</p>
-     <ul class="tool-features">
-      <li>Astable, monostable, and bistable modes</li>
-      <li>Real-time waveform visualization</li>
-      <li>Interactive component value adjustments</li>
-      <li>Pin-out diagram and circuit schematics</li>
-      <li>Educational explanations for each mode</li>
-     </ul>
-     <span class="tool-badge">🌟 Featured</span>
-    </a>
+  <!-- Coming Soon -->
+  <div class="coming-soon">
+   <h2>🚀 More Computer Science Tools Coming Soon</h2>
+   <p>We're building more interactive learning tools to help you master computer science fundamentals:</p>
+   <ul class="coming-soon-list">
+    <li>🧮 Two's Complement Calculator</li>
+    <li>📊 Sorting Algorithm Visualizer</li>
+    <li>🌳 Data Structure Explorer (Trees, Graphs, Lists)</li>
+    <li>⚙️ CPU Instruction Simulator</li>
+    <li>💾 Memory Management Visualizer</li>
+    <li>🔐 Encryption/Hashing Demos</li>
+    <li>📈 Big O Complexity Calculator</li>
+    <li>🔄 State Machine Designer</li>
+    <li>🧩 Bitwise Operations Playground</li>
+    <li>📚 Call Stack Debugger</li>
+   </ul>
+   <p style="margin-top: 24px; font-style: italic;">Have a suggestion? Let us know on <a href="https://github.com/isocialPractice/interactive-html" target="_blank" style="color: #2a5298; font-weight: 600;">GitHub</a>!</p>
+  </div>
+ </div>
 
-    <a href="555-astable-calculator.html" class="tool-card">
-     <div class="tool-icon">📊</div>
-     <h3 class="tool-title">555 Astable Calculator</h3>
-     <p class="tool-description">Precision calculator for designing 555 astable oscillator circuits. Calculate frequency, duty cycle, and timing component values.</p>
-     <ul class="tool-features">
-      <li>Frequency range from Hz to MHz</li>
-      <li>Duty cycle calculation and adjustment</li>
-      <li>Component value recommendations</li>
-      <li>Timing period visualization</li>
-      <li>Standard resistor/capacitor suggestions</li>
-     </ul>
-     <span class="tool-badge">Calculator</span>
-    </a>
-
-    <a href="555-monostable-simulator.html" class="tool-card">
-     <div class="tool-icon">⏲️</div>
-     <h3 class="tool-title">555 Monostable Simulator</h3>
-     <p class="tool-description">Interactive one-shot pulse generator simulator. Perfect for learning and designing time-delay and pulse-width circuits.</p>
-     <ul class="tool-features">
-      <li>Adjustable pulse width timing</li>
-      <li>Trigger input visualization</li>
-      <li>Output waveform display</li>
-      <li>Component value calculator</li>
-      <li>Retriggering behavior simulation</li>
-     </ul>
-     <span class="tool-badge">Simulator</span>
-    </a>
-
-    <a href="555-logic-simulator.html" class="tool-card">
-     <div class="tool-icon">💻</div>
-     <h3 class="tool-title">Computer Clock Logic Simulator</h3>
-     <p class="tool-description">Advanced 555-based computer clock simulator with adjustable frequency and logic level visualization. Ideal for digital design education.</p>
-     <ul class="tool-features">
-      <li>Variable clock frequency control</li>
-      <li>Logic level visualization</li>
-      <li>Pulse train generation</li>
-      <li>Timing diagram display</li>
-      <li>Perfect for digital logic learning</li>
-     </ul>
-     <span class="tool-badge">Advanced</span>
-    </a>
-   </div>
-
-   <!-- Learning Section -->
-   <div class="learning-section">
-    <h2>Understanding 555 Timer Modes</h2>
-    <div class="mode-grid">
-     <div class="mode-card">
-      <h3>⚡ Astable Mode</h3>
-      <p><strong>Continuous oscillation mode</strong> - Generates a continuous rectangular waveform. Used in LED flashers, tone generators, and clock signals. Output frequency and duty cycle are controlled by two resistors and one capacitor.</p>
-     </div>
-
-     <div class="mode-card">
-      <h3>⏱️ Monostable Mode</h3>
-      <p><strong>One-shot pulse mode</strong> - Produces a single pulse of fixed duration when triggered. Perfect for time delays, touch switches, and pulse-width generation. Output timing is determined by one resistor and one capacitor.</p>
-     </div>
-
-     <div class="mode-card">
-      <h3>🔄 Bistable Mode</h3>
-      <p><strong>Flip-flop mode</strong> - Acts as a set-reset latch. Output toggles between high and low states based on trigger and reset inputs. Used in debounce circuits and simple memory applications.</p>
-     </div>
-    </div>
+ <footer>
+  <div class="footer-content">
+   <p>Computer Science Tools - Part of the Interactive Tools collection. Licensed under <a href="../LICENSE" style="color: #2a5298; text-decoration: none; font-weight: 500;">MIT</a>.</p>
+   <div class="footer-links">
+    <a href="../index.html">← Back to All Tools</a>
+    <a href="https://github.com/isocialPractice/interactive-html" target="_blank">GitHub</a>
    </div>
   </div>
-
-  <footer>
-   <div class="footer-content">
-    <p>555 Timer Tools - Part of the Interactive Electronics Tools collection. Licensed under <a href="../LICENSE" style="color: darkslateblue; text-decoration: none; font-weight: 500;">MIT</a>.</p>
-    <div class="footer-links">
-     <a href="../index.html">← Back to All Tools</a>
-     <a href="https://github.com/isocialPractice/interactive-html" target="_blank">GitHub</a>
-    </div>
-   </div>
-  </footer>
+ </footer>
 
 <!-- InstanceEndEditable -->
 <script>
