@@ -66,6 +66,8 @@
       <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-number-converter.html" class="nav-link">Number Converter</a>
       <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-logic-gates.html" class="nav-link">Logic Gates</a>
       <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-stackPointer.html" class="nav-link">Stack Pointer Visualizer</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-binaryHexMemoryMapConverter.html" class="nav-link">Binary/Hex Memory Map</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-chipTimingWaveform.html" class="nav-link">Chip Timing Waveform</a>
      </div>
     </li>
    </ul>

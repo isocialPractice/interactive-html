@@ -26,6 +26,8 @@ Or visit any tool directly from the list below.
 - **[Number System Converter](computerScience/computerScience-number-converter.html)** - Convert between binary, hexadecimal, decimal, octal, and ASCII characters
 - **[Logic Gate Truth Tables](computerScience/computerScience-logic-gates.html)** - Explore digital logic gates and Boolean algebra with interactive truth tables
 - **[6502 Stack Pointer Visualizer](computerScience/computerScience-stackPointer.html)** - Understand 6502 processor stack operations and memory management
+- **[Binary/Hex Memory Map Converter](computerScience/computerScience-binaryHexMemoryMapConverter.html)** - Interactive memory address decoder for the Ben Eater 6502 computer
+- **[Chip Timing Waveform Analyzer](computerScience/computerScience-chipTimingWaveform.html)** - Visual timing diagram analyzer for RAM and CPU bus timing
 
 ### General Tools
 
@@ -155,7 +157,9 @@ interactive-html/
 │   ├── index.html                        # Computer Science tools landing page
 │   ├── computerScience-number-converter.html    # Number system converter
 │   ├── computerScience-logic-gates.html         # Logic gate truth tables
-│   └── computerScience-stackPointer.html        # 6502 stack pointer visualizer
+│   ├── computerScience-stackPointer.html        # 6502 stack pointer visualizer
+│   ├── computerScience-binaryHexMemoryMapConverter.html  # Binary/Hex memory map converter
+│   └── computerScience-chipTimingWaveform.html          # Chip timing waveform analyzer
 ├── general/
 │   ├── index.html                        # General tools landing page
 │   └── general-volume-measurement.html   # Volume measurement calculator

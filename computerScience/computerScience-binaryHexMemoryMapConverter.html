@@ -1,0 +1,1093 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/interactive.dwt" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+ <title>Binary/Hex Memory Map Converter - Ben Eater 6502 Series</title>
+ <style>
+  * {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+  }
+
+  body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   background: linear-gradient(135deg, #1e3c72eb 0%, #2a5298eb 50%);
+   padding: 20px;
+   min-height: 100vh;
+  }
+
+  .container {
+   max-width: 1400px;
+   margin: 0 auto;
+   background: white;
+   border-radius: 10px;
+   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+   overflow: hidden;
+  }
+
+  .header {
+   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+   color: white;
+   padding: 20px 30px;
+  }
+
+  .header h1 {
+   color: white;
+   font-size: 24px;
+   font-weight: 600;
+   margin-bottom: 5px;
+  }
+
+  .header .subtitle {
+   color: white;
+   font-size: 14px;
+   opacity: 0.9;
+  }
+
+  .content-wrapper {
+   display: flex;
+   min-height: 600px;
+  }
+
+  .left-panel {
+   flex: 1;
+   padding: 30px;
+   border-right: 2px solid #e0e0e0;
+   display: flex;
+   flex-direction: column;
+   gap: 24px;
+  }
+
+  .right-panel {
+   width: 380px;
+   padding: 30px;
+   background: #f8f9fa;
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+  }
+
+  h2 {
+   font-size: 17px;
+   color: #2a5298;
+   margin-bottom: 14px;
+   padding-bottom: 8px;
+   border-bottom: 2px solid #667eea;
+  }
+
+  /* ── Address input ── */
+  .address-section {}
+
+  .bit-grid {
+   display: grid;
+   grid-template-columns: repeat(2, 1fr);
+   gap: 12px;
+   margin-bottom: 16px;
+  }
+
+  .bit-group {
+   background: #f0f4ff;
+   border-radius: 8px;
+   padding: 10px;
+  }
+
+  .bit-group-label {
+   font-size: 11px;
+   color: #666;
+   text-align: center;
+   margin-bottom: 8px;
+   font-weight: 600;
+   letter-spacing: 0.5px;
+  }
+
+  .bit-row {
+   display: flex;
+   gap: 4px;
+   justify-content: center;
+  }
+
+  .bit-btn {
+   width: 32px;
+   height: 32px;
+   border: 2px solid #ccc;
+   border-radius: 5px;
+   background: white;
+   font-family: 'Courier New', monospace;
+   font-size: 14px;
+   font-weight: 700;
+   cursor: pointer;
+   transition: all 0.15s;
+   color: #333;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   flex-direction: column;
+   position: relative;
+  }
+
+  .bit-btn .bit-label {
+   font-size: 8px;
+   color: #999;
+   font-weight: 400;
+   position: absolute;
+   bottom: 2px;
+   left: 0;
+   right: 0;
+   text-align: center;
+  }
+
+  .bit-btn.active {
+   background: #2a5298;
+   border-color: #2a5298;
+   color: white;
+  }
+
+  .bit-btn.active .bit-label {
+   color: #aac4ff;
+  }
+
+  .bit-btn.bit-a15 { border-color: #e74c3c; }
+  .bit-btn.bit-a15.active { background: #e74c3c; border-color: #e74c3c; }
+  .bit-btn.bit-a14 { border-color: #e67e22; }
+  .bit-btn.bit-a14.active { background: #e67e22; border-color: #e67e22; }
+  .bit-btn.bit-a13 { border-color: #8e44ad; }
+  .bit-btn.bit-a13.active { background: #8e44ad; border-color: #8e44ad; }
+
+  .hex-input-row {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   margin-bottom: 4px;
+  }
+
+  .hex-input-row label {
+   font-size: 14px;
+   font-weight: 600;
+   color: #444;
+   min-width: 80px;
+  }
+
+  .hex-input {
+   font-family: 'Courier New', monospace;
+   font-size: 18px;
+   font-weight: 700;
+   padding: 8px 14px;
+   border: 2px solid #ccc;
+   border-radius: 6px;
+   width: 120px;
+   text-transform: uppercase;
+   color: #2a5298;
+   letter-spacing: 2px;
+  }
+
+  .hex-input:focus {
+   outline: none;
+   border-color: #2a5298;
+   box-shadow: 0 0 0 3px rgba(42,82,152,0.15);
+  }
+
+  .btn {
+   padding: 8px 18px;
+   border: none;
+   border-radius: 5px;
+   cursor: pointer;
+   font-size: 13px;
+   font-weight: 600;
+   transition: all 0.2s;
+  }
+
+  .btn-reset {
+   background: #e74c3c;
+   color: white;
+  }
+
+  .btn-reset:hover {
+   background: #c0392b;
+   transform: translateY(-1px);
+  }
+
+  .btn-random {
+   background: #8e44ad;
+   color: white;
+  }
+
+  .btn-random:hover {
+   background: #6c3483;
+   transform: translateY(-1px);
+  }
+
+  /* ── Chip select logic ── */
+  .chip-logic-grid {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 10px;
+  }
+
+  .chip-card {
+   border-radius: 8px;
+   padding: 12px 14px;
+   border: 2px solid transparent;
+   transition: all 0.25s;
+  }
+
+  .chip-card .chip-name {
+   font-size: 13px;
+   font-weight: 700;
+   margin-bottom: 6px;
+  }
+
+  .chip-card .chip-pins {
+   font-size: 11px;
+   color: #666;
+   font-family: 'Courier New', monospace;
+   line-height: 1.7;
+  }
+
+  .chip-card .chip-status {
+   margin-top: 8px;
+   font-size: 12px;
+   font-weight: 700;
+   padding: 3px 8px;
+   border-radius: 12px;
+   display: inline-block;
+  }
+
+  .chip-card.inactive {
+   background: #f5f5f5;
+   border-color: #ddd;
+  }
+
+  .chip-card.inactive .chip-name { color: #999; }
+  .chip-card.inactive .chip-status {
+   background: #eee;
+   color: #999;
+  }
+
+  .chip-card.active-ram {
+   background: #e8f5e9;
+   border-color: #4caf50;
+  }
+
+  .chip-card.active-ram .chip-name { color: #2e7d32; }
+  .chip-card.active-ram .chip-status {
+   background: #4caf50;
+   color: white;
+  }
+
+  .chip-card.active-rom {
+   background: #e3f2fd;
+   border-color: #2196f3;
+  }
+
+  .chip-card.active-rom .chip-name { color: #1565c0; }
+  .chip-card.active-rom .chip-status {
+   background: #2196f3;
+   color: white;
+  }
+
+  .chip-card.active-io {
+   background: #fff3e0;
+   border-color: #ff9800;
+  }
+
+  .chip-card.active-io .chip-name { color: #e65100; }
+  .chip-card.active-io .chip-status {
+   background: #ff9800;
+   color: white;
+  }
+
+  .chip-card.active-mixed {
+   background: #fce4ec;
+   border-color: #e91e63;
+  }
+
+  /* ── Region result box ── */
+  .region-result {
+   border-radius: 10px;
+   padding: 18px 20px;
+   text-align: center;
+   border: 3px solid transparent;
+   transition: all 0.3s ease;
+  }
+
+  .region-result .region-label {
+   font-size: 11px;
+   font-weight: 700;
+   letter-spacing: 1.5px;
+   text-transform: uppercase;
+   margin-bottom: 6px;
+  }
+
+  .region-result .region-name {
+   font-size: 26px;
+   font-weight: 800;
+   margin-bottom: 4px;
+  }
+
+  .region-result .region-range {
+   font-size: 14px;
+   font-family: 'Courier New', monospace;
+   font-weight: 600;
+  }
+
+  .region-ram {
+   background: #e8f5e9;
+   border-color: #4caf50;
+   color: #2e7d32;
+  }
+
+  .region-rom {
+   background: #e3f2fd;
+   border-color: #2196f3;
+   color: #1565c0;
+  }
+
+  .region-io {
+   background: #fff3e0;
+   border-color: #ff9800;
+   color: #e65100;
+  }
+
+  .region-unmapped {
+   background: #fafafa;
+   border-color: #bbb;
+   color: #777;
+  }
+
+  /* ── Memory Map Bar ── */
+  .map-bar-outer {
+   position: relative;
+   height: 280px;
+   display: flex;
+   gap: 8px;
+  }
+
+  .map-bar {
+   width: 48px;
+   height: 100%;
+   border-radius: 6px;
+   overflow: hidden;
+   border: 2px solid #ccc;
+   display: flex;
+   flex-direction: column;
+   position: relative;
+  }
+
+  .map-segment {
+   transition: filter 0.2s;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-family: 'Courier New', monospace;
+   font-size: 9px;
+   color: white;
+   font-weight: 700;
+   text-align: center;
+   letter-spacing: 0.5px;
+  }
+
+  .map-segment.seg-ram   { background: #4caf50; }
+  .map-segment.seg-unmap { background: #bdbdbd; }
+  .map-segment.seg-io    { background: #ff9800; }
+  .map-segment.seg-rom   { background: #2196f3; }
+
+  .map-segment.current-address {
+   filter: brightness(1.25);
+   outline: 3px solid #f44336;
+   outline-offset: -3px;
+   position: relative;
+  }
+
+  .map-labels {
+   display: flex;
+   flex-direction: column;
+   justify-content: flex-start;
+   height: 100%;
+   position: relative;
+  }
+
+  .map-label-item {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   font-size: 11px;
+  }
+
+  .map-label-dot {
+   width: 10px;
+   height: 10px;
+   border-radius: 2px;
+   flex-shrink: 0;
+  }
+
+  /* address pointer line */
+  .addr-pointer {
+   position: absolute;
+   left: 0;
+   width: 100%;
+   border-top: 2px dashed #f44336;
+   pointer-events: none;
+   transition: top 0.2s ease;
+  }
+
+  .addr-pointer::after {
+   content: attr(data-addr);
+   position: absolute;
+   left: 56px;
+   top: -9px;
+   font-size: 11px;
+   font-family: 'Courier New', monospace;
+   color: #f44336;
+   font-weight: 700;
+   white-space: nowrap;
+  }
+
+  /* ── Info boxes ── */
+  .info-box {
+   background: #fff3cd;
+   border-left: 4px solid #ffc107;
+   padding: 12px 14px;
+   border-radius: 4px;
+  }
+
+  .info-box h3 {
+   font-size: 13px;
+   color: #856404;
+   margin-bottom: 6px;
+  }
+
+  .info-box p {
+   font-size: 12px;
+   color: #555;
+   line-height: 1.55;
+   margin: 3px 0;
+  }
+
+  .info-box code {
+   font-family: 'Courier New', monospace;
+   background: rgba(0,0,0,0.08);
+   padding: 1px 4px;
+   border-radius: 3px;
+   font-size: 11px;
+  }
+
+  .decode-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+   font-family: 'Courier New', monospace;
+   margin-top: 8px;
+  }
+
+  .decode-table th {
+   background: #1e3c72;
+   color: white;
+   padding: 6px 8px;
+   text-align: center;
+  }
+
+  .decode-table td {
+   padding: 5px 8px;
+   border-bottom: 1px solid #e0e0e0;
+   text-align: center;
+  }
+
+  .decode-table tr.row-ram td { background: #e8f5e9; }
+  .decode-table tr.row-io td  { background: #fff3e0; }
+  .decode-table tr.row-rom td { background: #e3f2fd; }
+  .decode-table tr.row-unmap td { background: #f5f5f5; color: #999; }
+
+  .decode-table tr.active-row td {
+   font-weight: 700;
+   outline: 2px solid #f44336;
+   outline-offset: -2px;
+  }
+
+  @media (max-width: 1024px) {
+   .content-wrapper { flex-direction: column; }
+   .left-panel { border-right: none; border-bottom: 2px solid #e0e0e0; }
+   .right-panel { width: 100%; }
+   .bit-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+   .bit-grid { grid-template-columns: 1fr; }
+   .chip-logic-grid { grid-template-columns: 1fr; }
+  }
+ </style>
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+     <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#resistorTools" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#ledAndPowerTools" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#components" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-breadboard-simulator.html" class="nav-link">Breadboard Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/computerScience/index.html" class="nav-link dropdown-toggle"><span>💻</span> <span>Computer Science</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-number-converter.html" class="nav-link">Number Converter</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-logic-gates.html" class="nav-link">Logic Gates</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-stackPointer.html" class="nav-link">Stack Pointer Visualizer</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-binaryHexMemoryMapConverter.html" class="nav-link">Binary/Hex Memory Map</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-chipTimingWaveform.html" class="nav-link">Chip Timing Waveform</a>
+     </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+ <div class="container">
+  <div class="header">
+   <h1>&#x1F5FA; Binary / Hex Memory Map Converter</h1>
+   <div class="subtitle">Ben Eater 6502 Series &mdash; Video 6: RAM and Bus Timing &mdash; Address Decode Logic</div>
+  </div>
+
+  <div class="content-wrapper">
+
+   <!-- ══ LEFT PANEL ══ -->
+   <div class="left-panel">
+
+    <!-- Address Bit Toggles -->
+    <div class="address-section">
+     <h2>16-Bit Address Bus</h2>
+
+     <div class="bit-grid">
+      <!-- Group: A15-A12 -->
+      <div class="bit-group">
+       <div class="bit-group-label">A15 &ndash; A12 &nbsp;(HIGH BYTE HI)</div>
+       <div class="bit-row" id="grp-high-hi"></div>
+      </div>
+      <!-- Group: A11-A8 -->
+      <div class="bit-group">
+       <div class="bit-group-label">A11 &ndash; A8 &nbsp;&nbsp;(HIGH BYTE LO)</div>
+       <div class="bit-row" id="grp-high-lo"></div>
+      </div>
+      <!-- Group: A7-A4 -->
+      <div class="bit-group">
+       <div class="bit-group-label">A7 &ndash; A4 &nbsp;&nbsp;&nbsp;(LOW BYTE HI)</div>
+       <div class="bit-row" id="grp-low-hi"></div>
+      </div>
+      <!-- Group: A3-A0 -->
+      <div class="bit-group">
+       <div class="bit-group-label">A3 &ndash; A0 &nbsp;&nbsp;&nbsp;(LOW BYTE LO)</div>
+       <div class="bit-row" id="grp-low-lo"></div>
+      </div>
+     </div>
+
+     <div class="hex-input-row">
+      <label>Hex Address:</label>
+      <input type="text" class="hex-input" id="hexInput" value="0000" maxlength="4" placeholder="0000">
+      <button class="btn btn-reset" onclick="converter.reset()">Reset</button>
+      <button class="btn btn-random" onclick="converter.random()">Random</button>
+     </div>
+    </div>
+
+    <!-- Chip Select Logic -->
+    <div class="chip-section">
+     <h2>Chip Select / Output Enable Logic</h2>
+     <div class="chip-logic-grid" id="chipGrid">
+      <!-- Populated by JS -->
+     </div>
+    </div>
+
+    <!-- Decode Truth Table -->
+    <div class="decode-section">
+     <h2>Address Decode Truth Table</h2>
+     <table class="decode-table">
+      <thead>
+       <tr>
+        <th>A15</th>
+        <th>A14</th>
+        <th>A13</th>
+        <th>Region</th>
+        <th>Range</th>
+        <th>Size</th>
+       </tr>
+      </thead>
+      <tbody id="truthTable"></tbody>
+     </table>
+    </div>
+
+   </div>
+
+   <!-- ══ RIGHT PANEL ══ -->
+   <div class="right-panel">
+
+    <!-- Region Result -->
+    <div class="region-result region-unmapped" id="regionResult">
+     <div class="region-label">Mapped Region</div>
+     <div class="region-name" id="regionName">RAM</div>
+     <div class="region-range" id="regionRange">$0000 &ndash; $3FFF</div>
+    </div>
+
+    <!-- Memory Map Bar -->
+    <div>
+     <h2>64K Memory Map</h2>
+     <div class="map-bar-outer">
+      <div class="map-bar" id="mapBar">
+       <!-- Populated by JS -->
+      </div>
+      <div style="position:relative; flex:1;">
+       <div class="addr-pointer" id="addrPointer" data-addr="$0000" style="top:100%"></div>
+       <div class="map-labels" id="mapLegend">
+        <!-- Populated by JS -->
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <!-- Key info -->
+    <div class="info-box">
+     <h3>How the Decode Works</h3>
+     <p><code>A15 &#x2192; CS*</code> of 62256 RAM (via NAND/inverter)</p>
+     <p><code>A14 &#x2192; OE*</code> of 62256 RAM (tied directly)</p>
+     <p>RAM active only when both <code>A15=0</code> and <code>A14=0</code></p>
+     <p><code>A15 &#x2192; CS*</code> of ROM (active-high)</p>
+     <p>I/O uses <code>A15=0, A14=1, A13=1</code> for VIA 6522</p>
+    </div>
+
+    <div class="info-box">
+     <h3>RAM Chip 62256</h3>
+     <p>32 KB &mdash; but only <strong>16 KB used</strong> (0000&ndash;3FFF)</p>
+     <p>Tying <code>OE*</code> to <code>A14</code> prevents RAM from driving the bus above <code>3FFF</code>, keeping address decode simple and avoiding bus conflicts.</p>
+    </div>
+
+   </div>
+  </div><!-- end .content-wrapper -->
+ </div><!-- end .container -->
+
+ <script>
+  // ── Memory regions ──────────────────────────────────────────────
+  const REGIONS = [
+   {
+    id: 'ram',
+    name: 'RAM',
+    start: 0x0000,
+    end: 0x3FFF,
+    size: '16 KB',
+    chip: '62256',
+    a15: 0, a14: 0, a13: 'x',
+    cssClass: 'region-ram',
+    segClass: 'seg-ram',
+    activeChip: 'active-ram',
+    color: '#4caf50',
+    description: 'Static RAM (62256). Stack lives here at $0100-$01FF.',
+   },
+   {
+    id: 'unmap1',
+    name: 'Unmapped',
+    start: 0x4000,
+    end: 0x5FFF,
+    size: '8 KB',
+    chip: '—',
+    a15: 0, a14: 1, a13: 0,
+    cssClass: 'region-unmapped',
+    segClass: 'seg-unmap',
+    activeChip: '',
+    color: '#bdbdbd',
+    description: 'No device mapped here (open bus).',
+   },
+   {
+    id: 'io',
+    name: 'I/O',
+    start: 0x6000,
+    end: 0x7FFF,
+    size: '8 KB',
+    chip: '6522 VIA',
+    a15: 0, a14: 1, a13: 1,
+    cssClass: 'region-io',
+    segClass: 'seg-io',
+    activeChip: 'active-io',
+    color: '#ff9800',
+    description: 'VIA 6522 I/O chip. Controls LCD and peripheral ports.',
+   },
+   {
+    id: 'rom',
+    name: 'ROM',
+    start: 0x8000,
+    end: 0xFFFF,
+    size: '32 KB',
+    chip: 'AT28C256',
+    a15: 1, a14: 'x', a13: 'x',
+    cssClass: 'region-rom',
+    segClass: 'seg-rom',
+    activeChip: 'active-rom',
+    color: '#2196f3',
+    description: 'EEPROM. Program code lives here. Reset vector at $FFFC.',
+   },
+  ];
+
+  // ── Bit groupings ───────────────────────────────────────────────
+  const BIT_GROUPS = [
+   { containerId: 'grp-high-hi', bits: [15, 14, 13, 12] },
+   { containerId: 'grp-high-lo', bits: [11, 10,  9,  8] },
+   { containerId: 'grp-low-hi',  bits: [  7,  6,  5,  4] },
+   { containerId: 'grp-low-lo',  bits: [  3,  2,  1,  0] },
+  ];
+
+  // ── Main Converter ──────────────────────────────────────────────
+  class MemoryMapConverter {
+   constructor() {
+    this.address = 0x0000; // Current 16-bit address
+
+    this._buildBitButtons();
+    this._buildChipCards();
+    this._buildTruthTable();
+    this._buildMapBar();
+    this._buildMapLegend();
+    this._wireHexInput();
+    this.update();
+   }
+
+   // ── Build UI ───────────────────────────────────────────────────
+
+   _buildBitButtons() {
+    BIT_GROUPS.forEach(group => {
+     const container = document.getElementById(group.containerId);
+     group.bits.forEach(bitIndex => {
+      const btn = document.createElement('button');
+      btn.className = 'bit-btn';
+      btn.id = `bit-${bitIndex}`;
+      btn.dataset.bit = bitIndex;
+
+      if (bitIndex === 15) btn.classList.add('bit-a15');
+      else if (bitIndex === 14) btn.classList.add('bit-a14');
+      else if (bitIndex === 13) btn.classList.add('bit-a13');
+
+      btn.innerHTML = `0<span class="bit-label">A${bitIndex}</span>`;
+      btn.addEventListener('click', () => this._toggleBit(bitIndex));
+      container.appendChild(btn);
+     });
+    });
+   }
+
+   _buildChipCards() {
+    const grid = document.getElementById('chipGrid');
+    const chips = [
+     {
+      id: 'card-ram',
+      name: '62256 RAM',
+      pins: [
+       { label: 'CS*', tied: 'NOT(A15)', logicNote: 'Low when A15=0' },
+       { label: 'OE*', tied: 'A14',      logicNote: 'Low when A14=0' },
+       { label: 'WE*', tied: 'RWB',      logicNote: 'Low on CPU write' },
+      ],
+     },
+     {
+      id: 'card-rom',
+      name: 'AT28C256 ROM',
+      pins: [
+       { label: 'CS*', tied: 'NOT(A15)', logicNote: 'Wait — ROM uses A15=1' },
+       { label: 'OE*', tied: 'RWB',      logicNote: 'Low on CPU read' },
+      ],
+     },
+     {
+      id: 'card-io',
+      name: '6522 VIA I/O',
+      pins: [
+       { label: 'CS1', tied: 'A15=0,A14=1,A13=1', logicNote: 'Active 6000-7FFF' },
+       { label: 'CS2*', tied: 'A15',              logicNote: 'Active-low CS2' },
+      ],
+     },
+    ];
+
+    chips.forEach(chip => {
+     const card = document.createElement('div');
+     card.className = 'chip-card inactive';
+     card.id = chip.id;
+     let pinsHtml = chip.pins.map(p =>
+      `<div>${p.label} &larr; ${p.tied}</div>`
+     ).join('');
+     card.innerHTML = `
+      <div class="chip-name">${chip.name}</div>
+      <div class="chip-pins">${pinsHtml}</div>
+      <span class="chip-status" id="${chip.id}-status">INACTIVE</span>
+     `;
+     grid.appendChild(card);
+    });
+   }
+
+   _buildTruthTable() {
+    const tbody = document.getElementById('truthTable');
+    REGIONS.forEach(r => {
+     const tr = document.createElement('tr');
+     tr.className = `row-${r.id === 'unmap1' ? 'unmap' : r.id}`;
+     tr.id = `tr-${r.id}`;
+     const a13Display = r.a13 === 'x' ? 'X' : r.a13;
+     const a14Display = r.a14 === 'x' ? 'X' : r.a14;
+     tr.innerHTML = `
+      <td>${r.a15}</td>
+      <td>${a14Display}</td>
+      <td>${a13Display}</td>
+      <td style="font-weight:700">${r.name}</td>
+      <td>$${r.start.toString(16).toUpperCase().padStart(4,'0')}&ndash;$${r.end.toString(16).toUpperCase().padStart(4,'0')}</td>
+      <td>${r.size}</td>
+     `;
+     tbody.appendChild(tr);
+    });
+   }
+
+   _buildMapBar() {
+    const bar = document.getElementById('mapBar');
+    const totalRange = 0x10000; // 65536 bytes
+    REGIONS.forEach(r => {
+     const seg = document.createElement('div');
+     seg.className = `map-segment ${r.segClass}`;
+     seg.id = `seg-${r.id}`;
+     const pct = ((r.end - r.start + 1) / totalRange) * 100;
+     seg.style.height = pct + '%';
+     bar.appendChild(seg);
+    });
+   }
+
+   _buildMapLegend() {
+    const legend = document.getElementById('mapLegend');
+    const totalRange = 0x10000;
+
+    // Position labels at mid-point of each region
+    REGIONS.forEach(r => {
+     const midPct = ((r.start + (r.end - r.start) / 2) / totalRange) * 100;
+     const item = document.createElement('div');
+     item.className = 'map-label-item';
+     item.style.cssText = `position:absolute; top:${midPct}%; transform:translateY(-50%); left:0; right:0;`;
+     item.innerHTML = `
+      <div class="map-label-dot" style="background:${r.color}"></div>
+      <span style="font-size:11px; color:#444; font-weight:600">${r.name}</span>
+      <span style="font-size:10px; color:#888; font-family:monospace">$${r.start.toString(16).toUpperCase().padStart(4,'0')}</span>
+     `;
+     legend.appendChild(item);
+    });
+
+    // Top label (FFFF)
+    const topLabel = document.createElement('div');
+    topLabel.style.cssText = 'position:absolute; top:0; left:0; font-size:10px; font-family:monospace; color:#888;';
+    topLabel.textContent = '$FFFF';
+    legend.appendChild(topLabel);
+
+    // Bottom label (0000)
+    const botLabel = document.createElement('div');
+    botLabel.style.cssText = 'position:absolute; bottom:0; left:0; font-size:10px; font-family:monospace; color:#888;';
+    botLabel.textContent = '$0000';
+    legend.appendChild(botLabel);
+   }
+
+   _wireHexInput() {
+    const input = document.getElementById('hexInput');
+    input.addEventListener('input', () => {
+     const val = parseInt(input.value, 16);
+     if (!isNaN(val) && val >= 0 && val <= 0xFFFF) {
+      this.address = val;
+      this._syncBitsFromAddress();
+      this.update();
+     }
+    });
+    input.addEventListener('blur', () => {
+     input.value = this.address.toString(16).toUpperCase().padStart(4, '0');
+    });
+   }
+
+   // ── Bit manipulation ───────────────────────────────────────────
+
+   _toggleBit(bitIndex) {
+    this.address ^= (1 << bitIndex);
+    this._syncBitsFromAddress();
+    this._syncHexFromAddress();
+    this.update();
+   }
+
+   _syncBitsFromAddress() {
+    for (let i = 0; i < 16; i++) {
+     const btn = document.getElementById(`bit-${i}`);
+     if (!btn) continue;
+     const isSet = !!(this.address & (1 << i));
+     if (isSet) {
+      btn.classList.add('active');
+      btn.childNodes[0].textContent = '1';
+     } else {
+      btn.classList.remove('active');
+      btn.childNodes[0].textContent = '0';
+     }
+    }
+   }
+
+   _syncHexFromAddress() {
+    const input = document.getElementById('hexInput');
+    if (document.activeElement !== input) {
+     input.value = this.address.toString(16).toUpperCase().padStart(4, '0');
+    }
+   }
+
+   // ── Region lookup ──────────────────────────────────────────────
+
+   _getRegion(addr) {
+    for (const r of REGIONS) {
+     if (addr >= r.start && addr <= r.end) return r;
+    }
+    return null; // Shouldn't happen with our full map
+   }
+
+   // ── Update all UI ──────────────────────────────────────────────
+
+   update() {
+    this._syncHexFromAddress();
+
+    const addr = this.address;
+    const region = this._getRegion(addr);
+    const a15 = (addr >> 15) & 1;
+    const a14 = (addr >> 14) & 1;
+    const a13 = (addr >> 13) & 1;
+
+    // Region result badge
+    const resultEl = document.getElementById('regionResult');
+    const nameEl   = document.getElementById('regionName');
+    const rangeEl  = document.getElementById('regionRange');
+
+    resultEl.className = `region-result ${region ? region.cssClass : 'region-unmapped'}`;
+    nameEl.textContent  = region ? region.name : 'Unknown';
+    rangeEl.innerHTML   = region
+     ? `$${region.start.toString(16).toUpperCase().padStart(4,'0')} &ndash; $${region.end.toString(16).toUpperCase().padStart(4,'0')}`
+     : '—';
+
+    // Chip cards
+    const ramActive = a15 === 0 && a14 === 0;
+    const romActive = a15 === 1;
+    const ioActive  = a15 === 0 && a14 === 1 && a13 === 1;
+
+    this._setChipCard('card-ram', ramActive ? 'active-ram' : 'inactive',
+     ramActive ? 'SELECTED' : 'inactive');
+    this._setChipCard('card-rom', romActive ? 'active-rom' : 'inactive',
+     romActive ? 'SELECTED' : 'inactive');
+    this._setChipCard('card-io', ioActive  ? 'active-io'  : 'inactive',
+     ioActive  ? 'SELECTED' : 'inactive');
+
+    // Truth table highlight
+    document.querySelectorAll('.decode-table tbody tr').forEach(tr => {
+     tr.classList.remove('active-row');
+    });
+    if (region) {
+     const tr = document.getElementById(`tr-${region.id}`);
+     if (tr) tr.classList.add('active-row');
+    }
+
+    // Map bar address pointer
+    const totalRange = 0x10000;
+    const pct = (addr / totalRange) * 100;
+    const pointer = document.getElementById('addrPointer');
+    pointer.style.top = pct + '%';
+    pointer.dataset.addr = '$' + addr.toString(16).toUpperCase().padStart(4,'0');
+
+    // Highlight map segment
+    document.querySelectorAll('.map-segment').forEach(seg => {
+     seg.classList.remove('current-address');
+    });
+    if (region) {
+     const seg = document.getElementById(`seg-${region.id}`);
+     if (seg) seg.classList.add('current-address');
+    }
+   }
+
+   _setChipCard(cardId, stateClass, statusText) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    card.className = `chip-card ${stateClass}`;
+    const statusEl = document.getElementById(`${cardId}-status`);
+    if (statusEl) statusEl.textContent = statusText.toUpperCase();
+   }
+
+   // ── Preset actions ─────────────────────────────────────────────
+
+   reset() {
+    this.address = 0x0000;
+    this._syncBitsFromAddress();
+    document.getElementById('hexInput').value = '0000';
+    this.update();
+   }
+
+   random() {
+    this.address = Math.floor(Math.random() * 0x10000);
+    this._syncBitsFromAddress();
+    this.update();
+   }
+  }
+
+  // ── Boot ────────────────────────────────────────────────────────
+  const converter = new MemoryMapConverter();
+ </script>
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>

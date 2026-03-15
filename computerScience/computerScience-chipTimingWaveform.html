@@ -1,0 +1,1009 @@
+<html lang="en">
+<!-- InstanceBegin template="/Templates/interactive.dwt" codeOutsideHTMLIsLocked="true" -->
+<head>
+<link rel="stylesheet" href="https://isocialpractice.github.io/interactive-html/css/style.css">
+<link rel="icon" type="image/svg+xml" href="https://isocialpractice.github.io/interactive-html/img/favicon.svg">
+<!-- InstanceBeginEditable name="head" -->
+ <title>Chip Timing Waveform - Ben Eater 6502 Series</title>
+ <style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   background: linear-gradient(135deg, #1e3c72eb 0%, #2a5298eb 50%);
+   padding: 20px;
+   min-height: 100vh;
+  }
+
+  .container {
+   max-width: 1400px;
+   margin: 0 auto;
+   background: white;
+   border-radius: 10px;
+   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+   overflow: hidden;
+  }
+
+  .header {
+   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+   color: white;
+   padding: 20px 30px;
+  }
+
+  .header h1 { color:white; font-size:24px; font-weight:600; margin-bottom:5px; }
+  .header .subtitle { color:white; font-size:14px; opacity:0.9; }
+
+  .content-wrapper { display:flex; }
+
+  /* ── Left panel ── */
+  .left-panel {
+   width: 320px;
+   flex-shrink: 0;
+   padding: 24px 22px;
+   border-right: 2px solid #e0e0e0;
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+  }
+
+  /* ── Right panel ── */
+  .right-panel {
+   flex: 1;
+   padding: 24px;
+   display: flex;
+   flex-direction: column;
+   gap: 18px;
+   min-width: 0;
+   background: #f8f9fa;
+  }
+
+  h2 {
+   font-size: 15px;
+   color: #2a5298;
+   margin-bottom: 12px;
+   padding-bottom: 7px;
+   border-bottom: 2px solid #667eea;
+  }
+
+  /* ── Controls ── */
+  .control-row {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   margin-bottom: 10px;
+  }
+
+  .control-row label {
+   font-size: 12px;
+   font-weight: 600;
+   color: #444;
+   width: 110px;
+   flex-shrink: 0;
+  }
+
+  .control-row input[type='range'] {
+   flex: 1;
+   accent-color: #2a5298;
+  }
+
+  .control-row select {
+   padding: 5px 8px;
+   border: 1.5px solid #ccc;
+   border-radius: 5px;
+   font-size: 13px;
+   font-family: 'Courier New', monospace;
+   color: #2a5298;
+   font-weight: 700;
+  }
+
+  .control-value {
+   font-family: 'Courier New', monospace;
+   font-size: 13px;
+   font-weight: 700;
+   color: #2a5298;
+   min-width: 52px;
+   text-align: right;
+  }
+
+  /* ── Margin table ── */
+  .margin-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+  }
+
+  .margin-table th {
+   background: #1e3c72;
+   color: white;
+   padding: 6px 8px;
+   text-align: left;
+   font-weight: 600;
+  }
+
+  .margin-table td {
+   padding: 5px 8px;
+   border-bottom: 1px solid #eee;
+   font-family: 'Courier New', monospace;
+   font-size: 11px;
+  }
+
+  .margin-table tr.pass td { background: #e8f5e9; }
+  .margin-table tr.fail td { background: #ffebee; }
+  .margin-table tr.warn td { background: #fff8e1; }
+
+  .badge {
+   display: inline-block;
+   padding: 2px 7px;
+   border-radius: 10px;
+   font-size: 10px;
+   font-weight: 700;
+   font-family: sans-serif;
+  }
+  .badge-pass { background:#4caf50; color:white; }
+  .badge-fail { background:#f44336; color:white; }
+  .badge-warn { background:#ff9800; color:white; }
+
+  /* ── Info boxes ── */
+  .info-box {
+   border-left: 4px solid;
+   padding: 10px 12px;
+   border-radius: 4px;
+   font-size: 12px;
+   line-height: 1.55;
+  }
+
+  .info-box.yellow { background:#fff8e1; border-color:#ffc107; color:#5d4037; }
+  .info-box.blue   { background:#e3f2fd; border-color:#2196f3; color:#1a237e; }
+  .info-box.green  { background:#e8f5e9; border-color:#4caf50; color:#1b5e20; }
+  .info-box.red    { background:#ffebee; border-color:#f44336; color:#b71c1c; }
+
+  .info-box h3 { font-size:12px; font-weight:700; margin-bottom:5px; }
+  .info-box code {
+   font-family:'Courier New', monospace;
+   background:rgba(0,0,0,0.08);
+   padding:1px 4px;
+   border-radius:3px;
+  }
+
+  /* ── Canvas wrapper ── */
+  .canvas-wrapper {
+   background: #1a1a2e;
+   border-radius: 8px;
+   padding: 10px;
+   overflow-x: auto;
+  }
+
+  canvas {
+   display: block;
+   border-radius: 4px;
+  }
+
+  /* ── Frequency display ── */
+  .freq-display {
+   text-align: center;
+   padding: 10px;
+   background: #e3f2fd;
+   border-radius: 8px;
+   border: 2px solid #2196f3;
+  }
+
+  .freq-display .freq-big {
+   font-size: 28px;
+   font-weight: 800;
+   color: #1565c0;
+   font-family: 'Courier New', monospace;
+  }
+
+  .freq-display .period-info {
+   font-size: 12px;
+   color: #1976d2;
+   font-family: 'Courier New', monospace;
+   margin-top: 2px;
+  }
+
+  /* ── Legend ── */
+  .legend {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 10px;
+   font-size: 11px;
+  }
+
+  .legend-item {
+   display: flex;
+   align-items: center;
+   gap: 5px;
+  }
+
+  .legend-swatch {
+   width: 18px;
+   height: 10px;
+   border-radius: 2px;
+  }
+
+  @media (max-width: 1000px) {
+   .content-wrapper { flex-direction: column; }
+   .left-panel { width: 100%; border-right: none; border-bottom: 2px solid #e0e0e0; }
+  }
+ </style>
+<!-- InstanceEndEditable -->
+</head>
+
+<body>
+ <nav class="site-nav">
+  <div class="nav-container">
+   <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-brand">
+    <img src="https://isocialpractice.github.io/interactive-html/img/favicon.svg" alt="Electronics Tools" class="nav-logo">
+    <span>Interactive Tools</span>
+   </a>
+   <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-menu').classList.toggle('active')">☰</button>
+   <ul class="nav-menu">
+    <li class="nav-item">
+     <a href="https://isocialpractice.github.io/interactive-html/index.html" class="nav-link"><span>🏠</span> <span>Home</span></a>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/555/index.html" class="nav-link dropdown-toggle"><span>⏱️</span> <span>555 Timer</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-timer-simulator.html" class="nav-link">Interactive Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-astable-calculator.html" class="nav-link">Astable Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-monostable-simulator.html" class="nav-link">Monostable Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/555/555-logic-simulator.html" class="nav-link">Clock Logic Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#resistorTools" class="nav-link dropdown-toggle"><span>🔌</span> <span>Resistors</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-resistor-calculator.html" class="nav-link">Color Code Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-parallel-resistor-calculator.html" class="nav-link">Parallel Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-fusible-resistor-calculator.html" class="nav-link">Fusible Calculator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#ledAndPowerTools" class="nav-link dropdown-toggle"><span>💡</span> <span>LED & Power</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-ohms-law-calculator.html" class="nav-link">Ohm's Law</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-led-current-calculator.html" class="nav-link">LED Calculator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-voltage-divider-calculator.html" class="nav-link">Voltage Divider</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-varistor-simulator.html" class="nav-link">Varistor Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/electronics/index.html#components" class="nav-link dropdown-toggle"><span>🔧</span> <span>Components</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-simulator.html" class="nav-link">Potentiometer Simulator</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-potentiometer-decoder.html" class="nav-link">Potentiometer Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-surface-mount-decoder.html" class="nav-link">SMD Decoder</a>
+      <a href="https://isocialpractice.github.io/interactive-html/electronics/electronics-breadboard-simulator.html" class="nav-link">Breadboard Simulator</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/general/index.html" class="nav-link dropdown-toggle"><span>📐</span> <span>General</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-volume-measurement.html" class="nav-link">Volume Measurement</a>
+      <a href="https://isocialpractice.github.io/interactive-html/general/general-area-and-perimeter-calculator.html" class="nav-link">Area & Perimeter</a>
+     </div>
+    </li>
+    <li class="nav-item nav-dropdown">
+     <a href="https://isocialpractice.github.io/interactive-html/computerScience/index.html" class="nav-link dropdown-toggle"><span>💻</span> <span>Computer Science</span></a>
+     <div class="dropdown-menu">
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-number-converter.html" class="nav-link">Number Converter</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-logic-gates.html" class="nav-link">Logic Gates</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-stackPointer.html" class="nav-link">Stack Pointer Visualizer</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-binaryHexMemoryMapConverter.html" class="nav-link">Binary/Hex Memory Map</a>
+      <a href="https://isocialpractice.github.io/interactive-html/computerScience/computerScience-chipTimingWaveform.html" class="nav-link">Chip Timing Waveform</a>
+     </div>
+    </li>
+   </ul>
+  </div>
+ </nav>
+
+<!-- InstanceBeginEditable name="page" -->
+ <div class="container">
+
+  <div class="header">
+   <h1>&#x23F1; Chip Timing Waveform Analyzer</h1>
+   <div class="subtitle">Ben Eater 6502 Series &mdash; Video 6: RAM &amp; Bus Timing &mdash; 62256 RAM vs 65C02 CPU Read Cycle</div>
+  </div>
+
+  <div class="content-wrapper">
+
+   <!-- ══ LEFT PANEL ══ -->
+   <div class="left-panel">
+
+    <!-- Frequency display -->
+    <div class="freq-display">
+     <div class="freq-big" id="freqDisplay">1.00 MHz</div>
+     <div class="period-info" id="periodDisplay">Period: 1000 ns &nbsp;|&nbsp; PHI2 half: 500 ns</div>
+    </div>
+
+    <!-- Controls -->
+    <div>
+     <h2>Configuration</h2>
+
+     <div class="control-row">
+      <label>Clock Frequency</label>
+      <input type="range" id="freqSlider" min="0.5" max="8" step="0.1" value="1">
+      <span class="control-value" id="freqVal">1.0 MHz</span>
+     </div>
+
+     <div class="control-row">
+      <label>RAM Variant</label>
+      <select id="ramVariant">
+       <option value="-5">HM62256B&#x2011;5 (55 ns)</option>
+       <option value="-7" selected>HM62256B&#x2011;7 (70 ns)</option>
+       <option value="-8">HM62256B&#x2011;8 (85 ns)</option>
+      </select>
+     </div>
+
+     <div class="control-row">
+      <label>Gate Delay</label>
+      <input type="range" id="gateSlider" min="0" max="30" step="1" value="15">
+      <span class="control-value" id="gateVal">15 ns</span>
+     </div>
+    </div>
+
+    <!-- Critical margin summary -->
+    <div>
+     <h2>Timing Margin Analysis</h2>
+     <table class="margin-table">
+      <thead>
+       <tr><th>Check</th><th>Budget</th><th>Need</th><th>Margin</th></tr>
+      </thead>
+      <tbody id="marginTable"></tbody>
+     </table>
+    </div>
+
+    <!-- Dynamic info box -->
+    <div id="summaryBox" class="info-box green">
+     <h3 id="summaryTitle">Timing OK</h3>
+     <p id="summaryText"></p>
+    </div>
+
+    <!-- Fixed reference -->
+    <div class="info-box yellow">
+     <h3>65C02 CPU Timing (fixed)</h3>
+     <p><code>tADS</code> = 30 ns max (PHI2&darr; &rarr; Address valid)</p>
+     <p><code>tAH</code> &nbsp;= 10 ns min (Address hold after PHI2&uarr;)</p>
+     <p><code>tMDS</code> = 10 ns min (Data must be valid before PHI2&uarr;)</p>
+     <p><code>tDHR</code> = 10 ns min (Data hold after PHI2&uarr;)</p>
+    </div>
+
+   </div><!-- end .left-panel -->
+
+   <!-- ══ RIGHT PANEL ══ -->
+   <div class="right-panel">
+
+    <div>
+     <h2>Read Cycle Timing Diagram &mdash; One Complete Clock Cycle</h2>
+     <div class="canvas-wrapper">
+      <canvas id="timingCanvas" width="880" height="310"></canvas>
+     </div>
+    </div>
+
+    <div class="legend">
+     <div class="legend-item"><div class="legend-swatch" style="background:#4fc3f7"></div> PHI2 Clock</div>
+     <div class="legend-item"><div class="legend-swatch" style="background:#a5d6a7"></div> Address Valid</div>
+     <div class="legend-item"><div class="legend-swatch" style="background:#ce93d8"></div> CS* / OE* Active</div>
+     <div class="legend-item"><div class="legend-swatch" style="background:#ffcc02"></div> Data Valid</div>
+     <div class="legend-item"><div class="legend-swatch" style="background:#f44336"></div> Deadline (tMDS)</div>
+     <div class="legend-item"><div class="legend-swatch" style="background:#e57373; opacity:0.5"></div> Timing Violation</div>
+    </div>
+
+    <!-- Read Cycle Datasheet Table -->
+    <div>
+     <h2>62256 Read Cycle Parameters (Datasheet)</h2>
+     <table class="margin-table" style="font-size:11px;">
+      <thead>
+       <tr>
+        <th>Parameter</th><th>Symbol</th>
+        <th>&#x2011;5 Min</th><th>&#x2011;5 Max</th>
+        <th>&#x2011;7 Min</th><th>&#x2011;7 Max</th>
+        <th>&#x2011;8 Min</th><th>&#x2011;8 Max</th>
+        <th>Unit</th>
+       </tr>
+      </thead>
+      <tbody>
+       <tr><td>Read cycle time</td><td>tRC</td><td>55</td><td>—</td><td>70</td><td>—</td><td>85</td><td>—</td><td>ns</td></tr>
+       <tr><td>Address access time</td><td>tAA</td><td>—</td><td>55</td><td>—</td><td>70</td><td>—</td><td>85</td><td>ns</td></tr>
+       <tr><td>Chip select to access time</td><td>tACS</td><td>—</td><td>55</td><td>—</td><td>70</td><td>—</td><td>85</td><td>ns</td></tr>
+       <tr><td>Output enable to output valid</td><td>tOE</td><td>—</td><td>35</td><td>—</td><td>40</td><td>—</td><td>45</td><td>ns</td></tr>
+       <tr><td>Chip select to output in low-Z</td><td>tCLZ</td><td>5</td><td>—</td><td>10</td><td>—</td><td>10</td><td>—</td><td>ns</td></tr>
+       <tr><td>Output enable to output in low-Z</td><td>tOLZ</td><td>5</td><td>—</td><td>5</td><td>—</td><td>5</td><td>—</td><td>ns</td></tr>
+       <tr><td>Chip deselect to output in high-Z</td><td>tCHZ</td><td>0</td><td>20</td><td>0</td><td>25</td><td>0</td><td>30</td><td>ns</td></tr>
+       <tr><td>Output disable to output in high-Z</td><td>tOHZ</td><td>0</td><td>20</td><td>0</td><td>25</td><td>0</td><td>30</td><td>ns</td></tr>
+       <tr><td>Output hold from address change</td><td>tOH</td><td>5</td><td>—</td><td>5</td><td>—</td><td>5</td><td>—</td><td>ns</td></tr>
+      </tbody>
+     </table>
+    </div>
+
+   </div><!-- end .right-panel -->
+
+  </div><!-- end .content-wrapper -->
+ </div><!-- end .container -->
+
+ <script>
+  // ── Timing constants ────────────────────────────────────────────
+  const CPU = { tADS: 30, tAH: 10, tMDS: 10, tDHR: 10 };
+
+  const RAM_DATA = {
+   '-5': { tRC:55, tAA:55, tACS:55, tOE:35, tOH:5, tCHZmax:20, tOHZmax:20, label:'HM62256B-5', color:'#43a047' },
+   '-7': { tRC:70, tAA:70, tACS:70, tOE:40, tOH:5, tCHZmax:25, tOHZmax:25, label:'HM62256B-7', color:'#1e88e5' },
+   '-8': { tRC:85, tAA:85, tACS:85, tOE:45, tOH:5, tCHZmax:30, tOHZmax:30, label:'HM62256B-8', color:'#fb8c00' },
+  };
+
+  // ── Canvas setup ────────────────────────────────────────────────
+  const canvas = document.getElementById('timingCanvas');
+  const ctx = canvas.getContext('2d');
+  const CW = canvas.width;   // 880
+  const CH = canvas.height;  // 310
+
+  const LX = 100;  // left edge of diagram (after signal labels)
+  const RX = 858;  // right edge of diagram
+  const DW = RX - LX;  // diagram width
+
+  // Signal row positions
+  const SIG = {
+   phi2: { yH: 18, yL: 55,  label: 'PHI2' },
+   addr: { yH: 80, yL: 108, label: 'A0–A15' },
+   cs:   { yH: 133, yL: 161, label: 'CS*' },
+   oe:   { yH: 183, yL: 208, label: 'OE*' },
+   data: { yH: 230, yL: 258, label: 'DATA' },
+  };
+
+  const ANNOT_Y = 273;  // top of annotation row
+  const AXIS_Y  = 295;  // time axis
+
+  // Color palette (dark mode canvas)
+  const C = {
+   bg:       '#1a1a2e',
+   gridLine: '#2a2a4a',
+   axis:     '#666688',
+   label:    '#aaaacc',
+   phi2:     '#4fc3f7',
+   addrValid:'#a5d6a7',
+   addrInv:  '#555577',
+   cs:       '#ce93d8',
+   oe:       '#b39ddb',
+   dataValid:'#ffe082',
+   dataInv:  '#555577',
+   deadline: '#ef5350',
+   margin_ok:'#69f0ae',
+   margin_fail:'#ff5252',
+   tADS:     '#81d4fa',
+   tOE:      '#b39ddb',
+   tACS:     '#ce93d8',
+   tAA:      '#a5d6a7',
+   tMDS:     '#ef5350',
+   phi2Rise: '#ffffff',
+  };
+
+  // ── Map nanoseconds to canvas x-coordinate ─────────────────────
+  // Shows range: [-0.15T, 1.1T]  (1.25 cycles total)
+  function nsToX(t, T) {
+   const start = -0.15 * T;
+   const range = 1.25 * T;
+   return LX + ((t - start) / range) * DW;
+  }
+
+  // ── Drawing helpers ─────────────────────────────────────────────
+
+  function clearCanvas() {
+   ctx.fillStyle = C.bg;
+   ctx.fillRect(0, 0, CW, CH);
+  }
+
+  function drawGrid(T) {
+   ctx.strokeStyle = C.gridLine;
+   ctx.lineWidth = 1;
+   // Tick every T/10
+   const step = T / 10;
+   const startT = -0.15 * T;
+   const endT   = 1.1 * T;
+   for (let t = Math.ceil(startT / step) * step; t <= endT; t += step) {
+    const x = nsToX(t, T);
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, 15);
+    ctx.lineTo(x, AXIS_Y - 4);
+    ctx.stroke();
+    ctx.setLineDash([]);
+   }
+   // Bold lines at t=0 and t=T
+   [0, T].forEach(t => {
+    ctx.strokeStyle = '#444466';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(nsToX(t, T), 15);
+    ctx.lineTo(nsToX(t, T), AXIS_Y - 4);
+    ctx.stroke();
+   });
+  }
+
+  function drawTimeAxis(T) {
+   ctx.strokeStyle = C.axis;
+   ctx.lineWidth = 1;
+   ctx.beginPath();
+   ctx.moveTo(LX, AXIS_Y);
+   ctx.lineTo(RX, AXIS_Y);
+   ctx.stroke();
+
+   // Tick marks and labels
+   ctx.fillStyle = C.axis;
+   ctx.font = '10px monospace';
+   ctx.textAlign = 'center';
+
+   const step = T / 4; // tick every T/4
+   const startT = -0.15 * T;
+   const endT   = 1.1 * T;
+
+   for (let t = 0; t <= T; t += step) {
+    const x = nsToX(t, T);
+    ctx.beginPath();
+    ctx.moveTo(x, AXIS_Y);
+    ctx.lineTo(x, AXIS_Y + 4);
+    ctx.stroke();
+    ctx.fillText(t.toFixed(0) + ' ns', x, AXIS_Y + 14);
+   }
+
+   // Label
+   ctx.fillStyle = C.label;
+   ctx.font = '10px sans-serif';
+   ctx.textAlign = 'left';
+   ctx.fillText('Time (ns) →', RX - 60, AXIS_Y + 14);
+  }
+
+  function drawSignalLabel(sig) {
+   ctx.fillStyle = C.label;
+   ctx.font = 'bold 11px monospace';
+   ctx.textAlign = 'right';
+   ctx.fillText(sig.label, LX - 6, (sig.yH + sig.yL) / 2 + 4);
+  }
+
+  // Draw a standard digital clock waveform
+  function drawPhi2(T) {
+   const s = SIG.phi2;
+   const tPWL = T / 2;
+   const xPreStart = nsToX(-0.15 * T, T);
+   const xFall0   = nsToX(0, T);        // t=0: PHI2 falls (our cycle starts)
+   const xRise1   = nsToX(tPWL, T);     // t=T/2: PHI2 rises
+   const xFall1   = nsToX(T, T);        // t=T: PHI2 falls (next cycle)
+   const xPostEnd = nsToX(1.1 * T, T);
+
+   ctx.strokeStyle = C.phi2;
+   ctx.lineWidth = 2;
+   ctx.beginPath();
+   ctx.moveTo(xPreStart, s.yH);    // pre: was HIGH
+   ctx.lineTo(xFall0, s.yH);
+   ctx.lineTo(xFall0, s.yL);       // fall at t=0
+   ctx.lineTo(xRise1, s.yL);
+   ctx.lineTo(xRise1, s.yH);       // rise at T/2
+   ctx.lineTo(xFall1, s.yH);
+   ctx.lineTo(xFall1, s.yL);       // fall at T (next cycle)
+   ctx.lineTo(xPostEnd, s.yL);
+   ctx.stroke();
+
+   // Region labels
+   ctx.fillStyle = C.phi2;
+   ctx.font = '9px sans-serif';
+   ctx.textAlign = 'center';
+   ctx.globalAlpha = 0.65;
+   ctx.fillText('HIGH', (nsToX(-0.15*T,T)+nsToX(0,T))/2, s.yH - 5);
+   ctx.fillText('LOW',  (xFall0+xRise1)/2,                 s.yL + 10);
+   ctx.fillText('HIGH', (xRise1+xFall1)/2,                 s.yH - 5);
+   ctx.fillText('LOW',  (xFall1+xPostEnd)/2,               s.yL + 10);
+   ctx.globalAlpha = 1;
+  }
+
+  // Draw a bus signal (X-pattern = invalid, parallelogram envelope = valid)
+  function drawBus(sig, T, invalidRanges, validRange, validColor, validLabel) {
+   const { yH, yL } = sig;
+   const yMid = (yH + yL) / 2;
+
+   // Invalid regions
+   invalidRanges.forEach(([t0, t1]) => {
+    const x0 = Math.max(nsToX(t0, T), LX);
+    const x1 = Math.min(nsToX(t1, T), RX);
+    if (x1 <= x0) return;
+
+    ctx.strokeStyle = C.addrInv;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x0, yH); ctx.lineTo(x1, yH);
+    ctx.moveTo(x0, yL); ctx.lineTo(x1, yL);
+    ctx.moveTo(x0, yH); ctx.lineTo(x1, yL);
+    ctx.moveTo(x0, yL); ctx.lineTo(x1, yH);
+    ctx.stroke();
+   });
+
+   // Valid region with parallelogram ends
+   if (validRange) {
+    const [t0, t1] = validRange;
+    const x0 = Math.max(nsToX(t0, T), LX);
+    const x1 = Math.min(nsToX(t1, T), RX);
+    if (x1 > x0) {
+     const skew = Math.min(8, (x1-x0)/4);
+
+     ctx.strokeStyle = validColor;
+     ctx.lineWidth = 2;
+     ctx.fillStyle = validColor + '28';
+
+     ctx.beginPath();
+     ctx.moveTo(x0, yMid);
+     ctx.lineTo(x0 + skew, yH);
+     ctx.lineTo(x1 - skew, yH);
+     ctx.lineTo(x1, yMid);
+     ctx.lineTo(x1 - skew, yL);
+     ctx.lineTo(x0 + skew, yL);
+     ctx.closePath();
+     ctx.fill();
+     ctx.stroke();
+
+     // Label inside
+     if (validLabel && x1 - x0 > 50) {
+      ctx.fillStyle = validColor;
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(validLabel, (x0 + x1) / 2, yMid + 4);
+     }
+    }
+   }
+  }
+
+  // Draw an active-low digital signal
+  function drawActiveLow(sig, T, lowStart, lowEnd, color) {
+   const { yH, yL } = sig;
+   const xPreStart = nsToX(-0.15 * T, T);
+   const xLow0     = Math.max(nsToX(lowStart, T), LX);
+   const xLow1     = Math.min(nsToX(lowEnd,   T), RX);
+   const xPostEnd  = nsToX(1.1 * T, T);
+
+   ctx.strokeStyle = color;
+   ctx.lineWidth = 2;
+   ctx.beginPath();
+   ctx.moveTo(xPreStart, yH);
+   ctx.lineTo(xLow0, yH);
+   ctx.lineTo(xLow0, yL);     // fall (active)
+   ctx.lineTo(xLow1, yL);
+   ctx.lineTo(xLow1, yH);     // rise (inactive)
+   ctx.lineTo(xPostEnd, yH);
+   ctx.stroke();
+
+   // Fill active region
+   ctx.fillStyle = color + '22';
+   ctx.fillRect(xLow0, yL, xLow1 - xLow0, yH - yL);
+  }
+
+  // Vertical dashed reference line
+  function vLine(t, T, y0, y1, color, dash) {
+   const x = nsToX(t, T);
+   ctx.strokeStyle = color;
+   ctx.lineWidth = 1;
+   if (dash) ctx.setLineDash(dash);
+   ctx.beginPath();
+   ctx.moveTo(x, y0);
+   ctx.lineTo(x, y1);
+   ctx.stroke();
+   ctx.setLineDash([]);
+  }
+
+  // Double-headed timing arrow with label
+  function timingArrow(t0, t1, T, y, color, label, subLabel) {
+   if (t1 <= t0) return;
+   const x0 = nsToX(t0, T);
+   const x1 = nsToX(t1, T);
+   const tip = 5;
+   const yLabel = y - 2;
+   const yArrow = y + 8;
+
+   ctx.strokeStyle = color;
+   ctx.fillStyle   = color;
+   ctx.lineWidth   = 1.5;
+
+   // Horizontal shaft
+   ctx.beginPath();
+   ctx.moveTo(x0, yArrow);
+   ctx.lineTo(x1, yArrow);
+   ctx.stroke();
+
+   // Left arrowhead
+   ctx.beginPath();
+   ctx.moveTo(x0, yArrow);
+   ctx.lineTo(x0 + tip, yArrow - tip);
+   ctx.lineTo(x0 + tip, yArrow + tip);
+   ctx.closePath(); ctx.fill();
+
+   // Right arrowhead
+   ctx.beginPath();
+   ctx.moveTo(x1, yArrow);
+   ctx.lineTo(x1 - tip, yArrow - tip);
+   ctx.lineTo(x1 - tip, yArrow + tip);
+   ctx.closePath(); ctx.fill();
+
+   // Tick marks
+   ctx.beginPath();
+   ctx.moveTo(x0, yArrow - 4); ctx.lineTo(x0, yArrow + 4);
+   ctx.moveTo(x1, yArrow - 4); ctx.lineTo(x1, yArrow + 4);
+   ctx.stroke();
+
+   // Labels
+   const midX = (x0 + x1) / 2;
+   ctx.font = 'bold 10px monospace';
+   ctx.textAlign = 'center';
+   ctx.fillText(label, midX, yLabel);
+   if (subLabel) {
+    ctx.font = '9px monospace';
+    ctx.globalAlpha = 0.7;
+    ctx.fillText(subLabel, midX, yArrow + 18);
+    ctx.globalAlpha = 1;
+   }
+  }
+
+  // Event label above a vertical line
+  function eventLabel(t, T, y, text, color) {
+   ctx.fillStyle = color;
+   ctx.font = '9px sans-serif';
+   ctx.textAlign = 'center';
+   ctx.fillText(text, nsToX(t, T), y);
+  }
+
+  // ── Main draw ───────────────────────────────────────────────────
+
+  function draw() {
+   const freqMHz = parseFloat(document.getElementById('freqSlider').value);
+   const variant  = document.getElementById('ramVariant').value;
+   const gateDelay = parseInt(document.getElementById('gateSlider').value);
+
+   const T   = 1000 / freqMHz;   // clock period in ns
+   const tPWL = T / 2;            // PHI2 low half
+   const ram  = RAM_DATA[variant];
+
+   // ── Compute key time events ────────────────────────────────────
+   // t=0: PHI2 falls, starting the address phase
+   const t_addr_valid  = CPU.tADS;               // 30 ns: address appears
+   const t_cs_low      = t_addr_valid + gateDelay; // CS*=NOT(A15) via NAND
+   const t_oe_low      = t_addr_valid;              // OE*=A14 (no extra gate)
+   const t_phi2_rise   = tPWL;                    // T/2: clock goes high
+   const t_data_deadline = tPWL - CPU.tMDS;       // must be valid 10ns before rise
+   const t_addr_hold_end = tPWL + CPU.tAH;        // address stable until here
+
+   // RAM output timing (worst-case max values)
+   const t_data_from_addr = t_addr_valid + ram.tAA;
+   const t_data_from_cs   = t_cs_low    + ram.tACS;
+   const t_data_from_oe   = t_oe_low    + ram.tOE;
+   const t_data_valid     = Math.max(t_data_from_addr, t_data_from_cs, t_data_from_oe);
+
+   const margin = t_data_deadline - t_data_valid;
+
+   // ── Draw ───────────────────────────────────────────────────────
+   clearCanvas();
+   drawGrid(T);
+
+   // Signal labels
+   Object.values(SIG).forEach(drawSignalLabel);
+
+   // ── PHI2 ──
+   drawPhi2(T);
+
+   // ── ADDRESS bus ──
+   // Invalid: from before cycle start to addr_valid, and from addr_hold_end onwards
+   drawBus(SIG.addr, T,
+    [[-0.15*T, t_addr_valid], [t_addr_hold_end, 1.1*T]],
+    [t_addr_valid, t_addr_hold_end],
+    C.addrValid, 'VALID ADDRESS'
+   );
+
+   // ── CS* (active low) ──
+   // Active from cs_low until address changes: addr_hold_end (approx T+tAH - gateDelay)
+   const t_cs_high = t_addr_hold_end + gateDelay; // CS* goes high as address releases
+   drawActiveLow(SIG.cs, T, t_cs_low, Math.min(t_cs_high, 1.1*T), C.cs);
+
+   // ── OE* (active low, tied to A14) ──
+   const t_oe_high = t_addr_hold_end;
+   drawActiveLow(SIG.oe, T, t_oe_low, Math.min(t_oe_high, 1.1*T), C.oe);
+
+   // ── DATA bus ──
+   // High-Z until RAM drives data; becomes invalid when address changes
+   const dataColor = margin >= 0 ? C.dataValid : C.margin_fail;
+   drawBus(SIG.data, T,
+    [[-0.15*T, t_data_valid], [t_addr_hold_end, 1.1*T]],
+    t_data_valid < 1.1*T ? [t_data_valid, t_addr_hold_end] : null,
+    dataColor, 'DATA VALID'
+   );
+
+   // ── Vertical reference lines ──
+   vLine(0,               T, 15, ANNOT_Y, '#ffffff44', [3,4]);  // PHI2 fall
+   vLine(t_addr_valid,   T, SIG.addr.yH, ANNOT_Y, C.addrValid+'88', [4,3]);
+   vLine(t_cs_low,       T, SIG.cs.yH,   ANNOT_Y, C.cs+'88',   [4,3]);
+   vLine(t_phi2_rise,    T, 15, ANNOT_Y, C.phi2Rise+'66', [5,5]);
+   vLine(t_data_deadline,T, SIG.data.yH, ANNOT_Y, C.deadline+'cc', [3,3]);
+   vLine(t_data_valid,   T, SIG.data.yH, ANNOT_Y, dataColor+'cc',  [4,3]);
+
+   // ── Timing annotations ──
+   // Row 1 (ANNOT_Y): tADS (0 → addr_valid)
+   timingArrow(0, t_addr_valid,   T, ANNOT_Y,      C.tADS,     'tADS', '(30 ns)');
+   // Row 1: tAA (addr_valid → data_from_addr)
+   timingArrow(t_addr_valid, t_data_from_addr, T, ANNOT_Y,     C.tAA,      'tAA',  '(' + ram.tAA + ' ns)');
+
+   // ── Deadline bar ──
+   const xDeadline = nsToX(t_data_deadline, T);
+   ctx.strokeStyle = C.deadline;
+   ctx.lineWidth = 2;
+   ctx.setLineDash([]);
+   ctx.beginPath();
+   ctx.moveTo(xDeadline, SIG.data.yH - 4);
+   ctx.lineTo(xDeadline, SIG.data.yL + 4);
+   ctx.stroke();
+   ctx.fillStyle = C.deadline;
+   ctx.font = 'bold 9px sans-serif';
+   ctx.textAlign = 'center';
+   ctx.fillText('tMDS', xDeadline, SIG.data.yH - 7);
+
+   // ── PHI2 rise label ──
+   const xRise = nsToX(t_phi2_rise, T);
+   ctx.fillStyle = C.phi2;
+   ctx.font = 'bold 10px sans-serif';
+   ctx.textAlign = 'center';
+   ctx.fillText('CPU samples data', xRise, SIG.data.yH - 10);
+
+   // ── Margin callout ──
+   const xDataValid = nsToX(t_data_valid, T);
+   const xDataDead  = nsToX(t_data_deadline, T);
+   const marginLabel = margin >= 0
+    ? `MARGIN: +${margin.toFixed(0)} ns`
+    : `VIOLATION: ${margin.toFixed(0)} ns`;
+   const marginColor = margin >= 0 ? C.margin_ok : C.margin_fail;
+
+   if (Math.abs(xDataDead - xDataValid) > 10) {
+    const yMargin = SIG.data.yL + 16;
+    ctx.strokeStyle = marginColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(Math.min(xDataValid, xDataDead), yMargin);
+    ctx.lineTo(Math.max(xDataValid, xDataDead), yMargin);
+    ctx.stroke();
+    ctx.fillStyle = marginColor;
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(marginLabel, (xDataValid + xDataDead)/2, yMargin + 12);
+   }
+
+   drawTimeAxis(T);
+
+   // ── Update margin table ──
+   updateMarginTable(T, ram, t_addr_valid, t_cs_low, t_oe_low, t_data_deadline, gateDelay, freqMHz);
+
+   // ── Update summary ──
+   updateSummary(margin, freqMHz, ram, variant);
+  }
+
+  // ── Margin Table ────────────────────────────────────────────────
+
+  function updateMarginTable(T, ram, tAddrValid, tCsLow, tOeLow, tDeadline, gateDelay, freqMHz) {
+   const checks = [
+    {
+     name: 'tRC (cycle time)',
+     budget: T.toFixed(0) + ' ns',
+     need: ram.tRC + ' ns',
+     margin: T - ram.tRC,
+     note: 'Full period ≥ tRC',
+    },
+    {
+     name: 'tAA (addr access)',
+     budget: (tDeadline - tAddrValid).toFixed(0) + ' ns',
+     need: ram.tAA + ' ns',
+     margin: tDeadline - tAddrValid - ram.tAA,
+     note: 'Addr → data before latch',
+    },
+    {
+     name: 'tACS (CS access)',
+     budget: (tDeadline - tCsLow).toFixed(0) + ' ns',
+     need: ram.tACS + ' ns',
+     margin: tDeadline - tCsLow - ram.tACS,
+     note: 'CS* → data before latch',
+    },
+    {
+     name: 'tOE (OE access)',
+     budget: (tDeadline - tOeLow).toFixed(0) + ' ns',
+     need: ram.tOE + ' ns',
+     margin: tDeadline - tOeLow - ram.tOE,
+     note: 'OE* → data before latch',
+    },
+   ];
+
+   const tbody = document.getElementById('marginTable');
+   tbody.innerHTML = '';
+   checks.forEach(c => {
+    const tr = document.createElement('tr');
+    const m = c.margin;
+    let cls, badge;
+    if (m < 0)       { cls = 'fail'; badge = `<span class='badge badge-fail'>FAIL</span>`; }
+    else if (m < 20) { cls = 'warn'; badge = `<span class='badge badge-warn'>TIGHT</span>`; }
+    else             { cls = 'pass'; badge = `<span class='badge badge-pass'>PASS</span>`; }
+
+    tr.className = cls;
+    tr.innerHTML = `
+     <td>${c.name}</td>
+     <td>${c.budget}</td>
+     <td>${c.need}</td>
+     <td>${m >= 0 ? '+' : ''}${m.toFixed(0)} ns &nbsp;${badge}</td>
+    `;
+    tbody.appendChild(tr);
+   });
+  }
+
+  // ── Summary box ─────────────────────────────────────────────────
+
+  function updateSummary(margin, freqMHz, ram, variant) {
+   const box    = document.getElementById('summaryBox');
+   const title  = document.getElementById('summaryTitle');
+   const text   = document.getElementById('summaryText');
+   const T = 1000 / freqMHz;
+
+   if (margin < 0) {
+    box.className = 'info-box red';
+    title.textContent = '⚠ Timing Violation';
+    text.innerHTML = `${ram.label} (${ram.tAA} ns) <b>cannot</b> respond in time `
+     + `at ${freqMHz.toFixed(1)} MHz. Data is ${Math.abs(margin).toFixed(0)} ns late. `
+     + `Try a slower clock or the -5 variant.`;
+   } else if (margin < 20) {
+    box.className = 'info-box yellow';
+    title.textContent = '⚡ Tight Margin';
+    text.innerHTML = `${ram.label} just barely meets timing at ${freqMHz.toFixed(1)} MHz `
+     + `— only <b>${margin.toFixed(0)} ns</b> to spare. Fine for prototyping, `
+     + `but consider layout and temperature effects.`;
+   } else {
+    box.className = 'info-box green';
+    title.textContent = '✓ Timing OK';
+    text.innerHTML = `${ram.label} (${ram.tAA} ns) has a comfortable <b>${margin.toFixed(0)} ns</b> `
+     + `margin at ${freqMHz.toFixed(1)} MHz (T=${T.toFixed(0)} ns). `
+     + `Data is valid well before PHI2 rises.`;
+   }
+  }
+
+  // ── Control bindings ────────────────────────────────────────────
+
+  function updateControls() {
+   const freqMHz = parseFloat(document.getElementById('freqSlider').value);
+   const gate    = document.getElementById('gateSlider').value;
+   const T = 1000 / freqMHz;
+
+   document.getElementById('freqVal').textContent    = freqMHz.toFixed(1) + ' MHz';
+   document.getElementById('gateVal').textContent    = gate + ' ns';
+   document.getElementById('freqDisplay').textContent = freqMHz.toFixed(2) + ' MHz';
+   document.getElementById('periodDisplay').textContent =
+    `Period: ${T.toFixed(1)} ns  |  PHI2 half: ${(T/2).toFixed(1)} ns`;
+
+   draw();
+  }
+
+  document.getElementById('freqSlider').addEventListener('input', updateControls);
+  document.getElementById('ramVariant').addEventListener('change', updateControls);
+  document.getElementById('gateSlider').addEventListener('input', updateControls);
+
+  // ── Init ────────────────────────────────────────────────────────
+  updateControls();
+ </script>
+<!-- InstanceEndEditable -->
+<script>
+  // embeddedScript
+  // Debugging tool to adjust root link per localhost test, and github pages.
+
+  var href = location.href;
+  var pgHref = document.querySelectorAll("[href], [src]");
+  if (href.indexOf("localhost") > -1) {
+   let pgHrefLen = pgHref.length;
+   for (i = 0; i < pgHrefLen; i++) {
+    let curVal;
+    if (pgHref[i].hasAttribute("href")) {
+     curVal = pgHref[i].getAttribute("href");
+     pgHref[i].setAttribute("href", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+    if (pgHref[i].hasAttribute("src")) {
+     curVal = pgHref[i].getAttribute("src");
+     pgHref[i].setAttribute("src", curVal.replace("https://isocialpractice.github.io/interactive-html", ""));
+    }
+   }
+  }
+</script>
+</body>
+<!-- InstanceEnd --></html>
